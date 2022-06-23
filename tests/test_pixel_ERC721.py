@@ -39,6 +39,42 @@ async def setup():
 
 
 @pytest.mark.asyncio
+async def test_pixel_erc721_initializable(setup):
+    _, account, pixel_contract = setup
+
+    # Drawer address must be 0
+
+    execution_info = await pixel_contract.pixelDrawerAddress().call()
+    assert execution_info.result == (0,)
+
+    # Set drawer address
+
+    await signer.send_transaction(
+        account,
+        pixel_contract.contract_address,
+        "initialize",
+        [654321],
+    )
+
+    # Drawer address must be 654321
+
+    execution_info = await pixel_contract.pixelDrawerAddress().call()
+    assert execution_info.result == (654321,)
+
+    # Drawer address cannot be set again
+
+    await assert_revert(
+        signer.send_transaction(
+            account,
+            pixel_contract.contract_address,
+            "initialize",
+            [123456],
+        ),
+        reverted_with="Pixel contract already initialized",
+    )
+
+
+@pytest.mark.asyncio
 async def test_pixel_erc721_getters(setup):
     _, _, pixel_contract = setup
 

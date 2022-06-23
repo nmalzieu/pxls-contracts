@@ -2,7 +2,7 @@
 
 from starkware.cairo.common.cairo_builtins import HashBuiltin, SignatureBuiltin
 from starkware.cairo.common.uint256 import Uint256, uint256_le
-from starkware.cairo.common.bool import TRUE
+from starkware.cairo.common.bool import TRUE, FALSE
 
 from openzeppelin.token.erc721.library import ERC721
 from openzeppelin.introspection.ERC165 import ERC165
@@ -10,6 +10,11 @@ from openzeppelin.introspection.ERC165 import ERC165
 from openzeppelin.access.ownable import Ownable
 # TODO => remove ownable?
 from openzeppelin.security.safemath import SafeUint256
+from openzeppelin.security.initializable import Initializable
+
+#
+# Storage
+#
 
 @storage_var
 func minted_count() -> (count : Uint256):
@@ -17,6 +22,10 @@ end
 
 @storage_var
 func matrix_size() -> (size : Uint256):
+end
+
+@storage_var
+func pixel_drawer() -> (address : felt):
 end
 
 #
@@ -129,6 +138,14 @@ func maxSupply{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
     return (count=count)
 end
 
+@view
+func pixelDrawerAddress{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}() -> (
+    address : felt
+):
+    let (address : felt) = pixel_drawer.read()
+    return (address=address)
+end
+
 #
 # Externals
 #
@@ -204,5 +221,20 @@ end
 @external
 func renounceOwnership{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}():
     Ownable.renounce_ownership()
+    return ()
+end
+
+@external
+func initialize{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
+    pixel_drawer_address : felt
+):
+    Ownable.assert_only_owner()
+    let (initialized) = Initializable.initialized()
+    with_attr error_message("Pixel contract already initialized"):
+        assert initialized = FALSE
+    end
+
+    Initializable.initialize()
+    pixel_drawer.write(pixel_drawer_address)
     return ()
 end

@@ -58,11 +58,21 @@ func pixelERC721Address{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_
 end
 
 @view
-func getPixelColor{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
-    pixelId : Uint256
+func pixelColor{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
+    tokenId : Uint256
 ) -> (color : PixelColor):
-    let (color) = current_drawing.read(pixelId)
+    let (pixel_index) = pixelIndex(tokenId)
+    let (color) = current_drawing.read(pixel_index)
     return (color=color)
+end
+
+@view
+func pixelIndex{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
+    tokenId : Uint256
+) -> (pixelIndex : Uint256):
+    # Each pixel NFT represents a different
+    # pixel in the grid each day
+    return (pixelIndex=tokenId)
 end
 
 #
@@ -96,12 +106,14 @@ end
 
 @external
 func setPixelColor{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
-    pixelId : Uint256, color : Color
+    tokenId : Uint256, color : Color
 ):
     assert_valid_color(color)
     let (caller_address) = get_caller_address()
-    assert_pixel_owner(caller_address, pixelId)
+    assert_pixel_owner(caller_address, tokenId)
     let pixel_color = PixelColor(set=TRUE, color=color)
-    current_drawing.write(pixelId, pixel_color)
+
+    let (pixel_index) = pixelIndex(tokenId)
+    current_drawing.write(pixel_index, pixel_color)
     return ()
 end

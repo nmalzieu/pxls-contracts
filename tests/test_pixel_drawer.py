@@ -114,7 +114,7 @@ async def test_pixel_drawer_pixel_owner(setup: Setup):
 async def test_pixel_drawer_pixel_color(setup: Setup):
     # Check pixel color getter
 
-    execution_info = await setup.drawer_contract.getPixelColor(to_uint(1)).call()
+    execution_info = await setup.drawer_contract.pixelColor(to_uint(1)).call()
     assert execution_info.result == ((0, (0, 0, 0)),)  # First int 0 = unset, rest = rgb
 
     # Pixel owner cannot draw pixel with wrong color
@@ -136,7 +136,7 @@ async def test_pixel_drawer_pixel_color(setup: Setup):
     )
 
     # Check pixel color has been set
-    execution_info = await setup.drawer_contract.getPixelColor(to_uint(1)).call()
+    execution_info = await setup.drawer_contract.pixelColor(to_uint(1)).call()
     assert execution_info.result == ((1, (250, 0, 0)),)  # First int 1 = set, rest = rgb
 
     # Pixel owner can draw pixel again
@@ -148,5 +148,5 @@ async def test_pixel_drawer_pixel_color(setup: Setup):
     )
 
     # Check pixel color has been set
-    execution_info = await setup.drawer_contract.getPixelColor(to_uint(1)).call()
+    execution_info = await setup.drawer_contract.pixelColor(to_uint(1)).call()
     assert execution_info.result == ((1, (0, 0, 0)),)  # First int 1 = set, rest = rgb

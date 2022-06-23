@@ -1,7 +1,7 @@
 %lang starknet
 
 from starkware.cairo.common.cairo_builtins import HashBuiltin, SignatureBuiltin
-from starkware.cairo.common.uint256 import Uint256, uint256_le
+from starkware.cairo.common.uint256 import Uint256, uint256_lt
 from starkware.cairo.common.bool import TRUE, FALSE
 
 from openzeppelin.token.erc721.library import ERC721
@@ -188,12 +188,14 @@ func mint{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(to 
 
     # Ensures no more than PIXEL_COUNT pixels can be minted
     let (local lastTokenId : Uint256) = totalSupply()
-    let (local newTokenId : Uint256) = SafeUint256.add(lastTokenId, Uint256(1, 0))
     let (local max : Uint256) = maxSupply()
-    let (is_lt) = uint256_le(newTokenId, max)
+
+    let (is_lt) = uint256_lt(lastTokenId, max)
     with_attr error_message("Total pixel supply has already been minted"):
         assert is_lt = TRUE
     end
+
+    let (local newTokenId : Uint256) = SafeUint256.add(lastTokenId, Uint256(1, 0))
 
     minted_count.write(newTokenId)
     ERC721._mint(to, newTokenId)

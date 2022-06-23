@@ -6,7 +6,7 @@ import pytest
 from starkware.starknet.testing.starknet import Starknet
 
 from helpers.account import AccountSigner, deploy_account
-from helpers.types import str_to_felt, felt_to_clean_str, to_uint
+from helpers.types import str_to_felt, to_uint
 from helpers.vm import assert_revert
 
 signer = AccountSigner(123456789987654321)
@@ -17,6 +17,13 @@ def event_loop():
     loop = asyncio.get_event_loop()
     yield loop
     loop.close()
+
+
+class Setup:
+    starknet = None
+    account = None
+    pixel_contract = None
+    drawer_contract = None
 
 
 @pytest.fixture(scope="module")
@@ -47,18 +54,77 @@ async def setup():
         account,
         pixel_contract.contract_address,
         "initialize",
-        [drawer_contract.contract_address], # pixel_drawer_address
+        [drawer_contract.contract_address],  # pixel_drawer_address
     )
 
-    return (starknet, account, pixel_contract, drawer_contract)
+    s = Setup()
+    s.drawer_contract = drawer_contract
+    s.pixel_contract = pixel_contract
+    s.account = account
+    s.starknet = starknet
+
+    return s
 
 
 @pytest.mark.asyncio
-async def test_pixel_drawer_getters(setup):
-    _, _, pixel_contract, drawer_contract = setup
+async def test_pixel_drawer_getters(setup: Setup):
+    execution_info = await setup.drawer_contract.pixelERC721Address().call()
+    assert execution_info.result == (setup.pixel_contract.contract_address,)
 
-    execution_info = await drawer_contract.pixelERC721Address().call()
-    assert execution_info.result == (pixel_contract.contract_address,)
+    execution_info = await setup.pixel_contract.pixelDrawerAddress().call()
+    assert execution_info.result == (setup.drawer_contract.contract_address,)
 
-    execution_info = await pixel_contract.pixelDrawerAddress().call()
-    assert execution_info.result == (drawer_contract.contract_address,)
+
+@pytest.mark.asyncio
+async def test_pixel_drawer_pixel_owner(setup: Setup):
+    # I can't draw non existing pixel
+    await assert_revert(
+        signer.send_transaction(
+            setup.account,
+            setup.drawer_contract.contract_address,
+            "setPixelColor",
+            [*to_uint(1), str_to_felt("FF00FF")],
+        ),
+        reverted_with="ERC721: owner query for nonexistent token",
+    )
+
+    # Minting first pixel
+    await signer.send_transaction(
+        setup.account,
+        setup.pixel_contract.contract_address,
+        "mint",
+        [setup.account.contract_address],
+    )
+
+    account_2 = await deploy_account(setup.starknet, signer.public_key)
+
+    # Non owner can't draw pixel
+    await assert_revert(
+        signer.send_transaction(
+            account_2,
+            setup.drawer_contract.contract_address,
+            "setPixelColor",
+            [*to_uint(1), str_to_felt("FF00FF")],
+        ),
+        reverted_with="Address does not own pixel",
+    )
+
+
+@pytest.mark.asyncio
+async def test_pixel_drawer_pixel_color(setup: Setup):
+    # Check pixel color getter
+
+    execution_info = await setup.drawer_contract.getPixelColor(to_uint(1)).call()
+    assert execution_info.result == (0,)
+
+    # Pixel owner can draw pixel
+    await signer.send_transaction(
+        setup.account,
+        setup.drawer_contract.contract_address,
+        "setPixelColor",
+        [*to_uint(1), str_to_felt("FF00FF")],
+    )
+
+    # Check pixel color has been set
+    execution_info = await setup.drawer_contract.getPixelColor(to_uint(1)).call()
+    assert execution_info.result == (str_to_felt("FF00FF"),)

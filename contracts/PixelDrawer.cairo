@@ -1,7 +1,12 @@
 %lang starknet
 from starkware.cairo.common.cairo_builtins import HashBuiltin, SignatureBuiltin
+from starkware.cairo.common.uint256 import Uint256
+from starkware.cairo.common.bool import TRUE, FALSE
+from starkware.starknet.common.syscalls import get_caller_address
+
 # TODO => remove ownable ?
 from openzeppelin.access.ownable import Ownable
+from openzeppelin.token.erc721.interfaces.IERC721 import IERC721
 
 #
 # Storage
@@ -9,6 +14,10 @@ from openzeppelin.access.ownable import Ownable
 
 @storage_var
 func pixel_erc721() -> (address : felt):
+end
+
+@storage_var
+func current_drawing(pixel_index : Uint256) -> (color : felt):
 end
 
 #
@@ -34,4 +43,51 @@ func pixelERC721Address{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_
 ):
     let (address : felt) = pixel_erc721.read()
     return (address=address)
+end
+
+@view
+func getPixelColor{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
+    pixelId : Uint256
+) -> (color : felt):
+    let (color) = current_drawing.read(pixelId)
+    return (color=color)
+end
+
+#
+# Helpers
+#
+
+func is_pixel_owner{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    address : felt, pixel_id : Uint256
+) -> (owns_pixel : felt):
+    let (contract_address : felt) = pixel_erc721.read()
+    let (owner_address : felt) = IERC721.ownerOf(contract_address=contract_address, tokenId=pixel_id)
+    if owner_address == address:
+        return (owns_pixel=TRUE)
+    end
+    return (owns_pixel=FALSE)
+end
+
+func assert_pixel_owner{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    address : felt, pixel_id : Uint256
+):
+    let (owns_pixel : felt) = is_pixel_owner(address, pixel_id)
+    with_attr error_message("Address does not own pixel: address {address}"):
+        assert owns_pixel = TRUE
+    end
+    return ()
+end
+
+#
+# Externals
+#
+
+@external
+func setPixelColor{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
+    pixelId : Uint256, color : felt
+):
+    let (caller_address) = get_caller_address()
+    assert_pixel_owner(caller_address, pixelId)
+    current_drawing.write(pixelId, color)
+    return ()
 end

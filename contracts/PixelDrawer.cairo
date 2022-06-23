@@ -4,7 +4,6 @@ from starkware.cairo.common.uint256 import Uint256, uint256_sub
 from starkware.cairo.common.math import unsigned_div_rem
 from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.starknet.common.syscalls import get_caller_address
-from starkware.cairo.common.alloc import alloc
 
 # TODO => remove ownable ?
 from openzeppelin.access.ownable import Ownable

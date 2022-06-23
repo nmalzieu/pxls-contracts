@@ -26,6 +26,9 @@ class Setup:
     drawer_contract = None
 
 
+MATRIX_SIZE = 20
+
+
 @pytest.fixture(scope="module")
 async def setup():
     starknet = await Starknet.empty()
@@ -38,7 +41,7 @@ async def setup():
             str_to_felt("Pixel"),  # name
             str_to_felt("PXL"),  # symbol
             account.contract_address,  # owner
-            *to_uint(2),  # matrix_size 2 x 2 => 4 pixels
+            *to_uint(MATRIX_SIZE),  # matrix_size 2 x 2 => 4 pixels
         ],
     )
 
@@ -150,3 +153,12 @@ async def test_pixel_drawer_pixel_color(setup: Setup):
     # Check pixel color has been set
     execution_info = await setup.drawer_contract.pixelColor(to_uint(1)).call()
     assert execution_info.result == ((1, (0, 0, 0)),)  # First int 1 = set, rest = rgb
+
+
+@pytest.mark.asyncio
+async def test_pixel_drawer_shuffle_result(setup: Setup):
+    # Check pixel shuffle
+    execution_info = await setup.drawer_contract.tokenPixelIndex(to_uint(1)).call()
+    # For a given matrix size, result is deterministic
+    # For 20x20, first token position is 378 = 1 * 373 + 5 % 400
+    assert execution_info.result == (378,)

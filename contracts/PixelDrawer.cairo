@@ -10,6 +10,15 @@ from openzeppelin.token.erc721.interfaces.IERC721 import IERC721
 
 from libs.colors import Color, assert_valid_color
 
+#
+# Struct
+#
+
+struct PixelColor:
+    # Adding "set" to avoid unset pixels to be considered black
+    member set : felt
+    member color : Color
+end
 
 #
 # Storage
@@ -20,7 +29,7 @@ func pixel_erc721() -> (address : felt):
 end
 
 @storage_var
-func current_drawing(pixel_index : Uint256) -> (color : Color):
+func current_drawing(pixel_index : Uint256) -> (color : PixelColor):
 end
 
 #
@@ -51,7 +60,7 @@ end
 @view
 func getPixelColor{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
     pixelId : Uint256
-) -> (color : Color):
+) -> (color : PixelColor):
     let (color) = current_drawing.read(pixelId)
     return (color=color)
 end
@@ -92,6 +101,7 @@ func setPixelColor{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check
     assert_valid_color(color)
     let (caller_address) = get_caller_address()
     assert_pixel_owner(caller_address, pixelId)
-    current_drawing.write(pixelId, color)
+    let pixel_color = PixelColor(set=TRUE, color=color)
+    current_drawing.write(pixelId, pixel_color)
     return ()
 end

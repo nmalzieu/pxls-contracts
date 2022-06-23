@@ -83,7 +83,7 @@ async def test_pixel_drawer_pixel_owner(setup: Setup):
             setup.account,
             setup.drawer_contract.contract_address,
             "setPixelColor",
-            [*to_uint(1), str_to_felt("FF00FF")],
+            [*to_uint(1), *(255, 0, 0)],
         ),
         reverted_with="ERC721: owner query for nonexistent token",
     )
@@ -104,7 +104,7 @@ async def test_pixel_drawer_pixel_owner(setup: Setup):
             account_2,
             setup.drawer_contract.contract_address,
             "setPixelColor",
-            [*to_uint(1), str_to_felt("FF00FF")],
+            [*to_uint(1), *(255, 0, 0)],
         ),
         reverted_with="Address does not own pixel",
     )
@@ -115,16 +115,26 @@ async def test_pixel_drawer_pixel_color(setup: Setup):
     # Check pixel color getter
 
     execution_info = await setup.drawer_contract.getPixelColor(to_uint(1)).call()
-    assert execution_info.result == (0,)
+    assert execution_info.result == ((0, 0, 0),)
 
-    # Pixel owner can draw pixel
+    # Pixel owner cannot draw pixel with wrong color
+    await assert_revert(
+        signer.send_transaction(
+            setup.account,
+            setup.drawer_contract.contract_address,
+            "setPixelColor",
+            [*to_uint(1), *(265, 0, 0)],
+        )
+    )
+
+    # Pixel owner can draw pixel with right color
     await signer.send_transaction(
         setup.account,
         setup.drawer_contract.contract_address,
         "setPixelColor",
-        [*to_uint(1), str_to_felt("FF00FF")],
+        [*to_uint(1), *(250, 0, 0)],
     )
 
     # Check pixel color has been set
     execution_info = await setup.drawer_contract.getPixelColor(to_uint(1)).call()
-    assert execution_info.result == (str_to_felt("FF00FF"),)
+    assert execution_info.result == ((250, 0, 0),)

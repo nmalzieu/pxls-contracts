@@ -2,8 +2,11 @@
 
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.uint256 import Uint256
+from starkware.cairo.common.bool import TRUE, FALSE
+
 from libs.colors import Color, PixelColor
 from contracts.interfaces import IPixelERC721, IPixelDrawer
+
 
 @view
 func __setup__{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
@@ -179,9 +182,54 @@ func test_pixel_drawer_shuffle_result{
     # Check pixel shuffle
     # For a given matrix size, result is deterministic
     # For 20x20, first token position is 378 = 1 * 373 + 5 % 400
-    let (pixel_index_1) = IPixelDrawer.tokenPixelIndex(drawer_contract_address, Uint256(1, 0))
-    assert pixel_index_1 = 378
-    let (pixel_index_2) = IPixelDrawer.tokenPixelIndex(drawer_contract_address, Uint256(2, 0))
-    assert pixel_index_2 = 351
+    # last token position is 5 = 400 * 373 + 5 % 400
+    let (pixel_index_first) = IPixelDrawer.tokenPixelIndex(drawer_contract_address, Uint256(1, 0))
+    assert pixel_index_first = 378
+    let (pixel_index_last) = IPixelDrawer.tokenPixelIndex(drawer_contract_address, Uint256(400, 0))
+    assert pixel_index_last = 5
+    return ()
+end
+
+@view
+func test_pixel_launch_new_round_if_necessary{
+    syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
+}():
+    tempvar drawer_contract_address
+    %{ ids.drawer_contract_address = context.drawer_contract_address %}
+
+    # after calling start() in setup, we're at round 1
+
+    let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
+    assert round = 1
+
+    # 23 hour is not enough to launch new round
+
+    let new_timestamp = 'start_timestamp' + (23 * 3600)
+    %{ warp(ids.new_timestamp, context.drawer_contract_address) %}
+
+    let (launched) = IPixelDrawer.launchNewRoundIfNecessary(contract_address=drawer_contract_address)
+    assert launched = FALSE
+
+    let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
+    assert round = 1
+
+    # 25 hour is enough to launch new round
+
+    let new_timestamp = 'start_timestamp' + (25 * 3600)
+    %{ warp(ids.new_timestamp, context.drawer_contract_address) %}
+
+    let (launched) = IPixelDrawer.launchNewRoundIfNecessary(contract_address=drawer_contract_address)
+    assert launched = TRUE
+
+    let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
+    assert round = 2
+
+    # When a new round is launched, the pixel repartition is shuffled
+
+    let (pixel_index_first) = IPixelDrawer.tokenPixelIndex(drawer_contract_address, Uint256(1, 0))
+    assert pixel_index_first = 199
+    let (pixel_index_last) = IPixelDrawer.tokenPixelIndex(drawer_contract_address, Uint256(400, 0))
+    assert pixel_index_last = 270
+
     return ()
 end

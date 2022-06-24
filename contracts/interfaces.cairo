@@ -35,4 +35,6 @@ namespace IPixelDrawer:
     end
     func currentDrawingRound() -> (round : felt):
     end
+    func launchNewRoundIfNecessary() -> (launched : felt):
+    end
 end

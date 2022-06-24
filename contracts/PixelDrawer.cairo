@@ -200,7 +200,7 @@ end
 
 func launch_new_round_if_necessary{
     syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
-}():
+}() -> (launched : felt):
     let (should_launch) = should_launch_new_round()
     if should_launch == TRUE:
         launch_new_round(is_initial_round=FALSE)
@@ -208,12 +208,13 @@ func launch_new_round_if_necessary{
         tempvar syscall_ptr = syscall_ptr
         tempvar pedersen_ptr = pedersen_ptr
         tempvar range_check_ptr = range_check_ptr
+        return (launched=TRUE)
     else:
         tempvar syscall_ptr = syscall_ptr
         tempvar pedersen_ptr = pedersen_ptr
         tempvar range_check_ptr = range_check_ptr
+        return (launched=FALSE)
     end
-    return ()
 end
 
 #
@@ -247,4 +248,11 @@ func start{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}():
     launch_new_round(is_initial_round=TRUE)
 
     return ()
+end
+
+@external
+func launchNewRoundIfNecessary{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
+    ) -> (launched : felt):
+    let (launched) = launch_new_round_if_necessary()
+    return (launched=launched)
 end

@@ -2,6 +2,7 @@
 from starkware.cairo.common.cairo_builtins import HashBuiltin, SignatureBuiltin
 from starkware.cairo.common.uint256 import Uint256, uint256_sub
 from starkware.cairo.common.math import unsigned_div_rem
+from starkware.cairo.common.math_cmp import is_le
 from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.starknet.common.syscalls import get_caller_address, get_block_timestamp
 
@@ -87,8 +88,9 @@ func currentDrawingTimestamp{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, r
 end
 
 @view
-func currentDrawingRound{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
-    ) -> (round : felt):
+func currentDrawingRound{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}() -> (
+    round : felt
+):
     let (round) = current_drawing_round.read()
     return (round=round)
 end
@@ -169,6 +171,51 @@ func shuffle_pixel_positions{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, r
     return ()
 end
 
+func should_launch_new_round{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    ) -> (should_launch : felt):
+    alloc_locals
+    let (block_timestamp) = get_block_timestamp()
+    let (last_drawing_timestamp) = current_drawing_timestamp.read()
+    let duration = block_timestamp - last_drawing_timestamp
+    # 1 full day in seconds (get_block_timestamp returns timestamp in seconds)
+    const DAY_DURATION = 86400
+    # if duration >= DAY_DURATION (last drawing lasted 1 day)
+    let (should_launch) = is_le(DAY_DURATION, duration)
+    return (should_launch=should_launch)
+end
+
+func launch_new_round{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    is_initial_round : felt
+):
+    shuffle_pixel_positions(is_initial_shuffle=is_initial_round)
+
+    let (block_timestamp) = get_block_timestamp()
+    current_drawing_timestamp.write(block_timestamp)
+
+    let (current_round) = current_drawing_round.read()
+    current_drawing_round.write(current_round + 1)
+
+    return ()
+end
+
+func launch_new_round_if_necessary{
+    syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
+}():
+    let (should_launch) = should_launch_new_round()
+    if should_launch == TRUE:
+        launch_new_round(is_initial_round=FALSE)
+        # See https://www.cairo-lang.org/docs/how_cairo_works/builtins.html#revoked-implicit-arguments
+        tempvar syscall_ptr = syscall_ptr
+        tempvar pedersen_ptr = pedersen_ptr
+        tempvar range_check_ptr = range_check_ptr
+    else:
+        tempvar syscall_ptr = syscall_ptr
+        tempvar pedersen_ptr = pedersen_ptr
+        tempvar range_check_ptr = range_check_ptr
+    end
+    return ()
+end
+
 #
 # Externals
 #
@@ -197,11 +244,7 @@ func start{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}():
 
     Initializable.initialize()
 
-    shuffle_pixel_positions(TRUE)
-    let (block_timestamp) = get_block_timestamp()
-    current_drawing_timestamp.write(block_timestamp)
-    let (current_round) = current_drawing_round.read()
-    current_drawing_round.write(current_round + 1)
+    launch_new_round(is_initial_round=TRUE)
 
     return ()
 end

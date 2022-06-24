@@ -1,0 +1,25 @@
+["protostar.config"]
+protostar_version = "0.2.3"
+
+["protostar.project"]
+libs_path = "libs"
+
+["protostar.contracts"]
+pixel_erc721 = [
+    "./contracts/PixelERC721.cairo",
+]
+pixel_drawer = [
+    "./contracts/PixelDrawer.cairo"
+]
+
+["protostar.build"]
+cairo_path = ["./libs/cairo_contracts/src"]
+
+[profile.devnet.protostar.deploy]
+gateway_url="http://127.0.0.1:5050/"
+
+[profile.testnet.protostar.deploy]
+network="alpha-goerli"
+
+[profile.mainnet.protostar.deploy]
+network="alpha-mainnet"

@@ -226,6 +226,11 @@ func setPixelColor{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check
     tokenId : Uint256, color : Color
 ):
     assert_valid_color(color)
+
+    # When a user plays, we check if we should reset
+    # the drawing because 24 hours have passed
+    launch_new_round_if_necessary()
+
     let (caller_address) = get_caller_address()
     assert_pixel_owner(caller_address, tokenId)
     let pixel_color = PixelColor(set=TRUE, color=color)
@@ -253,6 +258,7 @@ end
 @external
 func launchNewRoundIfNecessary{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
     ) -> (launched : felt):
+    # Method to just launch a new round with drawing a pixel
     let (launched) = launch_new_round_if_necessary()
     return (launched=launched)
 end

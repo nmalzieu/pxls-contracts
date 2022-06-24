@@ -12,13 +12,14 @@ from contracts.interfaces import IPixelERC721, IPixelDrawer
 func __setup__{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
     let name = 'Pixel'
     let symbol = 'PXL'
-    let account = 123456
 
-    %{ context.pixel_contract_address = deploy_contract("contracts/PixelERC721.cairo", [ids.name, ids.symbol, ids.account, 20, 0]).contract_address %}
-    %{ context.drawer_contract_address = deploy_contract("contracts/PixelDrawer.cairo", [context.pixel_contract_address, ids.account]).contract_address %}
+    %{ context.account = 123456 %}
 
-    %{ stop_prank_pixel = start_prank(ids.account, target_contract_address=context.pixel_contract_address) %}
-    %{ stop_prank_drawer = start_prank(ids.account, target_contract_address=context.drawer_contract_address) %}
+    %{ context.pixel_contract_address = deploy_contract("contracts/PixelERC721.cairo", [ids.name, ids.symbol, context.account, 20, 0]).contract_address %}
+    %{ context.drawer_contract_address = deploy_contract("contracts/PixelDrawer.cairo", [context.pixel_contract_address, context.account]).contract_address %}
+
+    %{ stop_prank_pixel = start_prank(context.account, target_contract_address=context.pixel_contract_address) %}
+    %{ stop_prank_drawer = start_prank(context.account, target_contract_address=context.drawer_contract_address) %}
 
     tempvar pixel_contract_address
     %{ ids.pixel_contract_address = context.pixel_contract_address %}
@@ -91,7 +92,7 @@ func test_pixel_drawer_pixel_non_token_owner{
     tempvar drawer_contract_address
     %{ ids.drawer_contract_address = context.drawer_contract_address %}
 
-    %{ stop_prank = start_prank(123456, target_contract_address=ids.pixel_contract_address) %}
+    %{ stop_prank = start_prank(context.account, target_contract_address=ids.pixel_contract_address) %}
 
     # Minting first pixel
     IPixelERC721.mint(contract_address=pixel_contract_address, to=123458)
@@ -119,10 +120,13 @@ func test_pixel_drawer_pixel_wrong_color{
     assert pixel_color.set = 0  # Unset
     assert pixel_color.color = Color(0, 0, 0)
 
-    %{ stop_prank_drawer = start_prank(123456, target_contract_address=ids.drawer_contract_address) %}
+    %{ stop_prank_drawer = start_prank(context.account, target_contract_address=ids.drawer_contract_address) %}
+
+    tempvar account
+    %{ ids.account = context.account %}
 
     # Minting first pixel
-    IPixelERC721.mint(contract_address=pixel_contract_address, to=123456)
+    IPixelERC721.mint(contract_address=pixel_contract_address, to=account)
 
     # Pixel owner cannot draw pixel with wrong color
     %{ expect_revert() %}
@@ -147,10 +151,13 @@ func test_pixel_drawer_set_pixel_color{
     assert pixel_color.set = 0  # Unset
     assert pixel_color.color = Color(0, 0, 0)
 
-    %{ stop_prank_drawer = start_prank(123456, target_contract_address=ids.drawer_contract_address) %}
+    %{ stop_prank_drawer = start_prank(context.account, target_contract_address=ids.drawer_contract_address) %}
+
+    tempvar account
+    %{ ids.account = context.account %}
 
     # Minting first pixel
-    IPixelERC721.mint(contract_address=pixel_contract_address, to=123456)
+    IPixelERC721.mint(contract_address=pixel_contract_address, to=account)
 
     # Pixel owner can draw pixel with right color
     IPixelDrawer.setPixelColor(drawer_contract_address, Uint256(1, 0), Color(255, 0, 100))
@@ -230,6 +237,60 @@ func test_pixel_launch_new_round_if_necessary{
     assert pixel_index_first = 199
     let (pixel_index_last) = IPixelDrawer.tokenPixelIndex(drawer_contract_address, Uint256(400, 0))
     assert pixel_index_last = 270
+
+    return ()
+end
+
+
+@view
+func test_pixel_drawing_launches_new_round{
+    syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
+}():
+    tempvar pixel_contract_address
+    %{ ids.pixel_contract_address = context.pixel_contract_address %}
+
+    tempvar drawer_contract_address
+    %{ ids.drawer_contract_address = context.drawer_contract_address %}
+
+    # after calling start() in setup, we're at round 1
+
+    let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
+    assert round = 1
+
+    tempvar account
+    %{ ids.account = context.account %}
+
+    %{ stop_prank_drawer = start_prank(context.account, target_contract_address=ids.drawer_contract_address) %}
+
+    # Minting first pixel
+    IPixelERC721.mint(contract_address=pixel_contract_address, to=account)
+
+    # Pixel owner can draw pixel
+    IPixelDrawer.setPixelColor(drawer_contract_address, Uint256(1, 0), Color(255, 0, 100))
+
+    # 23 hour is not enough to launch new round
+
+    let new_timestamp = 'start_timestamp' + (23 * 3600)
+    %{ warp(ids.new_timestamp, context.drawer_contract_address) %}
+
+    # Drawing pixel after < 1 day does not launch new round
+    IPixelDrawer.setPixelColor(drawer_contract_address, Uint256(1, 0), Color(255, 0, 100))
+
+    let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
+    assert round = 1
+
+    # 25 hour is enough to launch new round
+
+    let new_timestamp = 'start_timestamp' + (25 * 3600)
+    %{ warp(ids.new_timestamp, context.drawer_contract_address) %}
+
+    # Drawing pixel after 1 day launches new round
+    IPixelDrawer.setPixelColor(drawer_contract_address, Uint256(1, 0), Color(255, 0, 100))
+
+    let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
+    assert round = 2
+
+    %{ stop_prank_drawer() %}
 
     return ()
 end

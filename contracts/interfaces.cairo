@@ -33,4 +33,6 @@ namespace IPixelDrawer:
     end
     func tokenPixelIndex(tokenId : Uint256) -> (pixelIndex : felt):
     end
+    func currentDrawingRound() -> (round : felt):
+    end
 end

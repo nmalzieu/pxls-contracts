@@ -42,23 +42,26 @@ func test_pixel_drawer_getters{syscall_ptr : felt*, range_check_ptr, pedersen_pt
     tempvar pixel_contract_address
     %{ ids.pixel_contract_address = context.pixel_contract_address %}
 
-tempvar drawer_contract_address
+    tempvar drawer_contract_address
     %{ ids.drawer_contract_address = context.drawer_contract_address %}
 
-let (p_address) = IPixelDrawer.pixelERC721Address(contract_address=drawer_contract_address)
+    let (p_address) = IPixelDrawer.pixelERC721Address(contract_address=drawer_contract_address)
     assert p_address = pixel_contract_address
 
-let (d_address) = IPixelERC721.pixelDrawerAddress(contract_address=pixel_contract_address)
+    let (d_address) = IPixelERC721.pixelDrawerAddress(contract_address=pixel_contract_address)
     assert d_address = drawer_contract_address
 
-# Timestamp must have been set to the deployment timestamp
+    let (round) = IPixelDrawer.currentDrawingRound()
+    assert round = 1
 
-let (returned_timestamp) = IPixelDrawer.currentDrawingTimestamp(
+    # Timestamp must have been set to the deployment timestamp
+
+    let (returned_timestamp) = IPixelDrawer.currentDrawingTimestamp(
         contract_address=drawer_contract_address
     )
     assert returned_timestamp = 'start_timestamp'
 
-return ()
+    return ()
 end
 
 @view
@@ -68,11 +71,11 @@ func test_pixel_drawer_pixel_owner_nonexistent_token{
     tempvar drawer_contract_address
     %{ ids.drawer_contract_address = context.drawer_contract_address %}
 
-%{ expect_revert(error_message="ERC721: owner query for nonexistent token") %}
+    %{ expect_revert(error_message="ERC721: owner query for nonexistent token") %}
 
-IPixelDrawer.setPixelColor(drawer_contract_address, Uint256(1, 0), Color(255, 0, 100))
+    IPixelDrawer.setPixelColor(drawer_contract_address, Uint256(1, 0), Color(255, 0, 100))
 
-return ()
+    return ()
 end
 
 @view
@@ -82,19 +85,19 @@ func test_pixel_drawer_pixel_non_token_owner{
     tempvar pixel_contract_address
     %{ ids.pixel_contract_address = context.pixel_contract_address %}
 
-tempvar drawer_contract_address
+    tempvar drawer_contract_address
     %{ ids.drawer_contract_address = context.drawer_contract_address %}
 
-%{ stop_prank = start_prank(123456, target_contract_address=ids.pixel_contract_address) %}
+    %{ stop_prank = start_prank(123456, target_contract_address=ids.pixel_contract_address) %}
 
-# Minting first pixel
+    # Minting first pixel
     IPixelERC721.mint(contract_address=pixel_contract_address, to=123458)
 
-# Non owner can't draw pixel
+    # Non owner can't draw pixel
     %{ expect_revert(error_message="Address does not own pixel") %}
     IPixelDrawer.setPixelColor(drawer_contract_address, Uint256(1, 0), Color(255, 0, 100))
 
-%{ stop_prank() %}
+    %{ stop_prank() %}
     return ()
 end
 
@@ -105,24 +108,24 @@ func test_pixel_drawer_pixel_wrong_color{
     tempvar pixel_contract_address
     %{ ids.pixel_contract_address = context.pixel_contract_address %}
 
-tempvar drawer_contract_address
+    tempvar drawer_contract_address
     %{ ids.drawer_contract_address = context.drawer_contract_address %}
 
-# Get current color
+    # Get current color
     let (pixel_color : PixelColor) = IPixelDrawer.pixelColor(drawer_contract_address, Uint256(1, 0))
     assert pixel_color.set = 0  # Unset
     assert pixel_color.color = Color(0, 0, 0)
 
-%{ stop_prank_drawer = start_prank(123456, target_contract_address=ids.drawer_contract_address) %}
+    %{ stop_prank_drawer = start_prank(123456, target_contract_address=ids.drawer_contract_address) %}
 
-# Minting first pixel
+    # Minting first pixel
     IPixelERC721.mint(contract_address=pixel_contract_address, to=123456)
 
-# Pixel owner cannot draw pixel with wrong color
+    # Pixel owner cannot draw pixel with wrong color
     %{ expect_revert() %}
     IPixelDrawer.setPixelColor(drawer_contract_address, Uint256(1, 0), Color(265, 0, 100))
 
-%{ stop_prank_drawer() %}
+    %{ stop_prank_drawer() %}
     return ()
 end
 
@@ -133,36 +136,36 @@ func test_pixel_drawer_set_pixel_color{
     tempvar pixel_contract_address
     %{ ids.pixel_contract_address = context.pixel_contract_address %}
 
-tempvar drawer_contract_address
+    tempvar drawer_contract_address
     %{ ids.drawer_contract_address = context.drawer_contract_address %}
 
-# Get current color
+    # Get current color
     let (pixel_color : PixelColor) = IPixelDrawer.pixelColor(drawer_contract_address, Uint256(1, 0))
     assert pixel_color.set = 0  # Unset
     assert pixel_color.color = Color(0, 0, 0)
 
-%{ stop_prank_drawer = start_prank(123456, target_contract_address=ids.drawer_contract_address) %}
+    %{ stop_prank_drawer = start_prank(123456, target_contract_address=ids.drawer_contract_address) %}
 
-# Minting first pixel
+    # Minting first pixel
     IPixelERC721.mint(contract_address=pixel_contract_address, to=123456)
 
-# Pixel owner can draw pixel with right color
+    # Pixel owner can draw pixel with right color
     IPixelDrawer.setPixelColor(drawer_contract_address, Uint256(1, 0), Color(255, 0, 100))
 
-# Check pixel color has been set
+    # Check pixel color has been set
     let (pixel_color : PixelColor) = IPixelDrawer.pixelColor(drawer_contract_address, Uint256(1, 0))
     assert pixel_color.set = 1  # Set
     assert pixel_color.color = Color(255, 0, 100)
 
-# Pixel owner can set pixel color again
+    # Pixel owner can set pixel color again
     IPixelDrawer.setPixelColor(drawer_contract_address, Uint256(1, 0), Color(100, 23, 190))
 
-# Check pixel color has been set over
+    # Check pixel color has been set over
     let (pixel_color : PixelColor) = IPixelDrawer.pixelColor(drawer_contract_address, Uint256(1, 0))
     assert pixel_color.set = 1  # Set
     assert pixel_color.color = Color(100, 23, 190)
 
-%{ stop_prank_drawer() %}
+    %{ stop_prank_drawer() %}
     return ()
 end
 

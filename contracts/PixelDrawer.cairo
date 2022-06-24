@@ -33,6 +33,10 @@ end
 func current_drawing_timestamp() -> (timestamp : felt):
 end
 
+@storage_var
+func current_drawing_round() -> (round : felt):
+end
+
 #
 # Constructor
 #
@@ -80,6 +84,13 @@ func currentDrawingTimestamp{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, r
     ) -> (timestamp : felt):
     let (timestamp) = current_drawing_timestamp.read()
     return (timestamp=timestamp)
+end
+
+@view
+func currentDrawingRound{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
+    ) -> (round : felt):
+    let (round) = current_drawing_round.read()
+    return (round=round)
 end
 
 #
@@ -158,6 +169,18 @@ func shuffle_pixel_positions{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, r
     return ()
 end
 
+func launch_new_round_if_necessary{
+    syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
+}():
+    let (contract_address : felt) = pixel_erc721.read()
+    let (token_id : Uint256) = IPixelERC721.maxSupply(contract_address=contract_address)
+
+    # We go over all the tokens, and for each one we determine
+    # a new position (= pixel index)
+    _shuffle_pixel_position(token_id, token_id.low, is_initial_shuffle)
+    return ()
+end
+
 #
 # Externals
 #
@@ -189,6 +212,8 @@ func start{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}():
     shuffle_pixel_positions(TRUE)
     let (block_timestamp) = get_block_timestamp()
     current_drawing_timestamp.write(block_timestamp)
+    let (current_round) = current_drawing_round.read()
+    current_drawing_round.write(current_round + 1)
 
     return ()
 end

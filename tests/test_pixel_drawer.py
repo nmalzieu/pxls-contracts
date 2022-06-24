@@ -77,6 +77,10 @@ async def test_pixel_drawer_getters(setup: Setup):
     execution_info = await setup.pixel_contract.pixelDrawerAddress().call()
     assert execution_info.result == (setup.drawer_contract.contract_address,)
 
+    execution_info = await setup.drawer_contract.currentDrawingTimestamp().call()
+    # Timestamp is returning 0 right now, to test on devnet
+    assert execution_info.result == (0,)
+
 
 @pytest.mark.asyncio
 async def test_pixel_drawer_pixel_owner(setup: Setup):

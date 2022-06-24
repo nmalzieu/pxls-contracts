@@ -51,7 +51,7 @@ func test_pixel_drawer_getters{syscall_ptr : felt*, range_check_ptr, pedersen_pt
     let (d_address) = IPixelERC721.pixelDrawerAddress(contract_address=pixel_contract_address)
     assert d_address = drawer_contract_address
 
-    let (round) = IPixelDrawer.currentDrawingRound()
+    let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
     assert round = 1
 
     # Timestamp must have been set to the deployment timestamp

@@ -169,18 +169,6 @@ func shuffle_pixel_positions{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, r
     return ()
 end
 
-func launch_new_round_if_necessary{
-    syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
-}():
-    let (contract_address : felt) = pixel_erc721.read()
-    let (token_id : Uint256) = IPixelERC721.maxSupply(contract_address=contract_address)
-
-    # We go over all the tokens, and for each one we determine
-    # a new position (= pixel index)
-    _shuffle_pixel_position(token_id, token_id.low, is_initial_shuffle)
-    return ()
-end
-
 #
 # Externals
 #

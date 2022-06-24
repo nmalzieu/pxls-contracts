@@ -11,16 +11,7 @@ from openzeppelin.token.erc721.interfaces.IERC721 import IERC721
 from openzeppelin.security.initializable import Initializable
 
 from libs.colors import Color, PixelColor, assert_valid_color
-
-#
-# Interfaces
-#
-
-@contract_interface
-namespace IPixelERC721:
-    func maxSupply() -> (count : Uint256):
-    end
-end
+from contracts.interfaces import IPixelERC721
 
 #
 # Storage

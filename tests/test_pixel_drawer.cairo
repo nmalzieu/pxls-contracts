@@ -3,38 +3,7 @@
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.uint256 import Uint256
 from libs.colors import Color, PixelColor
-
-@contract_interface
-namespace IPixelERC721:
-    func pixelDrawerAddress() -> (address : felt):
-    end
-    func initialize(pixel_drawer_address : felt):
-    end
-    func matrixSize() -> (size : Uint256):
-    end
-    func maxSupply() -> (count : Uint256):
-    end
-    func totalSupply() -> (count : Uint256):
-    end
-    func mint(to : felt):
-    end
-end
-
-@contract_interface
-namespace IPixelDrawer:
-    func start():
-    end
-    func pixelERC721Address() -> (address : felt):
-    end
-    func setPixelColor(tokenId : Uint256, color : Color):
-    end
-    func pixelColor(tokenId : Uint256) -> (color : PixelColor):
-    end
-    func currentDrawingTimestamp() -> (timestamp : felt):
-    end
-    func tokenPixelIndex(tokenId : Uint256) -> (pixelIndex : felt):
-    end
-end
+from contracts.interfaces import IPixelERC721, IPixelDrawer
 
 @view
 func __setup__{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():

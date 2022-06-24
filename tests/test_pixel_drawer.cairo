@@ -7,7 +7,6 @@ from starkware.cairo.common.bool import TRUE, FALSE
 from libs.colors import Color, PixelColor
 from contracts.interfaces import IPixelERC721, IPixelDrawer
 
-
 @view
 func __setup__{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
     let name = 'Pixel'
@@ -164,7 +163,7 @@ func test_pixel_drawer_set_pixel_color{
 
     # Check pixel color has been set
     let (pixel_color : PixelColor) = IPixelDrawer.pixelColor(drawer_contract_address, Uint256(1, 0))
-    assert pixel_color.set = 1  # Set
+    assert pixel_color.set = TRUE  # Set
     assert pixel_color.color = Color(255, 0, 100)
 
     # Pixel owner can set pixel color again
@@ -172,7 +171,7 @@ func test_pixel_drawer_set_pixel_color{
 
     # Check pixel color has been set over
     let (pixel_color : PixelColor) = IPixelDrawer.pixelColor(drawer_contract_address, Uint256(1, 0))
-    assert pixel_color.set = 1  # Set
+    assert pixel_color.set = TRUE  # Set
     assert pixel_color.color = Color(100, 23, 190)
 
     %{ stop_prank_drawer() %}
@@ -214,7 +213,9 @@ func test_pixel_launch_new_round_if_necessary{
     let new_timestamp = 'start_timestamp' + (23 * 3600)
     %{ warp(ids.new_timestamp, context.drawer_contract_address) %}
 
-    let (launched) = IPixelDrawer.launchNewRoundIfNecessary(contract_address=drawer_contract_address)
+    let (launched) = IPixelDrawer.launchNewRoundIfNecessary(
+        contract_address=drawer_contract_address
+    )
     assert launched = FALSE
 
     let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
@@ -225,7 +226,9 @@ func test_pixel_launch_new_round_if_necessary{
     let new_timestamp = 'start_timestamp' + (25 * 3600)
     %{ warp(ids.new_timestamp, context.drawer_contract_address) %}
 
-    let (launched) = IPixelDrawer.launchNewRoundIfNecessary(contract_address=drawer_contract_address)
+    let (launched) = IPixelDrawer.launchNewRoundIfNecessary(
+        contract_address=drawer_contract_address
+    )
     assert launched = TRUE
 
     let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
@@ -240,7 +243,6 @@ func test_pixel_launch_new_round_if_necessary{
 
     return ()
 end
-
 
 @view
 func test_pixel_drawing_launches_new_round{
@@ -291,6 +293,64 @@ func test_pixel_drawing_launches_new_round{
     assert round = 2
 
     %{ stop_prank_drawer() %}
+
+    return ()
+end
+
+@view
+func test_pixel_index_to_pixel_color_with_rounds{
+    syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
+}():
+    tempvar pixel_contract_address
+    %{ ids.pixel_contract_address = context.pixel_contract_address %}
+
+    tempvar drawer_contract_address
+    %{ ids.drawer_contract_address = context.drawer_contract_address %}
+
+    # after calling start() in setup, we're at round 1
+
+    let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
+    assert round = 1
+
+    tempvar account
+    %{ ids.account = context.account %}
+
+    %{ stop_prank_drawer = start_prank(context.account, target_contract_address=ids.drawer_contract_address) %}
+
+    # Minting first pixel
+    IPixelERC721.mint(contract_address=pixel_contract_address, to=account)
+
+    # Pixel owner can draw pixel
+    IPixelDrawer.setPixelColor(drawer_contract_address, Uint256(1, 0), Color(255, 0, 100))
+
+    # 25 hour is enough to launch new round
+
+    let new_timestamp = 'start_timestamp' + (25 * 3600)
+    %{ warp(ids.new_timestamp, context.drawer_contract_address) %}
+
+    # Drawing pixel after 1 day launches new round
+    IPixelDrawer.setPixelColor(drawer_contract_address, Uint256(1, 0), Color(123, 200, 0))
+
+    let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
+    assert round = 2
+
+    %{ stop_prank_drawer() %}
+
+    # We know pixel #1 position is 378 for round 1, then 199 for round 2
+    # let's check if pixel color history is well saved in the state
+
+    let (round_1_color : PixelColor) = IPixelDrawer.pixelIndexToPixelColor(
+        contract_address=drawer_contract_address, round=1, pixelIndex=378
+    )
+    let (round_2_color : PixelColor) = IPixelDrawer.pixelIndexToPixelColor(
+        contract_address=drawer_contract_address, round=2, pixelIndex=199
+    )
+
+    assert round_1_color.set = TRUE
+    assert round_1_color.color = Color(255, 0, 100)
+
+    assert round_2_color.set = TRUE
+    assert round_2_color.color = Color(123, 200, 0)
 
     return ()
 end

@@ -37,4 +37,6 @@ namespace IPixelDrawer:
     end
     func launchNewRoundIfNecessary() -> (launched : felt):
     end
+    func pixelIndexToPixelColor(round : felt, pixelIndex : felt) -> (color : PixelColor):
+    end
 end

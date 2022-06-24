@@ -23,7 +23,7 @@ func pixel_erc721() -> (address : felt):
 end
 
 @storage_var
-func current_drawing(pixel_index : felt) -> (color : PixelColor):
+func pixel_index_to_pixel_color(drawing_round : felt, pixel_index : felt) -> (color : PixelColor):
 end
 
 @storage_var
@@ -76,7 +76,8 @@ func pixelColor{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_pt
     tokenId : Uint256
 ) -> (color : PixelColor):
     let (pixel_index) = tokenPixelIndex(tokenId)
-    let (color) = current_drawing.read(pixel_index)
+    let (round) = current_drawing_round.read()
+    let (color) = pixel_index_to_pixel_color.read(round, pixel_index)
     return (color=color)
 end
 
@@ -93,6 +94,14 @@ func currentDrawingRound{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range
 ):
     let (round) = current_drawing_round.read()
     return (round=round)
+end
+
+@view
+func pixelIndexToPixelColor{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
+    round : felt, pixelIndex : felt
+) -> (color : PixelColor):
+    let (color) = pixel_index_to_pixel_color.read(round, pixelIndex)
+    return (color=color)
 end
 
 #
@@ -236,7 +245,8 @@ func setPixelColor{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check
     let pixel_color = PixelColor(set=TRUE, color=color)
 
     let (pixel_index) = tokenPixelIndex(tokenId)
-    current_drawing.write(pixel_index, pixel_color)
+    let (round) = current_drawing_round.read()
+    pixel_index_to_pixel_color.write(round, pixel_index, pixel_color)
     return ()
 end
 

@@ -12,9 +12,6 @@ pixel_drawer = [
     "./contracts/PixelDrawer.cairo"
 ]
 
-["protostar.build"]
-cairo_path = ["./libs/cairo_contracts/src"]
-
 [profile.devnet.protostar.deploy]
 gateway_url="http://127.0.0.1:5050/"
 

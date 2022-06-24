@@ -123,10 +123,10 @@ end
 
 @view
 func matrixSize{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}() -> (
-    count : Uint256
+    size : Uint256
 ):
-    let (count : Uint256) = matrix_size.read()
-    return (count)
+    let (size : Uint256) = matrix_size.read()
+    return (size)
 end
 
 @view

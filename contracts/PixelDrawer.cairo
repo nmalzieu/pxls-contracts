@@ -8,8 +8,9 @@ from starkware.starknet.common.syscalls import get_caller_address, get_block_tim
 # TODO => remove ownable ?
 from openzeppelin.access.ownable import Ownable
 from openzeppelin.token.erc721.interfaces.IERC721 import IERC721
+from openzeppelin.security.initializable import Initializable
 
-from libs.colors import Color, assert_valid_color
+from libs.colors import Color, PixelColor, assert_valid_color
 
 #
 # Interfaces
@@ -19,16 +20,6 @@ from libs.colors import Color, assert_valid_color
 namespace IPixelERC721:
     func maxSupply() -> (count : Uint256):
     end
-end
-
-#
-# Struct
-#
-
-struct PixelColor:
-    # Adding "set" to avoid unset pixels to be considered black
-    member set : felt
-    member color : Color
 end
 
 #
@@ -61,9 +52,6 @@ func constructor{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_p
 ):
     Ownable.initializer(owner)
     pixel_erc721.write(pixel_erc721_address)
-    shuffle_pixel_positions(TRUE)
-    let (block_timestamp) = get_block_timestamp()
-    current_drawing_timestamp.write(block_timestamp)
     return ()
 end
 
@@ -194,5 +182,22 @@ func setPixelColor{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check
 
     let (pixel_index) = tokenPixelIndex(tokenId)
     current_drawing.write(pixel_index, pixel_color)
+    return ()
+end
+
+@external
+func start{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}():
+    Ownable.assert_only_owner()
+    let (initialized) = Initializable.initialized()
+    with_attr error_message("Drawer contract already started"):
+        assert initialized = FALSE
+    end
+
+    Initializable.initialize()
+
+    shuffle_pixel_positions(TRUE)
+    let (block_timestamp) = get_block_timestamp()
+    current_drawing_timestamp.write(block_timestamp)
+
     return ()
 end

@@ -5,6 +5,7 @@ from starkware.cairo.common.math import unsigned_div_rem
 from starkware.cairo.common.math_cmp import is_le
 from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.starknet.common.syscalls import get_caller_address, get_block_timestamp
+from starkware.cairo.common.alloc import alloc
 
 # TODO => remove ownable ?
 from openzeppelin.access.ownable import Ownable
@@ -226,6 +227,20 @@ func launch_new_round_if_necessary{
     end
 end
 
+func get_grid{
+    syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
+}(round : felt, pixel_index : felt, max_supply : felt, grid_len : felt, grid : felt*) -> (grid_len : felt):
+    if pixel_index == max_supply:
+        return (grid_len=grid_len)
+    end
+    let (pixel_color : PixelColor) = pixel_index_to_pixel_color.read(round, pixel_index)
+    assert grid[grid_len] = pixel_color.set
+    assert grid[grid_len + 1] = pixel_color.color.red
+    assert grid[grid_len + 2] = pixel_color.color.green
+    assert grid[grid_len + 3] = pixel_color.color.blue
+    return get_grid(round=round, pixel_index=pixel_index + 1, max_supply=max_supply, grid_len=grid_len + 4, grid=grid)
+end
+
 #
 # Externals
 #
@@ -272,4 +287,16 @@ func launchNewRoundIfNecessary{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*,
     # Method to just launch a new round with drawing a pixel
     let (launched) = launch_new_round_if_necessary()
     return (launched=launched)
+end
+
+@external
+func getGrid{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(round : felt) -> (
+    grid_len : felt, grid : felt*
+):
+    alloc_locals
+    let (contract_address : felt) = pixel_erc721.read()
+    let (max_supply : Uint256) = IPixelERC721.maxSupply(contract_address=contract_address)
+    let (local grid : felt*) = alloc()
+    let (grid_len : felt) = get_grid(round=round, pixel_index=0, max_supply=max_supply.low, grid_len=0, grid=grid)
+    return (grid_len=grid_len, grid=grid)
 end

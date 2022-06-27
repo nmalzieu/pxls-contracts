@@ -21,8 +21,8 @@ end
 
 @view
 func __setup__{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
-    let name = 'Pixel'
-    let symbol = 'PXL'
+    let name = 'PXLS'
+    let symbol = 'PXLS'
     let account = 123456
     %{ context.pixel_contract_address = deploy_contract("contracts/PixelERC721.cairo", [ids.name, ids.symbol, ids.account, 2, 0]).contract_address %}
     return ()

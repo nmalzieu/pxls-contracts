@@ -332,11 +332,11 @@ func test_pixel_index_to_pixel_color_with_rounds{
         contract_address=drawer_contract_address
     )
 
-    # Drawing pixel after launching new round
-    IPixelDrawer.setPixelColor(drawer_contract_address, Uint256(1, 0), Color(123, 200, 0))
-
     let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
     assert round = 2
+
+    # Drawing pixel after launching new round
+    IPixelDrawer.setPixelColor(drawer_contract_address, Uint256(1, 0), Color(123, 200, 0))
 
     %{ stop_prank_drawer() %}
 
@@ -355,6 +355,78 @@ func test_pixel_index_to_pixel_color_with_rounds{
 
     assert round_2_color.set = TRUE
     assert round_2_color.color = Color(123, 200, 0)
+
+    return ()
+end
+
+@view
+func test_pixel_get_grid{
+    syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
+}():
+    tempvar pixel_contract_address
+    %{ ids.pixel_contract_address = context.pixel_contract_address %}
+
+    tempvar drawer_contract_address
+    %{ ids.drawer_contract_address = context.drawer_contract_address %}
+
+    # after calling start() in setup, we're at round 1
+
+    let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
+    assert round = 1
+
+    tempvar account
+    %{ ids.account = context.account %}
+
+    %{ stop_prank_drawer = start_prank(context.account, target_contract_address=ids.drawer_contract_address) %}
+
+    # Minting first pixel
+    IPixelERC721.mint(contract_address=pixel_contract_address, to=account)
+
+    # Pixel owner can draw pixel
+    IPixelDrawer.setPixelColor(drawer_contract_address, Uint256(1, 0), Color(255, 0, 100))
+
+    # 25 hour is enough to launch new round
+
+    let new_timestamp = 'start_timestamp' + (25 * 3600)
+    %{ warp(ids.new_timestamp, context.drawer_contract_address) %}
+
+    # Launch new round
+
+    IPixelDrawer.launchNewRoundIfNecessary(
+        contract_address=drawer_contract_address
+    )
+
+    let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
+    assert round = 2
+
+    # Drawing pixel after launching new round
+    IPixelDrawer.setPixelColor(drawer_contract_address, Uint256(1, 0), Color(123, 200, 0))
+
+    %{ stop_prank_drawer() %}
+
+    # We know pixel #1 position is 378 for round 1, then 199 for round 2
+    # let's check if pixel color history is well saved in the state
+
+    let (grid_1_len : felt, grid_1 : felt*) = IPixelDrawer.getGrid(contract_address=drawer_contract_address, round=1)
+    let (grid_2_len : felt, grid_2 : felt*) = IPixelDrawer.getGrid(contract_address=drawer_contract_address, round=2)
+
+    # Length is # of pixel * 4 (see PixelColor struct)
+    assert 20 * 20 * 4 = grid_1_len
+    assert 20 * 20 * 4 = grid_2_len
+
+    # Pixel 378 of round 1 set to 255, 0, 100
+
+    assert TRUE = grid_1[378 * 4]
+    assert 255 = grid_1[378 * 4 + 1]
+    assert 0 = grid_1[378 * 4 + 2]
+    assert 100 = grid_1[378 * 4 + 3]
+
+    # Pixel 199 of round 2 set to 123, 200, 0
+
+    assert TRUE = grid_2[199 * 4]
+    assert 123 = grid_2[199 * 4 + 1]
+    assert 200 = grid_2[199 * 4 + 2]
+    assert 0 = grid_2[199 * 4 + 3]
 
     return ()
 end

@@ -39,4 +39,6 @@ namespace IPixelDrawer:
     end
     func pixelIndexToPixelColor(round : felt, pixelIndex : felt) -> (color : PixelColor):
     end
+    func getGrid(round : felt) -> (grid_len : felt, grid : felt*):
+    end
 end

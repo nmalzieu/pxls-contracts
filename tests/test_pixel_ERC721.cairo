@@ -105,6 +105,12 @@ func test_pixel_erc721_mint{syscall_ptr : felt*, range_check_ptr, pedersen_ptr :
     assert total_supply.low = 1
     assert total_supply.high = 0
 
+    # Check that can't mint a second one
+
+    %{ expect_revert(error_message="123456 already owns a pixel") %}
+
+    IPixelERC721.mint(contract_address=pixel_contract_address, to=123456)
+
     %{ stop_prank() %}
     return ()
 end
@@ -121,9 +127,9 @@ func test_pixel_erc721_max_supply{
     # Let's mint 3 more so we get to max supply
 
     IPixelERC721.mint(contract_address=pixel_contract_address, to=123456)
-    IPixelERC721.mint(contract_address=pixel_contract_address, to=123456)
-    IPixelERC721.mint(contract_address=pixel_contract_address, to=123456)
-    IPixelERC721.mint(contract_address=pixel_contract_address, to=123456)
+    IPixelERC721.mint(contract_address=pixel_contract_address, to=123457)
+    IPixelERC721.mint(contract_address=pixel_contract_address, to=123458)
+    IPixelERC721.mint(contract_address=pixel_contract_address, to=123459)
 
     # Check that minted pixels count is 4
 
@@ -133,7 +139,7 @@ func test_pixel_erc721_max_supply{
 
     # Check that once max supply is reached we can't mint anymore
     %{ expect_revert(error_message="Total pixel supply has already been minted") %}
-    IPixelERC721.mint(contract_address=pixel_contract_address, to=123456)
+    IPixelERC721.mint(contract_address=pixel_contract_address, to=123460)
 
     %{ stop_prank() %}
     return ()

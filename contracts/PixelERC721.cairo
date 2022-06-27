@@ -1,8 +1,9 @@
 %lang starknet
 
 from starkware.cairo.common.cairo_builtins import HashBuiltin, SignatureBuiltin
-from starkware.cairo.common.uint256 import Uint256, uint256_lt
+from starkware.cairo.common.uint256 import Uint256, uint256_lt, uint256_eq
 from starkware.cairo.common.bool import TRUE, FALSE
+from starkware.starknet.common.syscalls import get_caller_address
 
 from openzeppelin.token.erc721.library import ERC721
 from openzeppelin.introspection.ERC165 import ERC165
@@ -185,6 +186,14 @@ end
 @external
 func mint{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(to : felt):
     alloc_locals
+
+    # Ensures a pixel holder cannot mint
+    let (local balance : Uint256) = balanceOf(to)
+    let (local owns_0) = uint256_eq(balance, Uint256(0, 0))
+
+    with_attr error_message("{to} already owns a pixel"):
+        assert owns_0 = TRUE
+    end
 
     # Ensures no more than PIXEL_COUNT pixels can be minted
     let (local lastTokenId : Uint256) = totalSupply()

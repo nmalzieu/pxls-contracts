@@ -245,7 +245,7 @@ func test_pixel_launch_new_round_if_necessary{
 end
 
 @view
-func test_pixel_drawing_launches_new_round{
+func test_pixel_drawing_fails_if_old_round{
     syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
 }():
     tempvar pixel_contract_address
@@ -286,11 +286,9 @@ func test_pixel_drawing_launches_new_round{
     let new_timestamp = 'start_timestamp' + (25 * 3600)
     %{ warp(ids.new_timestamp, context.drawer_contract_address) %}
 
-    # Drawing pixel after 1 day launches new round
+    # Drawing pixel after 1 day fails if no new round has been launched
+    %{ expect_revert(error_message="This drawing round is finished, please launch a new one") %}
     IPixelDrawer.setPixelColor(drawer_contract_address, Uint256(1, 0), Color(255, 0, 100))
-
-    let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
-    assert round = 2
 
     %{ stop_prank_drawer() %}
 
@@ -328,7 +326,13 @@ func test_pixel_index_to_pixel_color_with_rounds{
     let new_timestamp = 'start_timestamp' + (25 * 3600)
     %{ warp(ids.new_timestamp, context.drawer_contract_address) %}
 
-    # Drawing pixel after 1 day launches new round
+    # Launch new round
+
+    IPixelDrawer.launchNewRoundIfNecessary(
+        contract_address=drawer_contract_address
+    )
+
+    # Drawing pixel after launching new round
     IPixelDrawer.setPixelColor(drawer_contract_address, Uint256(1, 0), Color(123, 200, 0))
 
     let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)

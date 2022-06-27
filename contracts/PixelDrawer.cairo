@@ -105,6 +105,18 @@ func pixelIndexToPixelColor{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, ra
     return (color=color)
 end
 
+@view
+func getGrid{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(round : felt) -> (
+    grid_len : felt, grid : felt*
+):
+    alloc_locals
+    let (contract_address : felt) = pixel_erc721.read()
+    let (max_supply : Uint256) = IPixelERC721.maxSupply(contract_address=contract_address)
+    let (local grid : felt*) = alloc()
+    let (grid_len : felt) = get_grid(round=round, pixel_index=0, max_supply=max_supply.low, grid_len=0, grid=grid)
+    return (grid_len=grid_len, grid=grid)
+end
+
 #
 # Helpers
 #
@@ -287,16 +299,4 @@ func launchNewRoundIfNecessary{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*,
     # Method to just launch a new round with drawing a pixel
     let (launched) = launch_new_round_if_necessary()
     return (launched=launched)
-end
-
-@external
-func getGrid{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(round : felt) -> (
-    grid_len : felt, grid : felt*
-):
-    alloc_locals
-    let (contract_address : felt) = pixel_erc721.read()
-    let (max_supply : Uint256) = IPixelERC721.maxSupply(contract_address=contract_address)
-    let (local grid : felt*) = alloc()
-    let (grid_len : felt) = get_grid(round=round, pixel_index=0, max_supply=max_supply.low, grid_len=0, grid=grid)
-    return (grid_len=grid_len, grid=grid)
 end

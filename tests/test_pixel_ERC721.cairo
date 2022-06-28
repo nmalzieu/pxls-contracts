@@ -2,22 +2,8 @@
 
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.uint256 import Uint256
+from contracts.interfaces import IPixelERC721
 
-@contract_interface
-namespace IPixelERC721:
-    func pixelDrawerAddress() -> (address : felt):
-    end
-    func initialize(pixel_drawer_address : felt):
-    end
-    func matrixSize() -> (size : Uint256):
-    end
-    func maxSupply() -> (count : Uint256):
-    end
-    func totalSupply() -> (count : Uint256):
-    end
-    func mint(to : felt):
-    end
-end
 
 @view
 func __setup__{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
@@ -124,7 +110,7 @@ func test_pixel_erc721_max_supply{
 
     %{ stop_prank = start_prank(123456, target_contract_address=ids.pixel_contract_address) %}
 
-    # Let's mint 3 more so we get to max supply
+    # Let's mint 4 so we get to max supply
 
     IPixelERC721.mint(contract_address=pixel_contract_address, to=123456)
     IPixelERC721.mint(contract_address=pixel_contract_address, to=123457)
@@ -142,5 +128,49 @@ func test_pixel_erc721_max_supply{
     IPixelERC721.mint(contract_address=pixel_contract_address, to=123460)
 
     %{ stop_prank() %}
+    return ()
+end
+
+
+@view
+func test_pixel_erc721_pixels_of_owner{
+    syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
+}():
+    tempvar pixel_contract_address
+    %{ ids.pixel_contract_address = context.pixel_contract_address %}
+
+
+    # Let's mint 3 to 3  different addresses
+
+    IPixelERC721.mint(contract_address=pixel_contract_address, to=123456)
+    IPixelERC721.mint(contract_address=pixel_contract_address, to=123457)
+    IPixelERC721.mint(contract_address=pixel_contract_address, to=123458)
+
+    # Let's check that first address has 1
+
+    let (owned_pixels_123456_len, owned_pixels_123456 : felt*) = IPixelERC721.pixelsOfOwner(pixel_contract_address, 123456)
+    assert 1 = owned_pixels_123456_len
+
+    # Let's transfer from 123456 to 123458
+
+    %{ stop_prank = start_prank(123456, target_contract_address=ids.pixel_contract_address) %}
+
+    IPixelERC721.transferFrom(pixel_contract_address, 123456, 123458, Uint256(owned_pixels_123456[0], 0))
+
+    %{ stop_prank() %}
+
+    # Let's check transfer worked
+
+    let (owned_pixels_123456_len, owned_pixels_123456 : felt*) = IPixelERC721.pixelsOfOwner(pixel_contract_address, 123456)
+    assert 0 = owned_pixels_123456_len
+
+    let (owned_pixels_123458_len, owned_pixels_123458 : felt*) = IPixelERC721.pixelsOfOwner(pixel_contract_address, 123458)
+    assert 2 = owned_pixels_123458_len
+
+    # 123458 first minted the 3rd pixel
+    assert 3 = owned_pixels_123458[0]
+    # then got the 1st pixel transfered
+    assert 1 = owned_pixels_123458[1]
+
     return ()
 end

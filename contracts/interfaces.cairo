@@ -17,6 +17,10 @@ namespace IPixelERC721:
     end
     func mint(to : felt):
     end
+    func pixelsOfOwner(owner : felt) -> (pixels_len : felt, pixels : felt*):
+    end
+    func transferFrom(from_ : felt, to : felt, tokenId : Uint256):
+    end
 end
 
 @contract_interface

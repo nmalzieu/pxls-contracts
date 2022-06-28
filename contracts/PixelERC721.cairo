@@ -4,8 +4,10 @@ from starkware.cairo.common.cairo_builtins import HashBuiltin, SignatureBuiltin
 from starkware.cairo.common.uint256 import Uint256, uint256_lt, uint256_eq
 from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.starknet.common.syscalls import get_caller_address
+from starkware.cairo.common.alloc import alloc
 
 from openzeppelin.token.erc721.library import ERC721
+from openzeppelin.token.erc721_enumerable.library import ERC721_Enumerable
 from openzeppelin.introspection.ERC165 import ERC165
 
 from openzeppelin.access.ownable import Ownable
@@ -38,6 +40,7 @@ func constructor{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_p
     name : felt, symbol : felt, owner : felt, m_size : Uint256
 ):
     ERC721.initializer(name, symbol)
+    ERC721_Enumerable.initializer()
     Ownable.initializer(owner)
     matrix_size.write(m_size)
     return ()
@@ -171,7 +174,7 @@ end
 func transferFrom{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
     from_ : felt, to : felt, tokenId : Uint256
 ):
-    ERC721.transfer_from(from_, to, tokenId)
+    ERC721_Enumerable.transfer_from(from_, to, tokenId)
     return ()
 end
 
@@ -179,7 +182,7 @@ end
 func safeTransferFrom{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
     from_ : felt, to : felt, tokenId : Uint256, data_len : felt, data : felt*
 ):
-    ERC721.safe_transfer_from(from_, to, tokenId, data_len, data)
+    ERC721_Enumerable.safe_transfer_from(from_, to, tokenId, data_len, data)
     return ()
 end
 
@@ -207,7 +210,7 @@ func mint{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(to 
     let (local newTokenId : Uint256) = SafeUint256.add(lastTokenId, Uint256(1, 0))
 
     minted_count.write(newTokenId)
-    ERC721._mint(to, newTokenId)
+    ERC721_Enumerable._mint(to, newTokenId)
 
     return ()
 end
@@ -236,6 +239,17 @@ func renounceOwnership{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_c
 end
 
 @external
+func pixelsOfOwner{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    owner : felt
+) -> (pixels_len : felt, pixels : felt*):
+    alloc_locals
+    let (pixels : felt*) = alloc()
+    let (balance : Uint256) = ERC721.balance_of(owner)
+    get_all_pixels_of_owner(owner, 0, balance.low, pixels)
+    return (pixels_len=balance.low, pixels=pixels)
+end
+
+@external
 func initialize{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
     pixel_drawer_address : felt
 ):
@@ -248,4 +262,21 @@ func initialize{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_pt
     Initializable.initialize()
     pixel_drawer.write(pixel_drawer_address)
     return ()
+end
+
+#
+# Helpers
+#
+
+func get_all_pixels_of_owner{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    owner : felt, index : felt, balance : felt, pixels : felt*
+) -> ():
+    if index == balance:
+        return ()
+    end
+    let (tokenId : Uint256) = ERC721_Enumerable.token_of_owner_by_index(
+        owner=owner, index=Uint256(low=index, high=0)
+    )
+    assert pixels[index] = tokenId.low
+    return get_all_pixels_of_owner(owner, index + 1, balance, pixels)
 end

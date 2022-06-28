@@ -11,7 +11,6 @@ from openzeppelin.token.erc721_enumerable.library import ERC721_Enumerable
 from openzeppelin.introspection.ERC165 import ERC165
 
 from openzeppelin.access.ownable import Ownable
-# TODO => remove ownable?
 from openzeppelin.security.safemath import SafeUint256
 from openzeppelin.security.initializable import Initializable
 

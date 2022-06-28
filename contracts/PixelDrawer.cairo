@@ -7,7 +7,6 @@ from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.starknet.common.syscalls import get_caller_address, get_block_timestamp
 from starkware.cairo.common.alloc import alloc
 
-# TODO => remove ownable ?
 from openzeppelin.access.ownable import Ownable
 from openzeppelin.token.erc721.interfaces.IERC721 import IERC721
 from openzeppelin.security.initializable import Initializable
@@ -62,6 +61,12 @@ func pixelERC721Address{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_
 ):
     let (address : felt) = pixel_erc721.read()
     return (address=address)
+end
+
+@view
+func owner{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}() -> (owner : felt):
+    let (owner : felt) = Ownable.owner()
+    return (owner)
 end
 
 @view

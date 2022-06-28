@@ -15,46 +15,6 @@ func __setup__{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
 end
 
 @view
-func test_pixel_erc721_initializable{
-    syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
-}():
-    tempvar pixel_contract_address
-    %{ ids.pixel_contract_address = context.pixel_contract_address %}
-
-    # Drawer address must be 0
-
-    let (pixel_drawer_address) = IPixelERC721.pixelDrawerAddress(
-        contract_address=pixel_contract_address
-    )
-    assert pixel_drawer_address = 0
-
-    # Set drawer address
-
-    %{ stop_prank = start_prank(123456, target_contract_address=ids.pixel_contract_address) %}
-
-    IPixelERC721.initialize(
-        contract_address=pixel_contract_address, pixel_drawer_address='pixel_drawer_address'
-    )
-
-    # Drawer address must have been set
-
-    let (pixel_drawer_address) = IPixelERC721.pixelDrawerAddress(
-        contract_address=pixel_contract_address
-    )
-    assert pixel_drawer_address = 'pixel_drawer_address'
-
-    # Drawer address cannot be set again
-
-    %{ expect_revert(error_message="Pixel contract already initialized") %}
-    IPixelERC721.initialize(
-        contract_address=pixel_contract_address, pixel_drawer_address='pixel_drawer_address'
-    )
-
-    %{ stop_prank() %}
-    return ()
-end
-
-@view
 func test_pixel_erc721_getters{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
     tempvar pixel_contract_address
     %{ ids.pixel_contract_address = context.pixel_contract_address %}

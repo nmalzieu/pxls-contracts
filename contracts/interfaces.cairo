@@ -5,8 +5,6 @@ from libs.colors import Color, PixelColor
 
 @contract_interface
 namespace IPixelERC721:
-    func pixelDrawerAddress() -> (address : felt):
-    end
     func initialize(pixel_drawer_address : felt):
     end
     func matrixSize() -> (size : Uint256):

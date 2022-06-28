@@ -10,7 +10,6 @@ from openzeppelin.token.erc721.library import ERC721
 from openzeppelin.token.erc721_enumerable.library import ERC721_Enumerable
 from openzeppelin.introspection.ERC165 import ERC165
 
-from openzeppelin.access.ownable import Ownable
 from openzeppelin.security.safemath import SafeUint256
 from openzeppelin.security.initializable import Initializable
 
@@ -26,10 +25,6 @@ end
 func matrix_size() -> (size : Uint256):
 end
 
-@storage_var
-func pixel_drawer() -> (address : felt):
-end
-
 #
 # Constructor
 #
@@ -40,7 +35,6 @@ func constructor{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_p
 ):
     ERC721.initializer(name, symbol)
     ERC721_Enumerable.initializer()
-    Ownable.initializer(owner)
     matrix_size.write(m_size)
     return ()
 end
@@ -111,12 +105,6 @@ func tokenURI{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}
 end
 
 @view
-func owner{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}() -> (owner : felt):
-    let (owner : felt) = Ownable.owner()
-    return (owner)
-end
-
-@view
 func totalSupply{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}() -> (
     count : Uint256
 ):
@@ -142,11 +130,14 @@ func maxSupply{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
 end
 
 @view
-func pixelDrawerAddress{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}() -> (
-    address : felt
-):
-    let (address : felt) = pixel_drawer.read()
-    return (address=address)
+func pixelsOfOwner{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    owner : felt
+) -> (pixels_len : felt, pixels : felt*):
+    alloc_locals
+    let (pixels : felt*) = alloc()
+    let (balance : Uint256) = ERC721.balance_of(owner)
+    get_all_pixels_of_owner(owner, 0, balance.low, pixels)
+    return (pixels_len=balance.low, pixels=pixels)
 end
 
 #
@@ -218,50 +209,10 @@ end
 # func setTokenURI{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
 #     tokenId : Uint256, tokenURI : felt
 # ):
-#     Ownable.assert_only_owner()
 #     ERC721._set_token_uri(tokenId, tokenURI)
 #     return ()
 # end
 
-@external
-func transferOwnership{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    newOwner : felt
-):
-    Ownable.transfer_ownership(newOwner)
-    return ()
-end
-
-@external
-func renounceOwnership{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}():
-    Ownable.renounce_ownership()
-    return ()
-end
-
-@external
-func pixelsOfOwner{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    owner : felt
-) -> (pixels_len : felt, pixels : felt*):
-    alloc_locals
-    let (pixels : felt*) = alloc()
-    let (balance : Uint256) = ERC721.balance_of(owner)
-    get_all_pixels_of_owner(owner, 0, balance.low, pixels)
-    return (pixels_len=balance.low, pixels=pixels)
-end
-
-@external
-func initialize{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
-    pixel_drawer_address : felt
-):
-    Ownable.assert_only_owner()
-    let (initialized) = Initializable.initialized()
-    with_attr error_message("Pixel contract already initialized"):
-        assert initialized = FALSE
-    end
-
-    Initializable.initialize()
-    pixel_drawer.write(pixel_drawer_address)
-    return ()
-end
 
 #
 # Helpers

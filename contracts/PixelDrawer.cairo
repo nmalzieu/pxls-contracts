@@ -305,3 +305,18 @@ func launchNewRoundIfNecessary{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*,
     let (launched) = launch_new_round_if_necessary()
     return (launched=launched)
 end
+
+
+@external
+func transferOwnership{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    newOwner : felt
+):
+    Ownable.transfer_ownership(newOwner)
+    return ()
+end
+
+@external
+func renounceOwnership{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}():
+    Ownable.renounce_ownership()
+    return ()
+end

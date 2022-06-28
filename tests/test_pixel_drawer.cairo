@@ -26,10 +26,6 @@ func __setup__{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
     tempvar drawer_contract_address
     %{ ids.drawer_contract_address = context.drawer_contract_address %}
 
-    IPixelERC721.initialize(
-        contract_address=pixel_contract_address, pixel_drawer_address=drawer_contract_address
-    )
-
     # Warping time before starting the drawer contract
     let start_timestamp = 'start_timestamp'
     %{ warp(ids.start_timestamp, context.drawer_contract_address) %}
@@ -50,9 +46,6 @@ func test_pixel_drawer_getters{syscall_ptr : felt*, range_check_ptr, pedersen_pt
 
     let (p_address) = IPixelDrawer.pixelERC721Address(contract_address=drawer_contract_address)
     assert p_address = pixel_contract_address
-
-    let (d_address) = IPixelERC721.pixelDrawerAddress(contract_address=pixel_contract_address)
-    assert d_address = drawer_contract_address
 
     let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
     assert round = 1

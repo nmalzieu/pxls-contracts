@@ -11,6 +11,9 @@ pixel_erc721 = [
 pixel_drawer = [
     "./contracts/PixelDrawer.cairo"
 ]
+pxls_1_100 = [
+    "./contracts/pxls_metadata/pxls_1_100.cairo"
+]
 
 [profile.devnet.protostar.deploy]
 gateway_url="http://127.0.0.1:5050/"

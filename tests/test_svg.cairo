@@ -10,7 +10,7 @@ from contracts.pxls_metadata.svg import (
     svg_rects_from_pixel_grid,
     svg_start_from_grid_size,
 )
-from caistring.str import Str
+from caistring.str import Str, str_empty
 from libs.colors import Color
 
 @view
@@ -97,8 +97,9 @@ func test_svg_rects_from_pixel_grid{
     let (grid_location) = get_label_location(grid_label)
     let grid_array = cast(grid_location, felt*)
 
+    let (empty_str : Str) = str_empty()
     let (svg_rects_str : Str) = svg_rects_from_pixel_grid(
-        grid_size=2, grid_array_len=4, grid_array=grid_array, pixel_index=0
+        grid_size=2, grid_array_len=4, grid_array=grid_array, pixel_index=0, current_str=empty_str
     )
 
     assert 48 = svg_rects_str.arr_len

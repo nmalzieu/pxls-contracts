@@ -2,77 +2,49 @@
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.cairo.common.registers import get_label_location
-from contracts.pxls_metadata.pxls_colors import get_color_palette_name, get_color
 from contracts.pxls_metadata.pxls_metadata import get_palette_trait, get_pxl_json_metadata
 from caistring.str import Str
 
-# @view
-# func test_get_color_palette_name{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}(
-#     ):
-#     let (cyan : Str) = get_color_palette_name(0)
-#     assert 1 = cyan.arr_len
-#     assert 'cyan' = cyan.arr[0]
-#     return ()
-# end
+@view
+func test_get_palette_trait{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
+    # Palette 2 = magenta, 1 = "yes", with a comma at the end
+    let (trait : Str) = get_palette_trait(2, TRUE, FALSE)
+    # Result must be {"trait_type":"magenta","value":"yes"}
+    # in the form of 4 felts :
+    # {"trait_type":"
+    # magenta
+    # ","value":"yes"}
+    # ,
+    assert 4 = trait.arr_len
+    assert '{"trait_type":"' = trait.arr[0]
+    assert 'magenta' = trait.arr[1]
+    assert '","value":"yes"}' = trait.arr[2]
+    assert ',' = trait.arr[3]
+    return ()
+end
 
-# @view
-# func test_get_color{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
-#     # cyan = ["CCFFFF", "99FFFF", "66FFFF", "33FFFF", "00FFFF"]
-#     # blue = ["CCCCFF", "9999FF", "6666FF", "3333FF", "0000FF"]
-#     # magenta = ["FFCCFF", "FF99FF", "FF66FF", "FF33FF", "FF00FF"]
-#     # red = ["FFCCCC", "FF9999", "FF6666", "FF3333", "FF0000"]
-#     # yellow = ["FFFFCC", "FFFF99", "FFFF66", "FFFF33", "FFFF00"]
-#     # green = ["CCFFCC", "99FF99", "66FF66", "33FF33", "00FF00"]
+@view
+func test_get_pixel_metadata{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
+    let (pixel_metadata_len : felt, pixel_metadata : felt*) = sample_pixel_metadata(0)
 
-#     # Color 13 is supposed to be FF66FF = 255,102,255
-#     let (FF66FF) = get_color(12)
-#     assert 255 = FF66FF.red
-#     assert 102 = FF66FF.green
-#     assert 255 = FF66FF.blue
+    # First pxl has 4 palettes : "cyan","yellow","magenta","blue" = 0,4,2,1
+    assert 1 = pixel_metadata[0]
+    assert 1 = pixel_metadata[1]
+    assert 1 = pixel_metadata[2]
+    assert 0 = pixel_metadata[3]
+    assert 1 = pixel_metadata[4]
+    assert 0 = pixel_metadata[5]
 
-#     return ()
-# end
+    # First pxl has 400 colors: pixel_metadata[6] => pixel_metadata[405]
+    # Its 23rd color is #33FFFF . It is supposed to be stored at pixel_metadata[28]
+    # and its value is supposed to be the color index of 33FFFF which is 3 in our list
+    assert 3 = pixel_metadata[28]
 
-# @view
-# func test_get_palette_trait{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
-#     # Palette 2 = magenta, 1 = "yes", with a comma at the end
-#     let (trait : Str) = get_palette_trait(2, TRUE, FALSE)
-#     # Result must be {"trait_type":"magenta","value":"yes"}
-#     # in the form of 4 felts :
-#     # {"trait_type":"
-#     # magenta
-#     # ","value":"yes"}
-#     # ,
-#     assert 4 = trait.arr_len
-#     assert '{"trait_type":"' = trait.arr[0]
-#     assert 'magenta' = trait.arr[1]
-#     assert '","value":"yes"}' = trait.arr[2]
-#     assert ',' = trait.arr[3]
-#     return ()
-# end
-
-# @view
-# func test_get_pixel_metadata{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
-#     let (pixel_metadata_len : felt, pixel_metadata : felt*) = sample_pixel_metadata(0)
-
-#     # First pxl has 4 palettes : "cyan","yellow","magenta","blue" = 0,4,2,1
-#     assert 1 = pixel_metadata[0]
-#     assert 1 = pixel_metadata[1]
-#     assert 1 = pixel_metadata[2]
-#     assert 0 = pixel_metadata[3]
-#     assert 1 = pixel_metadata[4]
-#     assert 0 = pixel_metadata[5]
-
-#     # First pxl has 400 colors: pixel_metadata[6] => pixel_metadata[405]
-#     # Its 23rd color is #33FFFF . It is supposed to be stored at pixel_metadata[28]
-#     # and its value is supposed to be the color index of 33FFFF which is 3 in our list
-#     assert 3 = pixel_metadata[28]
-
-#     # Its last color is #FFCCFF . It is supposed to be stored at pixel_metadata[405]
-#     # and its value is supposed to be the color index of FFCCFF which is 10 in our list
-#     assert 10 = pixel_metadata[405]
-#     return ()
-# end
+    # Its last color is #FFCCFF . It is supposed to be stored at pixel_metadata[405]
+    # and its value is supposed to be the color index of FFCCFF which is 10 in our list
+    assert 10 = pixel_metadata[405]
+    return ()
+end
 
 @view
 func test_get_pxl_json_metadata{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}(

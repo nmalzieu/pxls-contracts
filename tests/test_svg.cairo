@@ -203,30 +203,435 @@ func test_svg_start_from_grid_size{
 end
 
 @view
-func test_svg_from_pixel_grid{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
+func test_svg_from_pixel_grid{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}(
+    ) -> (svg_str_len : felt, svg_str : felt*):
     # Testing the method for a 2 x 2 grid = 4 rects
 
     let (grid_location) = get_label_location(grid_label)
     let grid_array = cast(grid_location, felt*)
 
+    # 12 x 12 works, 20 x 20 raises OUT_OF_RESOURCES
+
     let (svg_str : Str) = svg_from_pixel_grid(grid_size=2, grid_array_len=4, grid_array=grid_array)
 
-    # 6 start, 48 rects, 1 end =
+    # 6 start, 400 rects of length 12, 1 end = 4807
+    # assert 4807 = svg_str.arr_len
+    # assert '<svg width="' = svg_str.arr[0]
+    # assert '<rect width="10" height="10" x=' = svg_str.arr[6]
+    # assert '</svg>' = svg_str.arr[4806]
+
+    # 6 start, 4 rects of length 12, 1 end = 55
     assert 55 = svg_str.arr_len
     assert '<svg width="' = svg_str.arr[0]
     assert '<rect width="10" height="10" x=' = svg_str.arr[6]
     assert '</svg>' = svg_str.arr[54]
 
-    return ()
+    return (svg_str_len=svg_str.arr_len, svg_str=svg_str.arr)
 
-    # Color 1 = index 0
-    # Color 2 = index 3
-    # Color 3 = index 12
-    # Color 4 = index 20
+    # Color 1 = index 7
+    # Color 2 = index 14
+    # Color 3 = index 11
+    # Color 4 = index 9
 
     grid_label:
+    dw 7
+    dw 14
+    dw 11
+    dw 9
+    dw 22
+    dw 8
+    dw 24
+    dw 8
+    dw 13
+    dw 8
+    dw 13
+    dw 1
+    dw 5
+    dw 22
+    dw 10
+    dw 0
+    dw 14
+    dw 14
+    dw 8
+    dw 24
+    dw 22
+    dw 4
+    dw 3
+    dw 5
+    dw 7
+    dw 0
+    dw 11
+    dw 22
+    dw 20
+    dw 12
+    dw 13
+    dw 24
+    dw 21
+    dw 24
+    dw 4
+    dw 12
+    dw 22
+    dw 1
+    dw 14
+    dw 4
     dw 0
     dw 3
+    dw 8
+    dw 2
+    dw 5
+    dw 2
+    dw 2
+    dw 9
+    dw 21
+    dw 7
+    dw 13
+    dw 8
+    dw 11
+    dw 12
+    dw 23
+    dw 14
+    dw 0
+    dw 2
+    dw 4
+    dw 6
+    dw 4
+    dw 9
+    dw 1
+    dw 7
+    dw 24
+    dw 22
+    dw 5
+    dw 12
+    dw 1
+    dw 4
+    dw 22
+    dw 8
+    dw 22
+    dw 5
+    dw 10
+    dw 8
+    dw 2
+    dw 7
+    dw 4
+    dw 6
+    dw 13
+    dw 9
+    dw 22
+    dw 11
+    dw 9
+    dw 20
+    dw 0
+    dw 24
+    dw 5
+    dw 8
+    dw 9
+    dw 13
+    dw 8
+    dw 8
+    dw 11
+    dw 0
+    dw 20
+    dw 6
+    dw 7
+    dw 14
+    dw 11
+    dw 9
+    dw 10
+    dw 22
+    dw 22
+    dw 2
+    dw 5
+    dw 2
+    dw 3
+    dw 9
+    dw 4
+    dw 1
+    dw 21
+    dw 14
+    dw 6
+    dw 13
+    dw 5
+    dw 7
+    dw 13
+    dw 22
+    dw 13
+    dw 5
+    dw 0
+    dw 7
+    dw 4
+    dw 3
+    dw 24
+    dw 12
+    dw 1
+    dw 13
+    dw 8
+    dw 6
+    dw 11
+    dw 5
+    dw 22
+    dw 8
+    dw 10
+    dw 24
+    dw 22
+    dw 0
+    dw 14
+    dw 4
+    dw 4
+    dw 12
+    dw 2
+    dw 2
+    dw 20
+    dw 7
+    dw 7
+    dw 3
+    dw 9
+    dw 3
+    dw 0
+    dw 13
+    dw 3
+    dw 6
+    dw 11
+    dw 3
+    dw 20
+    dw 11
+    dw 14
+    dw 3
+    dw 4
+    dw 7
+    dw 4
+    dw 12
+    dw 21
+    dw 11
+    dw 14
+    dw 20
+    dw 23
+    dw 5
+    dw 14
+    dw 11
+    dw 8
+    dw 0
+    dw 4
+    dw 24
+    dw 14
+    dw 9
+    dw 7
+    dw 5
+    dw 0
+    dw 3
+    dw 22
+    dw 10
+    dw 8
+    dw 24
+    dw 5
+    dw 24
+    dw 24
+    dw 5
+    dw 10
+    dw 0
+    dw 22
+    dw 2
+    dw 0
+    dw 0
+    dw 1
+    dw 20
+    dw 2
+    dw 6
+    dw 23
+    dw 4
+    dw 23
+    dw 4
+    dw 9
+    dw 24
+    dw 22
+    dw 8
+    dw 14
+    dw 7
+    dw 4
+    dw 24
+    dw 6
+    dw 13
+    dw 22
+    dw 13
+    dw 7
+    dw 14
+    dw 20
+    dw 0
+    dw 10
+    dw 1
+    dw 8
+    dw 9
+    dw 21
+    dw 4
+    dw 6
+    dw 5
+    dw 4
+    dw 0
+    dw 5
+    dw 23
+    dw 9
+    dw 24
+    dw 0
+    dw 12
+    dw 10
+    dw 12
+    dw 6
+    dw 22
+    dw 13
+    dw 11
+    dw 2
+    dw 12
+    dw 3
+    dw 24
+    dw 21
+    dw 7
+    dw 2
+    dw 21
+    dw 21
+    dw 2
+    dw 23
+    dw 7
+    dw 0
+    dw 6
+    dw 5
+    dw 13
+    dw 6
+    dw 21
+    dw 2
+    dw 9
+    dw 11
+    dw 2
+    dw 9
+    dw 8
+    dw 24
+    dw 0
+    dw 11
+    dw 13
+    dw 13
+    dw 24
+    dw 12
+    dw 10
+    dw 8
+    dw 5
+    dw 24
+    dw 9
+    dw 6
+    dw 4
+    dw 6
+    dw 1
+    dw 4
+    dw 23
+    dw 14
+    dw 21
+    dw 8
+    dw 8
+    dw 3
+    dw 2
+    dw 2
+    dw 22
+    dw 3
+    dw 10
+    dw 23
+    dw 9
+    dw 1
+    dw 11
+    dw 10
+    dw 6
+    dw 6
+    dw 0
+    dw 5
+    dw 4
+    dw 10
+    dw 4
+    dw 14
+    dw 13
+    dw 4
+    dw 3
+    dw 7
+    dw 10
+    dw 2
     dw 12
     dw 20
+    dw 22
+    dw 14
+    dw 12
+    dw 11
+    dw 6
+    dw 1
+    dw 1
+    dw 13
+    dw 7
+    dw 11
+    dw 8
+    dw 1
+    dw 7
+    dw 22
+    dw 9
+    dw 2
+    dw 5
+    dw 24
+    dw 10
+    dw 7
+    dw 22
+    dw 2
+    dw 11
+    dw 3
+    dw 20
+    dw 24
+    dw 12
+    dw 13
+    dw 13
+    dw 10
+    dw 10
+    dw 10
+    dw 10
+    dw 3
+    dw 14
+    dw 1
+    dw 24
+    dw 24
+    dw 4
+    dw 4
+    dw 22
+    dw 6
+    dw 10
+    dw 2
+    dw 20
+    dw 24
+    dw 2
+    dw 10
+    dw 3
+    dw 0
+    dw 22
+    dw 11
+    dw 10
+    dw 20
+    dw 23
+    dw 23
+    dw 8
+    dw 10
+    dw 5
+    dw 14
+    dw 1
+    dw 12
+    dw 13
+    dw 11
+    dw 10
+    dw 13
+    dw 6
+    dw 11
+    dw 10
+    dw 21
+    dw 10
+    dw 1
+    dw 11
+    dw 24
+    dw 8
+    dw 11
+    dw 23
+    dw 1
+    dw 20
+    dw 3
+    dw 12
+    dw 14
+    dw 10
 end

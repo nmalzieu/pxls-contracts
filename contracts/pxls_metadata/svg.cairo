@@ -61,16 +61,19 @@ func svg_rect_from_pixel{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range
 end
 
 func svg_rects_from_pixel_grid{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    grid_size : felt, grid_array_len : felt, grid_array : felt*, pixel_index : felt
+    grid_size : felt,
+    grid_array_len : felt,
+    grid_array : felt*,
+    pixel_index : felt,
+    current_str : Str,
 ) -> (svg_rects_str : Str):
     alloc_locals
     # A pixel grid is an array of Color arranged in a size x size grid
     # This method generates each svg <rect> for the grid and concatenates them
 
-    # If no more pixel, return empty string
+    # If no more pixel, return the result
     if grid_array_len == 0:
-        let (empty_str : Str) = str_empty()
-        return (svg_rects_str=empty_str)
+        return (svg_rects_str=current_str)
     end
 
     # Calculate pixel position from its index
@@ -80,14 +83,12 @@ func svg_rects_from_pixel_grid{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*,
     let (color : Color) = get_color(color_index)
     # Create rect for this pixel
     let (pixel_rect_str : Str) = svg_rect_from_pixel(x=x, y=y, color=color)
-    # Recursively create rects for other pixels
-    let (rest_rects_str : Str) = svg_rects_from_pixel_grid(
-        grid_size, grid_array_len - 1, grid_array + 1, pixel_index + 1
-    )
 
-    # Concat this pixel and the rest
-    let (svg_rects_str : Str) = str_concat(pixel_rect_str, rest_rects_str)
-    return (svg_rects_str=svg_rects_str)
+    # Tail recursion
+    let (new_current_str : Str) = str_concat(current_str, pixel_rect_str)
+    return svg_rects_from_pixel_grid(
+        grid_size, grid_array_len - 1, grid_array + 1, pixel_index + 1, new_current_str
+    )
 end
 
 func svg_start_from_grid_size{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
@@ -121,7 +122,10 @@ func svg_from_pixel_grid{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range
 
     # A pixel grid is an array of colors (represented by their index, a single felt) arranged in a size x size grid
     let (svg_start : Str) = svg_start_from_grid_size(grid_size)
-    let (svg_rects : Str) = svg_rects_from_pixel_grid(grid_size, grid_array_len, grid_array, 0)
+    
+    let (empty_str : Str) = str_empty()
+    let (svg_rects : Str) = svg_rects_from_pixel_grid(grid_size, grid_array_len, grid_array, 0, empty_str)
+
     let (svg_end : Str) = str_from_literal('</svg>')
 
     let (svg_unclosed : Str) = str_concat(svg_start, svg_rects)

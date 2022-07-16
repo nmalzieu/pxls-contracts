@@ -5,15 +5,9 @@ from starkware.cairo.common.alloc import alloc
 from starkware.cairo.common.math import assert_nn_le, unsigned_div_rem
 
 from contracts.pxls_metadata.pxls_colors import get_color
-from caistring.str import (
-    Str,
-    str_from_number,
-    str_from_literal,
-    str_concat_array,
-    str_concat,
-    str_empty,
-)
+from caistring.str import Str, str_from_literal, str_concat_array, str_concat, str_empty
 from libs.colors import Color
+from libs.numbers_literals import number_to_literal_dangerous
 
 func pixel_coordinates_from_index{
     syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
@@ -29,13 +23,18 @@ func svg_rect_from_pixel{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range
 
     let (rect_start_x_location) = get_label_location(rect_start_x_label)
     let (comma) = str_from_literal(',')
-    let (x_str : Str) = str_from_number(x * 10)  # Since our pixels have dimension 10
-    let (rect_y : Str) = str_from_literal('" y="')
-    let (y_str : Str) = str_from_number(y * 10)  # Since our pixels have dimension 10
-    let (rect_fill : Str) = str_from_literal('" fill="rgb(')
-    let (red_str : Str) = str_from_number(color.red)
-    let (green_str : Str) = str_from_number(color.green)
-    let (blue_str : Str) = str_from_number(color.blue)
+    let (x_literal) = number_to_literal_dangerous(x)
+    let (x_str : Str) = str_from_literal(x_literal)
+    let (rect_y : Str) = str_from_literal('0" y="')
+    let (y_literal) = number_to_literal_dangerous(y)
+    let (y_str : Str) = str_from_literal(y_literal)
+    let (rect_fill : Str) = str_from_literal('0" fill="rgb(')
+    let (red_literal) = number_to_literal_dangerous(color.red)
+    let (red_str : Str) = str_from_literal(red_literal)
+    let (green_literal) = number_to_literal_dangerous(color.green)
+    let (green_str : Str) = str_from_literal(green_literal)
+    let (blue_literal) = number_to_literal_dangerous(color.blue)
+    let (blue_str : Str) = str_from_literal(blue_literal)
     let (rect_end : Str) = str_from_literal(')" />')
 
     let (str_array : Str*) = alloc()
@@ -97,10 +96,11 @@ func svg_start_from_grid_size{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, 
     alloc_locals
 
     let (svg_start : Str) = str_from_literal('<svg width="')
-    let (grid_size_str : Str) = str_from_number(10 * grid_size)
-    let (svg_height : Str) = str_from_literal('" height="')
-    let (svg_xmlns : Str) = str_from_literal('" xmlns="http://www.w3.org/2000')
-    let (svg_end : Str) = str_from_literal('/svg">')
+    let (grid_size_literal) = number_to_literal_dangerous(grid_size)
+    let (grid_size_str : Str) = str_from_literal(grid_size_literal)
+    let (svg_height : Str) = str_from_literal('0" height="')
+    let (svg_xmlns : Str) = str_from_literal('0" xmlns="http://www.w3.org/200')
+    let (svg_end : Str) = str_from_literal('0/svg">')
 
     let (str_array : Str*) = alloc()
     assert str_array[0] = svg_start
@@ -122,9 +122,11 @@ func svg_from_pixel_grid{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range
 
     # A pixel grid is an array of colors (represented by their index, a single felt) arranged in a size x size grid
     let (svg_start : Str) = svg_start_from_grid_size(grid_size)
-    
+
     let (empty_str : Str) = str_empty()
-    let (svg_rects : Str) = svg_rects_from_pixel_grid(grid_size, grid_array_len, grid_array, 0, empty_str)
+    let (svg_rects : Str) = svg_rects_from_pixel_grid(
+        grid_size, grid_array_len, grid_array, 0, empty_str
+    )
 
     let (svg_end : Str) = str_from_literal('</svg>')
 

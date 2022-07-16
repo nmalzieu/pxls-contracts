@@ -7,13 +7,14 @@ from starkware.cairo.common.alloc import alloc
 
 from caistring.str import (
     Str,
-    str_from_number,
     str_from_literal,
     str_concat_array,
     str_concat,
     str_empty,
 )
 from libs.colors import Color
+from libs.numbers_literals import number_to_literal_dangerous
+
 from contracts.pxls_metadata.svg import svg_from_pixel_grid
 from contracts.pxls_metadata.pxls_colors import get_color_palette_name
 
@@ -57,7 +58,8 @@ func get_pxl_json_metadata{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, ran
     alloc_locals
 
     let (json_start : Str) = str_from_literal('{"name":"#')
-    let (pixel_index_str : Str) = str_from_number(pixel_index + 1)  # starts at 1
+    let (pixel_index_literal) = number_to_literal_dangerous(pixel_index + 1)  # starts at 1
+    let (pixel_index_str : Str) = str_from_literal(pixel_index_literal)
     let (attributes_start : Str) = str_from_literal('","attributes":[')
     let (attribute_cyan : Str) = get_palette_trait(0, pixel_data[0], FALSE)
     let (attribute_blue : Str) = get_palette_trait(1, pixel_data[1], FALSE)

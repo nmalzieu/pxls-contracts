@@ -61,10 +61,10 @@ func test_svg_rect_from_pixel{syscall_ptr : felt*, range_check_ptr, pedersen_ptr
 
     # 1. <rect width="10" height="10" x=
     # 2. "
-    # 3. 10
-    # 4. " y="
-    # 5. 20
-    # 6. " fill="rgb(
+    # 3. 1
+    # 4. 0" y="
+    # 5. 2
+    # 6. 0" fill="rgb(
     # 7. 255
     # 8. ,
     # 9. 20
@@ -75,10 +75,10 @@ func test_svg_rect_from_pixel{syscall_ptr : felt*, range_check_ptr, pedersen_ptr
     assert 12 = svg_rect_str.arr_len
     assert '<rect width="10" height="10" x=' = svg_rect_str.arr[0]
     assert '"' = svg_rect_str.arr[1]
-    assert '10' = svg_rect_str.arr[2]
-    assert '" y="' = svg_rect_str.arr[3]
-    assert '20' = svg_rect_str.arr[4]
-    assert '" fill="rgb(' = svg_rect_str.arr[5]
+    assert '1' = svg_rect_str.arr[2]
+    assert '0" y="' = svg_rect_str.arr[3]
+    assert '2' = svg_rect_str.arr[4]
+    assert '0" fill="rgb(' = svg_rect_str.arr[5]
     assert '255' = svg_rect_str.arr[6]
     assert ',' = svg_rect_str.arr[7]
     assert '20' = svg_rect_str.arr[8]
@@ -109,9 +109,9 @@ func test_svg_rects_from_pixel_grid{
     assert '<rect width="10" height="10" x=' = svg_rects_str.arr[0]
     assert '"' = svg_rects_str.arr[1]
     assert '0' = svg_rects_str.arr[2]
-    assert '" y="' = svg_rects_str.arr[3]
+    assert '0" y="' = svg_rects_str.arr[3]
     assert '0' = svg_rects_str.arr[4]
-    assert '" fill="rgb(' = svg_rects_str.arr[5]
+    assert '0" fill="rgb(' = svg_rects_str.arr[5]
     assert '204' = svg_rects_str.arr[6]
     assert ',' = svg_rects_str.arr[7]
     assert '255' = svg_rects_str.arr[8]
@@ -123,10 +123,10 @@ func test_svg_rects_from_pixel_grid{
 
     assert '<rect width="10" height="10" x=' = svg_rects_str.arr[12]
     assert '"' = svg_rects_str.arr[13]
-    assert '10' = svg_rects_str.arr[14]
-    assert '" y="' = svg_rects_str.arr[15]
+    assert '1' = svg_rects_str.arr[14]
+    assert '0" y="' = svg_rects_str.arr[15]
     assert '0' = svg_rects_str.arr[16]
-    assert '" fill="rgb(' = svg_rects_str.arr[17]
+    assert '0" fill="rgb(' = svg_rects_str.arr[17]
     assert '51' = svg_rects_str.arr[18]
     assert ',' = svg_rects_str.arr[19]
     assert '255' = svg_rects_str.arr[20]
@@ -139,9 +139,9 @@ func test_svg_rects_from_pixel_grid{
     assert '<rect width="10" height="10" x=' = svg_rects_str.arr[24]
     assert '"' = svg_rects_str.arr[25]
     assert '0' = svg_rects_str.arr[26]
-    assert '" y="' = svg_rects_str.arr[27]
-    assert '10' = svg_rects_str.arr[28]
-    assert '" fill="rgb(' = svg_rects_str.arr[29]
+    assert '0" y="' = svg_rects_str.arr[27]
+    assert '1' = svg_rects_str.arr[28]
+    assert '0" fill="rgb(' = svg_rects_str.arr[29]
     assert '255' = svg_rects_str.arr[30]
     assert ',' = svg_rects_str.arr[31]
     assert '102' = svg_rects_str.arr[32]
@@ -153,10 +153,10 @@ func test_svg_rects_from_pixel_grid{
 
     assert '<rect width="10" height="10" x=' = svg_rects_str.arr[36]
     assert '"' = svg_rects_str.arr[37]
-    assert '10' = svg_rects_str.arr[38]
-    assert '" y="' = svg_rects_str.arr[39]
-    assert '10' = svg_rects_str.arr[40]
-    assert '" fill="rgb(' = svg_rects_str.arr[41]
+    assert '1' = svg_rects_str.arr[38]
+    assert '0" y="' = svg_rects_str.arr[39]
+    assert '1' = svg_rects_str.arr[40]
+    assert '0" fill="rgb(' = svg_rects_str.arr[41]
     assert '255' = svg_rects_str.arr[42]
     assert ',' = svg_rects_str.arr[43]
     assert '255' = svg_rects_str.arr[44]
@@ -195,11 +195,11 @@ func test_svg_start_from_grid_size{
 
     assert 6 = svg_start_str.arr_len
     assert '<svg width="' = svg_start_str.arr[0]
-    assert '200' = svg_start_str.arr[1]
-    assert '" height="' = svg_start_str.arr[2]
-    assert '200' = svg_start_str.arr[3]
-    assert '" xmlns="http://www.w3.org/2000' = svg_start_str.arr[4]
-    assert '/svg">' = svg_start_str.arr[5]
+    assert '20' = svg_start_str.arr[1]
+    assert '0" height="' = svg_start_str.arr[2]
+    assert '20' = svg_start_str.arr[3]
+    assert '0" xmlns="http://www.w3.org/200' = svg_start_str.arr[4]
+    assert '0/svg">' = svg_start_str.arr[5]
     return ()
 end
 

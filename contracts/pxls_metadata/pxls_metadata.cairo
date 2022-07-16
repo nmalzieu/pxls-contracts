@@ -37,6 +37,8 @@ func append_palette_trait{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, rang
     let (yes_no_str : felt) = get_yes_no_str(palette_present)
     if is_last_trait == FALSE:
         let (yes_no_str : felt) = literal_concat_known_length_dangerous(yes_no_str, ',', 1)
+    else:
+        let (yes_no_str : felt) = literal_concat_known_length_dangerous(yes_no_str, ']', 1)
     end
 
     assert destination[destination_len] = trait_start
@@ -53,7 +55,7 @@ func get_pxl_json_metadata{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, ran
 
     let (pxl_json_metadata : felt*) = alloc()
     assert pxl_json_metadata[0] = 'data:application/json;'
-    assert pxl_json_metadata[1] = 'charset=utf-8,{"name":"#'  # json start
+    assert pxl_json_metadata[1] = 'charset=utf-8,{"name":"%23'  # json start
     let (pixel_index_literal) = number_to_literal_dangerous(pixel_index + 1)  # starts at 1
     assert pxl_json_metadata[2] = pixel_index_literal
     assert pxl_json_metadata[3] = '","attributes":['  # attributes start

@@ -5,9 +5,16 @@ from starkware.cairo.common.alloc import alloc
 from starkware.cairo.common.math import assert_nn_le, unsigned_div_rem
 
 from contracts.pxls_metadata.pxls_colors import get_color
-from caistring.str import Str, str_from_literal, str_concat_array, str_concat, str_empty
+from caistring.str import (
+    Str,
+    str_from_literal,
+    str_concat_array,
+    str_concat,
+    str_empty,
+    literal_concat_known_length_dangerous,
+)
 from libs.colors import Color
-from libs.numbers_literals import number_to_literal_dangerous
+from libs.numbers_literals import number_to_literal_dangerous, number_literal_length
 
 func pixel_coordinates_from_index{
     syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
@@ -22,35 +29,52 @@ func svg_rect_from_pixel{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range
     alloc_locals
 
     let (rect_start_x_location) = get_label_location(rect_start_x_label)
-    let (comma) = str_from_literal(',')
-    let (x_literal) = number_to_literal_dangerous(x)
-    let (x_str : Str) = str_from_literal(x_literal)
-    let (rect_y : Str) = str_from_literal('0" y="')
-    let (y_literal) = number_to_literal_dangerous(y)
-    let (y_str : Str) = str_from_literal(y_literal)
-    let (rect_fill : Str) = str_from_literal('0" fill="rgb(')
-    let (red_literal) = number_to_literal_dangerous(color.red)
-    let (red_str : Str) = str_from_literal(red_literal)
-    let (green_literal) = number_to_literal_dangerous(color.green)
-    let (green_str : Str) = str_from_literal(green_literal)
-    let (blue_literal) = number_to_literal_dangerous(color.blue)
-    let (blue_str : Str) = str_from_literal(blue_literal)
-    let (rect_end : Str) = str_from_literal(')" />')
 
-    let (str_array : Str*) = alloc()
-    assert str_array[0] = Str(2, cast(rect_start_x_location, felt*))
-    assert str_array[1] = x_str
-    assert str_array[2] = rect_y
-    assert str_array[3] = y_str
-    assert str_array[4] = rect_fill
-    assert str_array[5] = red_str
-    assert str_array[6] = comma
-    assert str_array[7] = green_str
-    assert str_array[8] = comma
-    assert str_array[9] = blue_str
-    assert str_array[10] = rect_end
+    let (x_literal) = number_to_literal_dangerous(x)  # max length 3 because works up to 400
+    let rect_y_literal = '0" y="'  # length 6
+    let (y_literal) = number_to_literal_dangerous(y)  # max length 3
+    let (y_literal_length) = number_literal_length(y)
+    let rect_fill_literal = '0" fill="rgb('  # length 13
+    let comma_literal = ','  # length 1
+    let (red_literal) = number_to_literal_dangerous(color.red)  # max length 3
+    let (green_literal) = number_to_literal_dangerous(color.green)  # max length 3
+    let (green_literal_length) = number_literal_length(color.green)
+    let (blue_literal) = number_to_literal_dangerous(color.blue)  # max length 3
+    let (blue_literal_length) = number_literal_length(color.blue)
+    let rect_end_literal = ')" />'  # length 5
 
-    let (svg_rect_str : Str) = str_concat_array(11, str_array)
+    # literal_concat_known_length_dangerous must be used only if we know result will
+    # be less than 31 characters.
+
+    let (x_to_fill_literal) = literal_concat_known_length_dangerous(x_literal, rect_y_literal, 6)  # 3 + 6 = 9
+    let (x_to_fill_literal) = literal_concat_known_length_dangerous(
+        x_to_fill_literal, y_literal, y_literal_length
+    )  # + 3 = 12
+    let (x_to_fill_literal) = literal_concat_known_length_dangerous(
+        x_to_fill_literal, rect_fill_literal, 13
+    )  # + 13 = 25
+
+    let (x_to_fill_str : Str) = str_from_literal(x_to_fill_literal)
+
+    let (red_to_end_literal) = literal_concat_known_length_dangerous(red_literal, comma_literal, 1)  # 3 + 1 = 4
+    let (red_to_end_literal) = literal_concat_known_length_dangerous(
+        red_to_end_literal, green_literal, green_literal_length
+    )  # + 3 = 7
+    let (red_to_end_literal) = literal_concat_known_length_dangerous(
+        red_to_end_literal, comma_literal, 1
+    )  # + 1 = 8
+    let (red_to_end_literal) = literal_concat_known_length_dangerous(
+        red_to_end_literal, blue_literal, blue_literal_length
+    )  # + 3 = 11
+    let (red_to_end_literal) = literal_concat_known_length_dangerous(
+        red_to_end_literal, rect_end_literal, 5
+    )  # + 5 = 16
+
+    let (red_to_end_str : Str) = str_from_literal(red_to_end_literal)
+
+    let rect_start_str = Str(2, cast(rect_start_x_location, felt*))
+    let (svg_rect_str : Str) = str_concat(rect_start_str, x_to_fill_str)
+    let (svg_rect_str : Str) = str_concat(svg_rect_str, red_to_end_str)
 
     return (svg_rect_str=svg_rect_str)
 

@@ -1,4 +1,26 @@
 from starkware.cairo.common.registers import get_label_location
+from starkware.cairo.common.math_cmp import is_le
+from starkware.cairo.common.bool import TRUE, FALSE
+
+func number_literal_length{range_check_ptr}(i : felt) -> (length : felt):
+    alloc_locals
+    # Returns the length of the short string representing i
+    # (useful to use the literal_concat_known_length_dangerous method
+    # which takes the length. If not it introduces \x00s in the strings
+    # which would be ok but makes testing complicated
+    # /!\ Since it's to be used with  number_to_literal_dangerous
+    # we don't go over 400
+
+    let (less_than_10) = is_le(i, 9)
+    let (less_than_100) = is_le(i, 99)
+    if less_than_10 == TRUE:
+        return (length=1)
+    end
+    if less_than_100 == TRUE:
+        return (length=2)
+    end
+    return (length=3)
+end
 
 func number_to_literal_dangerous(i : felt) -> (res : felt):
     # This method returns a felt string for each integer

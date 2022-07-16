@@ -10,7 +10,7 @@ from contracts.pxls_metadata.svg import (
     svg_rects_from_pixel_grid,
     svg_start_from_grid_size,
 )
-from caistring.str import Str, str_empty
+from caistring.str import Str, str_empty, literal_concat_known_length_dangerous
 from libs.colors import Color
 
 @view
@@ -56,35 +56,21 @@ end
 @view
 func test_svg_rect_from_pixel{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
     let (svg_rect_str : Str) = svg_rect_from_pixel(x=1, y=2, color=Color(255, 20, 100))
+
     # Result is <rect width="10" height="10" x="10" y="20" fill="COLOR" />
-    # in the form of an array of length 12:
+    # in the form of an array of length 4:
 
     # 1. <rect width="10" height="10" x=
     # 2. "
-    # 3. 1
-    # 4. 0" y="
-    # 5. 2
-    # 6. 0" fill="rgb(
-    # 7. 255
-    # 8. ,
-    # 9. 20
-    # 10. ,
-    # 11. 100
-    # 12. )" />
+    # 3. 10" y="20" fill="rgb(
+    # 4. 255,20,100)" />
 
-    assert 12 = svg_rect_str.arr_len
+    assert 4 = svg_rect_str.arr_len
     assert '<rect width="10" height="10" x=' = svg_rect_str.arr[0]
     assert '"' = svg_rect_str.arr[1]
-    assert '1' = svg_rect_str.arr[2]
-    assert '0" y="' = svg_rect_str.arr[3]
-    assert '2' = svg_rect_str.arr[4]
-    assert '0" fill="rgb(' = svg_rect_str.arr[5]
-    assert '255' = svg_rect_str.arr[6]
-    assert ',' = svg_rect_str.arr[7]
-    assert '20' = svg_rect_str.arr[8]
-    assert ',' = svg_rect_str.arr[9]
-    assert '100' = svg_rect_str.arr[10]
-    assert ')" />' = svg_rect_str.arr[11]
+    assert '10" y="20" fill="rgb(' = svg_rect_str.arr[2]
+    assert '255,20,100)" />' = svg_rect_str.arr[3]
+
     return ()
 end
 
@@ -102,67 +88,35 @@ func test_svg_rects_from_pixel_grid{
         grid_size=2, grid_array_len=4, grid_array=grid_array, pixel_index=0, current_str=empty_str
     )
 
-    assert 48 = svg_rects_str.arr_len
+    assert 16 = svg_rects_str.arr_len
 
     # Pixel 0, x = 0, y = 0, color index 0 => CCFFFF = 204,255,255
 
     assert '<rect width="10" height="10" x=' = svg_rects_str.arr[0]
     assert '"' = svg_rects_str.arr[1]
-    assert '0' = svg_rects_str.arr[2]
-    assert '0" y="' = svg_rects_str.arr[3]
-    assert '0' = svg_rects_str.arr[4]
-    assert '0" fill="rgb(' = svg_rects_str.arr[5]
-    assert '204' = svg_rects_str.arr[6]
-    assert ',' = svg_rects_str.arr[7]
-    assert '255' = svg_rects_str.arr[8]
-    assert ',' = svg_rects_str.arr[9]
-    assert '255' = svg_rects_str.arr[10]
-    assert ')" />' = svg_rects_str.arr[11]
+    assert '00" y="00" fill="rgb(' = svg_rects_str.arr[2]
+    assert '204,255,255)" />' = svg_rects_str.arr[3]
 
     # Pixel 1, x = 10, y = 0, color index 3 => 33FFFF = 51,255,255
 
-    assert '<rect width="10" height="10" x=' = svg_rects_str.arr[12]
-    assert '"' = svg_rects_str.arr[13]
-    assert '1' = svg_rects_str.arr[14]
-    assert '0" y="' = svg_rects_str.arr[15]
-    assert '0' = svg_rects_str.arr[16]
-    assert '0" fill="rgb(' = svg_rects_str.arr[17]
-    assert '51' = svg_rects_str.arr[18]
-    assert ',' = svg_rects_str.arr[19]
-    assert '255' = svg_rects_str.arr[20]
-    assert ',' = svg_rects_str.arr[21]
-    assert '255' = svg_rects_str.arr[22]
-    assert ')" />' = svg_rects_str.arr[23]
+    assert '<rect width="10" height="10" x=' = svg_rects_str.arr[4]
+    assert '"' = svg_rects_str.arr[5]
+    assert '10" y="00" fill="rgb(' = svg_rects_str.arr[6]
+    assert '51,255,255)" />' = svg_rects_str.arr[7]
 
     # Pixel 2, x = 0, y = 10, color index 12 => FF66FF = 255,102,255
 
-    assert '<rect width="10" height="10" x=' = svg_rects_str.arr[24]
-    assert '"' = svg_rects_str.arr[25]
-    assert '0' = svg_rects_str.arr[26]
-    assert '0" y="' = svg_rects_str.arr[27]
-    assert '1' = svg_rects_str.arr[28]
-    assert '0" fill="rgb(' = svg_rects_str.arr[29]
-    assert '255' = svg_rects_str.arr[30]
-    assert ',' = svg_rects_str.arr[31]
-    assert '102' = svg_rects_str.arr[32]
-    assert ',' = svg_rects_str.arr[33]
-    assert '255' = svg_rects_str.arr[34]
-    assert ')" />' = svg_rects_str.arr[35]
+    assert '<rect width="10" height="10" x=' = svg_rects_str.arr[8]
+    assert '"' = svg_rects_str.arr[9]
+    assert '00" y="10" fill="rgb(' = svg_rects_str.arr[10]
+    assert '255,102,255)" />' = svg_rects_str.arr[11]
 
     # Pixel 3, x = 10, y = 10, color index 20 => FFFFCC = 255,255,204
 
-    assert '<rect width="10" height="10" x=' = svg_rects_str.arr[36]
-    assert '"' = svg_rects_str.arr[37]
-    assert '1' = svg_rects_str.arr[38]
-    assert '0" y="' = svg_rects_str.arr[39]
-    assert '1' = svg_rects_str.arr[40]
-    assert '0" fill="rgb(' = svg_rects_str.arr[41]
-    assert '255' = svg_rects_str.arr[42]
-    assert ',' = svg_rects_str.arr[43]
-    assert '255' = svg_rects_str.arr[44]
-    assert ',' = svg_rects_str.arr[45]
-    assert '204' = svg_rects_str.arr[46]
-    assert ')" />' = svg_rects_str.arr[47]
+    assert '<rect width="10" height="10" x=' = svg_rects_str.arr[12]
+    assert '"' = svg_rects_str.arr[13]
+    assert '10" y="10" fill="rgb(' = svg_rects_str.arr[14]
+    assert '255,255,204)" />' = svg_rects_str.arr[15]
 
     return ()
 
@@ -211,21 +165,15 @@ func test_svg_from_pixel_grid{syscall_ptr : felt*, range_check_ptr, pedersen_ptr
     let (grid_location) = get_label_location(grid_label)
     let grid_array = cast(grid_location, felt*)
 
-    # 12 x 12 works, 20 x 20 raises OUT_OF_RESOURCES
+    let (svg_str : Str) = svg_from_pixel_grid(
+        grid_size=16, grid_array_len=256, grid_array=grid_array
+    )
 
-    let (svg_str : Str) = svg_from_pixel_grid(grid_size=2, grid_array_len=4, grid_array=grid_array)
-
-    # 6 start, 400 rects of length 12, 1 end = 4807
-    # assert 4807 = svg_str.arr_len
+    # 6 start, 4 rects of length 4, 1 end = 23
+    # assert 23 = svg_str.arr_len
     # assert '<svg width="' = svg_str.arr[0]
     # assert '<rect width="10" height="10" x=' = svg_str.arr[6]
-    # assert '</svg>' = svg_str.arr[4806]
-
-    # 6 start, 4 rects of length 12, 1 end = 55
-    assert 55 = svg_str.arr_len
-    assert '<svg width="' = svg_str.arr[0]
-    assert '<rect width="10" height="10" x=' = svg_str.arr[6]
-    assert '</svg>' = svg_str.arr[54]
+    # assert '</svg>' = svg_str.arr[22]
 
     return (svg_str_len=svg_str.arr_len, svg_str=svg_str.arr)
 

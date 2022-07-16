@@ -3,7 +3,7 @@ from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.alloc import alloc
 from starkware.cairo.common.registers import get_label_location
 
-from contracts.pxls_metadata.svg import (
+from contracts.pxls_metadata.pxls_svg import (
     append_svg_from_pixel_grid,
     append_svg_rect_from_pixel,
     pixel_coordinates_from_index,

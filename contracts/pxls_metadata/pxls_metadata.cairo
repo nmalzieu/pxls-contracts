@@ -9,7 +9,7 @@ from libs.colors import Color
 from libs.numbers_literals import number_to_literal_dangerous
 from caistring.str import literal_concat_known_length_dangerous
 
-# from contracts.pxls_metadata.svg import svg_from_pixel_grid
+from contracts.pxls_metadata.pxls_svg import append_svg_from_pixel_grid
 from contracts.pxls_metadata.pxls_colors import get_color_palette_name
 
 func get_yes_no_str{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
@@ -52,12 +52,13 @@ func get_pxl_json_metadata{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, ran
     alloc_locals
 
     let (pxl_json_metadata : felt*) = alloc()
-    assert pxl_json_metadata[0] = '{"name":"#'  # json start
+    assert pxl_json_metadata[0] = 'data:application/json;'
+    assert pxl_json_metadata[1] = 'charset=utf-8,{"name":"#'  # json start
     let (pixel_index_literal) = number_to_literal_dangerous(pixel_index + 1)  # starts at 1
-    assert pxl_json_metadata[1] = pixel_index_literal
-    assert pxl_json_metadata[2] = '","attributes":['  # attributes start
+    assert pxl_json_metadata[2] = pixel_index_literal
+    assert pxl_json_metadata[3] = '","attributes":['  # attributes start
     let (pxl_json_metadata_len) = append_palette_trait(
-        0, pixel_data[0], FALSE, 3, pxl_json_metadata
+        0, pixel_data[0], FALSE, 4, pxl_json_metadata
     )  # cyan attribute
     let (pxl_json_metadata_len) = append_palette_trait(
         1, pixel_data[1], FALSE, pxl_json_metadata_len, pxl_json_metadata
@@ -75,11 +76,21 @@ func get_pxl_json_metadata{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, ran
         5, pixel_data[5], TRUE, pxl_json_metadata_len, pxl_json_metadata
     )  # green attribute
 
-    assert pxl_json_metadata[pxl_json_metadata_len] = ',"image":"'
+    assert pxl_json_metadata[pxl_json_metadata_len] = ',"image":"data:'
+    assert pxl_json_metadata[pxl_json_metadata_len + 1] = 'image/svg+xml;utf8,'
 
-    # TODO : append from pixel grid
-    assert pxl_json_metadata[pxl_json_metadata_len + 1] = '<svg></svg>'
-    assert pxl_json_metadata[pxl_json_metadata_len + 2] = '"}'
 
-    return (pxl_json_metadata_len=pxl_json_metadata_len + 3, pxl_json_metadata=pxl_json_metadata)
+    let (pxl_json_metadata_len) = append_svg_from_pixel_grid(
+        grid_size=grid_size,
+        # Grid array is just the pixel data minus the 6 first
+        # felts which define which palettes compose the pxl
+        grid_array_len=pixel_data_len - 6,
+        grid_array=pixel_data + 6,
+        destination_len=pxl_json_metadata_len + 2,
+        destination=pxl_json_metadata,
+    )
+
+    assert pxl_json_metadata[pxl_json_metadata_len] = '"}'
+
+    return (pxl_json_metadata_len=pxl_json_metadata_len + 1, pxl_json_metadata=pxl_json_metadata)
 end

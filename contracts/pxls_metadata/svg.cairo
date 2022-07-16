@@ -28,9 +28,11 @@ func svg_rect_from_pixel{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range
 ) -> (svg_rect_str : Str):
     alloc_locals
 
-    let (rect_start_x_location) = get_label_location(rect_start_x_label)
+    let rect_start_literal = '<rect width="10" height="10" x='
 
+    let double_quote_literal = '"'  # length 1
     let (x_literal) = number_to_literal_dangerous(x)  # max length 3 because works up to 400
+    let (x_literal_length) = number_literal_length(x)
     let rect_y_literal = '0" y="'  # length 6
     let (y_literal) = number_to_literal_dangerous(y)  # max length 3
     let (y_literal_length) = number_literal_length(y)
@@ -46,13 +48,18 @@ func svg_rect_from_pixel{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range
     # literal_concat_known_length_dangerous must be used only if we know result will
     # be less than 31 characters.
 
-    let (x_to_fill_literal) = literal_concat_known_length_dangerous(x_literal, rect_y_literal, 6)  # 3 + 6 = 9
+    let (x_to_fill_literal) = literal_concat_known_length_dangerous(
+        double_quote_literal, x_literal, x_literal_length
+    )  # 1 + 3 = 4
+    let (x_to_fill_literal) = literal_concat_known_length_dangerous(
+        x_to_fill_literal, rect_y_literal, 6
+    )  # 4 + 6 = 10
     let (x_to_fill_literal) = literal_concat_known_length_dangerous(
         x_to_fill_literal, y_literal, y_literal_length
-    )  # + 3 = 12
+    )  # + 3 = 13
     let (x_to_fill_literal) = literal_concat_known_length_dangerous(
         x_to_fill_literal, rect_fill_literal, 13
-    )  # + 13 = 25
+    )  # + 13 = 26
 
     let (x_to_fill_str : Str) = str_from_literal(x_to_fill_literal)
 
@@ -72,15 +79,11 @@ func svg_rect_from_pixel{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range
 
     let (red_to_end_str : Str) = str_from_literal(red_to_end_literal)
 
-    let rect_start_str = Str(2, cast(rect_start_x_location, felt*))
+    let (rect_start_str : Str) = str_from_literal(rect_start_literal)
     let (svg_rect_str : Str) = str_concat(rect_start_str, x_to_fill_str)
     let (svg_rect_str : Str) = str_concat(svg_rect_str, red_to_end_str)
 
     return (svg_rect_str=svg_rect_str)
-
-    rect_start_x_label:
-    dw '<rect width="10" height="10" x='
-    dw '"'
 end
 
 func svg_rects_from_pixel_grid{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
@@ -119,22 +122,37 @@ func svg_start_from_grid_size{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, 
 ) -> (svg_start_str : Str):
     alloc_locals
 
-    let (svg_start : Str) = str_from_literal('<svg width="')
-    let (grid_size_literal) = number_to_literal_dangerous(grid_size)
-    let (grid_size_str : Str) = str_from_literal(grid_size_literal)
-    let (svg_height : Str) = str_from_literal('0" height="')
+    let svg_start_literal = '<svg width="'  # length 12
+    # let (svg_start : Str) = str_from_literal('<svg width="')
+    let (grid_size_literal) = number_to_literal_dangerous(grid_size)  # max length 3
+    let (grid_size_literal_length) = number_literal_length(grid_size)
+    # let (grid_size_str : Str) = str_from_literal(grid_size_literal)
+    let svg_height_literal = '0" height="'  # length 11
+    # let (svg_height : Str) = str_from_literal('0" height="')
+    # let svg_xmlns_literal = '0" xmlns="http://www.w3.org/200'  # length 31
     let (svg_xmlns : Str) = str_from_literal('0" xmlns="http://www.w3.org/200')
+    # let svg_end_literal = '0/svg">'
     let (svg_end : Str) = str_from_literal('0/svg">')
 
-    let (str_array : Str*) = alloc()
-    assert str_array[0] = svg_start
-    assert str_array[1] = grid_size_str
-    assert str_array[2] = svg_height
-    assert str_array[3] = grid_size_str
-    assert str_array[4] = svg_xmlns
-    assert str_array[5] = svg_end
+    let (svg_start_to_height) = literal_concat_known_length_dangerous(
+        svg_start_literal, grid_size_literal, grid_size_literal_length
+    )  # 12 + 3 = 15
+    let (svg_start_to_height) = literal_concat_known_length_dangerous(
+        svg_start_to_height, svg_height_literal, 11
+    )  # 15 + 11 = 26
 
-    let (svg_start_str : Str) = str_concat_array(6, str_array)
+    let (svg_start_to_height) = literal_concat_known_length_dangerous(
+        svg_start_to_height, grid_size_literal, grid_size_literal_length
+    )  # 26 + 3 = 29
+
+    let (svg_start_to_height_str : Str) = str_from_literal(svg_start_to_height)
+
+    let (str_array : Str*) = alloc()
+    assert str_array[0] = svg_start_to_height_str
+    assert str_array[1] = svg_xmlns
+    assert str_array[2] = svg_end
+
+    let (svg_start_str : Str) = str_concat_array(3, str_array)
 
     return (svg_start_str=svg_start_str)
 end

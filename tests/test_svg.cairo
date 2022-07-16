@@ -65,11 +65,10 @@ func test_svg_rect_from_pixel{syscall_ptr : felt*, range_check_ptr, pedersen_ptr
     # 3. 10" y="20" fill="rgb(
     # 4. 255,20,100)" />
 
-    assert 4 = svg_rect_str.arr_len
+    assert 3 = svg_rect_str.arr_len
     assert '<rect width="10" height="10" x=' = svg_rect_str.arr[0]
-    assert '"' = svg_rect_str.arr[1]
-    assert '10" y="20" fill="rgb(' = svg_rect_str.arr[2]
-    assert '255,20,100)" />' = svg_rect_str.arr[3]
+    assert '"10" y="20" fill="rgb(' = svg_rect_str.arr[1]
+    assert '255,20,100)" />' = svg_rect_str.arr[2]
 
     return ()
 end
@@ -88,35 +87,31 @@ func test_svg_rects_from_pixel_grid{
         grid_size=2, grid_array_len=4, grid_array=grid_array, pixel_index=0, current_str=empty_str
     )
 
-    assert 16 = svg_rects_str.arr_len
+    assert 12 = svg_rects_str.arr_len
 
     # Pixel 0, x = 0, y = 0, color index 0 => CCFFFF = 204,255,255
 
     assert '<rect width="10" height="10" x=' = svg_rects_str.arr[0]
-    assert '"' = svg_rects_str.arr[1]
-    assert '00" y="00" fill="rgb(' = svg_rects_str.arr[2]
-    assert '204,255,255)" />' = svg_rects_str.arr[3]
+    assert '"00" y="00" fill="rgb(' = svg_rects_str.arr[1]
+    assert '204,255,255)" />' = svg_rects_str.arr[2]
 
     # Pixel 1, x = 10, y = 0, color index 3 => 33FFFF = 51,255,255
 
-    assert '<rect width="10" height="10" x=' = svg_rects_str.arr[4]
-    assert '"' = svg_rects_str.arr[5]
-    assert '10" y="00" fill="rgb(' = svg_rects_str.arr[6]
-    assert '51,255,255)" />' = svg_rects_str.arr[7]
+    assert '<rect width="10" height="10" x=' = svg_rects_str.arr[3]
+    assert '"10" y="00" fill="rgb(' = svg_rects_str.arr[4]
+    assert '51,255,255)" />' = svg_rects_str.arr[5]
 
     # Pixel 2, x = 0, y = 10, color index 12 => FF66FF = 255,102,255
 
-    assert '<rect width="10" height="10" x=' = svg_rects_str.arr[8]
-    assert '"' = svg_rects_str.arr[9]
-    assert '00" y="10" fill="rgb(' = svg_rects_str.arr[10]
-    assert '255,102,255)" />' = svg_rects_str.arr[11]
+    assert '<rect width="10" height="10" x=' = svg_rects_str.arr[6]
+    assert '"00" y="10" fill="rgb(' = svg_rects_str.arr[7]
+    assert '255,102,255)" />' = svg_rects_str.arr[8]
 
     # Pixel 3, x = 10, y = 10, color index 20 => FFFFCC = 255,255,204
 
-    assert '<rect width="10" height="10" x=' = svg_rects_str.arr[12]
-    assert '"' = svg_rects_str.arr[13]
-    assert '10" y="10" fill="rgb(' = svg_rects_str.arr[14]
-    assert '255,255,204)" />' = svg_rects_str.arr[15]
+    assert '<rect width="10" height="10" x=' = svg_rects_str.arr[9]
+    assert '"10" y="10" fill="rgb(' = svg_rects_str.arr[10]
+    assert '255,255,204)" />' = svg_rects_str.arr[11]
 
     return ()
 
@@ -138,22 +133,12 @@ func test_svg_start_from_grid_size{
 }():
     let (svg_start_str : Str) = svg_start_from_grid_size(20)
     # Result is <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
-    # in the form of an array of length 6:
+    # in the form of an array of length 3:
 
-    # 1. <svg width="
-    # 2. 200
-    # 3. " height="
-    # 4. 200
-    # 5. " xmlns="http://www.w3.org/2000
-    # 6. /svg">
-
-    assert 6 = svg_start_str.arr_len
-    assert '<svg width="' = svg_start_str.arr[0]
-    assert '20' = svg_start_str.arr[1]
-    assert '0" height="' = svg_start_str.arr[2]
-    assert '20' = svg_start_str.arr[3]
-    assert '0" xmlns="http://www.w3.org/200' = svg_start_str.arr[4]
-    assert '0/svg">' = svg_start_str.arr[5]
+    assert 3 = svg_start_str.arr_len
+    assert '<svg width="200" height="20' = svg_start_str.arr[0]
+    assert '0" xmlns="http://www.w3.org/200' = svg_start_str.arr[1]
+    assert '0/svg">' = svg_start_str.arr[2]
     return ()
 end
 
@@ -165,15 +150,13 @@ func test_svg_from_pixel_grid{syscall_ptr : felt*, range_check_ptr, pedersen_ptr
     let (grid_location) = get_label_location(grid_label)
     let grid_array = cast(grid_location, felt*)
 
-    let (svg_str : Str) = svg_from_pixel_grid(
-        grid_size=16, grid_array_len=256, grid_array=grid_array
-    )
+    let (svg_str : Str) = svg_from_pixel_grid(grid_size=2, grid_array_len=4, grid_array=grid_array)
 
-    # 6 start, 4 rects of length 4, 1 end = 23
-    # assert 23 = svg_str.arr_len
-    # assert '<svg width="' = svg_str.arr[0]
-    # assert '<rect width="10" height="10" x=' = svg_str.arr[6]
-    # assert '</svg>' = svg_str.arr[22]
+    # 3 start, 4 rects of length 3, 1 end = 23
+    assert 16 = svg_str.arr_len
+    assert '<svg width="20" height="2' = svg_str.arr[0]
+    assert '<rect width="10" height="10" x=' = svg_str.arr[6]
+    assert '</svg>' = svg_str.arr[15]
 
     return (svg_str_len=svg_str.arr_len, svg_str=svg_str.arr)
 
@@ -187,400 +170,4 @@ func test_svg_from_pixel_grid{syscall_ptr : felt*, range_check_ptr, pedersen_ptr
     dw 14
     dw 11
     dw 9
-    dw 22
-    dw 8
-    dw 24
-    dw 8
-    dw 13
-    dw 8
-    dw 13
-    dw 1
-    dw 5
-    dw 22
-    dw 10
-    dw 0
-    dw 14
-    dw 14
-    dw 8
-    dw 24
-    dw 22
-    dw 4
-    dw 3
-    dw 5
-    dw 7
-    dw 0
-    dw 11
-    dw 22
-    dw 20
-    dw 12
-    dw 13
-    dw 24
-    dw 21
-    dw 24
-    dw 4
-    dw 12
-    dw 22
-    dw 1
-    dw 14
-    dw 4
-    dw 0
-    dw 3
-    dw 8
-    dw 2
-    dw 5
-    dw 2
-    dw 2
-    dw 9
-    dw 21
-    dw 7
-    dw 13
-    dw 8
-    dw 11
-    dw 12
-    dw 23
-    dw 14
-    dw 0
-    dw 2
-    dw 4
-    dw 6
-    dw 4
-    dw 9
-    dw 1
-    dw 7
-    dw 24
-    dw 22
-    dw 5
-    dw 12
-    dw 1
-    dw 4
-    dw 22
-    dw 8
-    dw 22
-    dw 5
-    dw 10
-    dw 8
-    dw 2
-    dw 7
-    dw 4
-    dw 6
-    dw 13
-    dw 9
-    dw 22
-    dw 11
-    dw 9
-    dw 20
-    dw 0
-    dw 24
-    dw 5
-    dw 8
-    dw 9
-    dw 13
-    dw 8
-    dw 8
-    dw 11
-    dw 0
-    dw 20
-    dw 6
-    dw 7
-    dw 14
-    dw 11
-    dw 9
-    dw 10
-    dw 22
-    dw 22
-    dw 2
-    dw 5
-    dw 2
-    dw 3
-    dw 9
-    dw 4
-    dw 1
-    dw 21
-    dw 14
-    dw 6
-    dw 13
-    dw 5
-    dw 7
-    dw 13
-    dw 22
-    dw 13
-    dw 5
-    dw 0
-    dw 7
-    dw 4
-    dw 3
-    dw 24
-    dw 12
-    dw 1
-    dw 13
-    dw 8
-    dw 6
-    dw 11
-    dw 5
-    dw 22
-    dw 8
-    dw 10
-    dw 24
-    dw 22
-    dw 0
-    dw 14
-    dw 4
-    dw 4
-    dw 12
-    dw 2
-    dw 2
-    dw 20
-    dw 7
-    dw 7
-    dw 3
-    dw 9
-    dw 3
-    dw 0
-    dw 13
-    dw 3
-    dw 6
-    dw 11
-    dw 3
-    dw 20
-    dw 11
-    dw 14
-    dw 3
-    dw 4
-    dw 7
-    dw 4
-    dw 12
-    dw 21
-    dw 11
-    dw 14
-    dw 20
-    dw 23
-    dw 5
-    dw 14
-    dw 11
-    dw 8
-    dw 0
-    dw 4
-    dw 24
-    dw 14
-    dw 9
-    dw 7
-    dw 5
-    dw 0
-    dw 3
-    dw 22
-    dw 10
-    dw 8
-    dw 24
-    dw 5
-    dw 24
-    dw 24
-    dw 5
-    dw 10
-    dw 0
-    dw 22
-    dw 2
-    dw 0
-    dw 0
-    dw 1
-    dw 20
-    dw 2
-    dw 6
-    dw 23
-    dw 4
-    dw 23
-    dw 4
-    dw 9
-    dw 24
-    dw 22
-    dw 8
-    dw 14
-    dw 7
-    dw 4
-    dw 24
-    dw 6
-    dw 13
-    dw 22
-    dw 13
-    dw 7
-    dw 14
-    dw 20
-    dw 0
-    dw 10
-    dw 1
-    dw 8
-    dw 9
-    dw 21
-    dw 4
-    dw 6
-    dw 5
-    dw 4
-    dw 0
-    dw 5
-    dw 23
-    dw 9
-    dw 24
-    dw 0
-    dw 12
-    dw 10
-    dw 12
-    dw 6
-    dw 22
-    dw 13
-    dw 11
-    dw 2
-    dw 12
-    dw 3
-    dw 24
-    dw 21
-    dw 7
-    dw 2
-    dw 21
-    dw 21
-    dw 2
-    dw 23
-    dw 7
-    dw 0
-    dw 6
-    dw 5
-    dw 13
-    dw 6
-    dw 21
-    dw 2
-    dw 9
-    dw 11
-    dw 2
-    dw 9
-    dw 8
-    dw 24
-    dw 0
-    dw 11
-    dw 13
-    dw 13
-    dw 24
-    dw 12
-    dw 10
-    dw 8
-    dw 5
-    dw 24
-    dw 9
-    dw 6
-    dw 4
-    dw 6
-    dw 1
-    dw 4
-    dw 23
-    dw 14
-    dw 21
-    dw 8
-    dw 8
-    dw 3
-    dw 2
-    dw 2
-    dw 22
-    dw 3
-    dw 10
-    dw 23
-    dw 9
-    dw 1
-    dw 11
-    dw 10
-    dw 6
-    dw 6
-    dw 0
-    dw 5
-    dw 4
-    dw 10
-    dw 4
-    dw 14
-    dw 13
-    dw 4
-    dw 3
-    dw 7
-    dw 10
-    dw 2
-    dw 12
-    dw 20
-    dw 22
-    dw 14
-    dw 12
-    dw 11
-    dw 6
-    dw 1
-    dw 1
-    dw 13
-    dw 7
-    dw 11
-    dw 8
-    dw 1
-    dw 7
-    dw 22
-    dw 9
-    dw 2
-    dw 5
-    dw 24
-    dw 10
-    dw 7
-    dw 22
-    dw 2
-    dw 11
-    dw 3
-    dw 20
-    dw 24
-    dw 12
-    dw 13
-    dw 13
-    dw 10
-    dw 10
-    dw 10
-    dw 10
-    dw 3
-    dw 14
-    dw 1
-    dw 24
-    dw 24
-    dw 4
-    dw 4
-    dw 22
-    dw 6
-    dw 10
-    dw 2
-    dw 20
-    dw 24
-    dw 2
-    dw 10
-    dw 3
-    dw 0
-    dw 22
-    dw 11
-    dw 10
-    dw 20
-    dw 23
-    dw 23
-    dw 8
-    dw 10
-    dw 5
-    dw 14
-    dw 1
-    dw 12
-    dw 13
-    dw 11
-    dw 10
-    dw 13
-    dw 6
-    dw 11
-    dw 10
-    dw 21
-    dw 10
-    dw 1
-    dw 11
-    dw 24
-    dw 8
-    dw 11
-    dw 23
-    dw 1
-    dw 20
-    dw 3
-    dw 12
-    dw 14
-    dw 10
 end

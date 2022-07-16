@@ -5,90 +5,81 @@ from starkware.cairo.common.registers import get_label_location
 from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.cairo.common.alloc import alloc
 
-from caistring.str import (
-    Str,
-    str_from_literal,
-    str_concat_array,
-    str_concat,
-    str_empty,
-)
 from libs.colors import Color
 from libs.numbers_literals import number_to_literal_dangerous
+from caistring.str import literal_concat_known_length_dangerous
 
-from contracts.pxls_metadata.svg import svg_from_pixel_grid
+# from contracts.pxls_metadata.svg import svg_from_pixel_grid
 from contracts.pxls_metadata.pxls_colors import get_color_palette_name
 
 func get_yes_no_str{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     boolean : felt
-) -> (yes_no_str : Str):
+) -> (yes_no_str : felt):
     if boolean == TRUE:
-        let (yes_string : Str) = str_from_literal('","value":"yes"}')
-        return (yes_no_str=yes_string)
+        return (yes_no_str='","value":"yes"}')
     else:
-        let (no_string : Str) = str_from_literal('","value":"no"}')
-        return (yes_no_str=no_string)
+        return (yes_no_str='","value":"no"}')
     end
 end
 
-func get_palette_trait{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    palette_index : felt, palette_present : felt, is_last_trait : felt
-) -> (trait : Str):
+func append_palette_trait{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    palette_index : felt,
+    palette_present : felt,
+    is_last_trait : felt,
+    destination_len : felt,
+    destination : felt*,
+) -> (new_destination_len : felt):
     alloc_locals
-    let (trait_start : Str) = str_from_literal('{"trait_type":"')
+    let trait_start = '{"trait_type":"'
 
-    let (palette_name : Str) = get_color_palette_name(palette_index)
+    let (palette_name : felt) = get_color_palette_name(palette_index)
 
-    let (yes_no_str : Str) = get_yes_no_str(palette_present)
-
-    let (trait : Str) = str_concat(trait_start, palette_name)
-    let (trait : Str) = str_concat(trait, yes_no_str)
-
-    if is_last_trait == TRUE:
-        return (trait=trait)
-    else:
-        let (comma : Str) = str_from_literal(',')
-        let (trait : Str) = str_concat(trait, comma)
-        return (trait=trait)
+    let (yes_no_str : felt) = get_yes_no_str(palette_present)
+    if is_last_trait == FALSE:
+        let (yes_no_str : felt) = literal_concat_known_length_dangerous(yes_no_str, ',', 1)
     end
+
+    assert destination[destination_len] = trait_start
+    assert destination[destination_len + 1] = palette_name
+    assert destination[destination_len + 2] = yes_no_str
+
+    return (new_destination_len=destination_len + 3)
 end
 
 func get_pxl_json_metadata{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     grid_size : felt, pixel_index : felt, pixel_data_len : felt, pixel_data : felt*
-) -> (pxl_json_metadata : Str):
+) -> (pxl_json_metadata_len : felt, pxl_json_metadata : felt*):
     alloc_locals
 
-    let (json_start : Str) = str_from_literal('{"name":"#')
+    let (pxl_json_metadata : felt*) = alloc()
+    assert pxl_json_metadata[0] = '{"name":"#'  # json start
     let (pixel_index_literal) = number_to_literal_dangerous(pixel_index + 1)  # starts at 1
-    let (pixel_index_str : Str) = str_from_literal(pixel_index_literal)
-    let (attributes_start : Str) = str_from_literal('","attributes":[')
-    let (attribute_cyan : Str) = get_palette_trait(0, pixel_data[0], FALSE)
-    let (attribute_blue : Str) = get_palette_trait(1, pixel_data[1], FALSE)
-    let (attribute_magenta : Str) = get_palette_trait(2, pixel_data[2], FALSE)
-    let (attribute_red : Str) = get_palette_trait(3, pixel_data[3], FALSE)
-    let (attribute_yellow : Str) = get_palette_trait(4, pixel_data[4], FALSE)
-    let (attribute_green : Str) = get_palette_trait(5, pixel_data[5], TRUE)
-    let (attributes_end : Str) = str_from_literal(',"image":"')
+    assert pxl_json_metadata[1] = pixel_index_literal
+    assert pxl_json_metadata[2] = '","attributes":['  # attributes start
+    let (pxl_json_metadata_len) = append_palette_trait(
+        0, pixel_data[0], FALSE, 3, pxl_json_metadata
+    )  # cyan attribute
+    let (pxl_json_metadata_len) = append_palette_trait(
+        1, pixel_data[1], FALSE, pxl_json_metadata_len, pxl_json_metadata
+    )  # blue attribute
+    let (pxl_json_metadata_len) = append_palette_trait(
+        2, pixel_data[2], FALSE, pxl_json_metadata_len, pxl_json_metadata
+    )  # magenta attribute
+    let (pxl_json_metadata_len) = append_palette_trait(
+        3, pixel_data[3], FALSE, pxl_json_metadata_len, pxl_json_metadata
+    )  # red attribute
+    let (pxl_json_metadata_len) = append_palette_trait(
+        4, pixel_data[4], FALSE, pxl_json_metadata_len, pxl_json_metadata
+    )  # yellow attribute
+    let (pxl_json_metadata_len) = append_palette_trait(
+        5, pixel_data[5], TRUE, pxl_json_metadata_len, pxl_json_metadata
+    )  # green attribute
 
-    # let (svg_image : Str) = svg_from_pixel_grid(grid_size, pixel_data_len - 6, pixel_data + 6)
-    let (svg_image : Str) = str_from_literal('<svg></svg>')
+    assert pxl_json_metadata[pxl_json_metadata_len] = ',"image":"'
 
-    let (json_end : Str) = str_from_literal('"}')
+    # TODO : append from pixel grid
+    assert pxl_json_metadata[pxl_json_metadata_len + 1] = '<svg></svg>'
+    assert pxl_json_metadata[pxl_json_metadata_len + 2] = '"}'
 
-    let (str_array : Str*) = alloc()
-    assert str_array[0] = json_start
-    assert str_array[1] = pixel_index_str
-    assert str_array[2] = attributes_start
-    assert str_array[3] = attribute_cyan
-    assert str_array[4] = attribute_blue
-    assert str_array[5] = attribute_magenta
-    assert str_array[6] = attribute_red
-    assert str_array[7] = attribute_yellow
-    assert str_array[8] = attribute_green
-    assert str_array[9] = attributes_end
-    assert str_array[10] = svg_image
-    assert str_array[11] = json_end
-
-    let (pxl_json_metadata : Str) = str_concat_array(12, str_array)
-
-    return (pxl_json_metadata=pxl_json_metadata)
+    return (pxl_json_metadata_len=pxl_json_metadata_len + 3, pxl_json_metadata=pxl_json_metadata)
 end

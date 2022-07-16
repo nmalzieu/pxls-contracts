@@ -2,24 +2,26 @@
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.cairo.common.registers import get_label_location
-from contracts.pxls_metadata.pxls_metadata import get_palette_trait, get_pxl_json_metadata
+from starkware.cairo.common.alloc import alloc
+
+from contracts.pxls_metadata.pxls_metadata import append_palette_trait, get_pxl_json_metadata
 from caistring.str import Str
 
 @view
-func test_get_palette_trait{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
+func test_append_palette_trait{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
+    alloc_locals
+    let (trait : felt*) = alloc()
     # Palette 2 = magenta, 1 = "yes", with a comma at the end
-    let (trait : Str) = get_palette_trait(2, TRUE, FALSE)
+    let (trait_len) = append_palette_trait(2, TRUE, FALSE, 0, trait)
     # Result must be {"trait_type":"magenta","value":"yes"}
-    # in the form of 4 felts :
+    # in the form of 3 felts :
     # {"trait_type":"
     # magenta
-    # ","value":"yes"}
-    # ,
-    assert 4 = trait.arr_len
-    assert '{"trait_type":"' = trait.arr[0]
-    assert 'magenta' = trait.arr[1]
-    assert '","value":"yes"}' = trait.arr[2]
-    assert ',' = trait.arr[3]
+    # ","value":"yes"},
+    assert 3 = trait_len
+    assert '{"trait_type":"' = trait[0]
+    assert 'magenta' = trait[1]
+    assert '","value":"yes"},' = trait[2]
     return ()
 end
 
@@ -50,7 +52,7 @@ end
 func test_get_pxl_json_metadata{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}(
     ):
     let (pixel_metadata_len : felt, pixel_metadata : felt*) = sample_pixel_metadata(0)
-    let (pxl_json_metadata : Str) = get_pxl_json_metadata(
+    let (pxl_json_metadata_len : felt, pxl_json_metadata : felt*) = get_pxl_json_metadata(
         grid_size=4, pixel_index=0, pixel_data_len=pixel_metadata_len, pixel_data=pixel_metadata
     )
     return ()

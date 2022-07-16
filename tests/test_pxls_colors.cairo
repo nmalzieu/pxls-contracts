@@ -1,14 +1,14 @@
 %lang starknet
 from starkware.cairo.common.cairo_builtins import HashBuiltin
+from starkware.cairo.common.alloc import alloc
+
 from contracts.pxls_metadata.pxls_colors import get_color_palette_name, get_color
-from caistring.str import Str
 
 @view
 func test_get_color_palette_name{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}(
     ):
-    let (cyan : Str) = get_color_palette_name(0)
-    assert 1 = cyan.arr_len
-    assert 'cyan' = cyan.arr[0]
+    let (cyan) = get_color_palette_name(0)
+    assert 'cyan' = cyan
     return ()
 end
 

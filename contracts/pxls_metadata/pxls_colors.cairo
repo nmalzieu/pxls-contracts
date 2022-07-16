@@ -3,17 +3,15 @@
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.registers import get_label_location
 
-from caistring.str import Str, str_from_literal
 from libs.colors import Color
 
 func get_color_palette_name{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     palette_index : felt
-) -> (palette_name : Str):
+) -> (palette_name : felt):
     let (palettes_location) = get_label_location(palettes_label)
     let palettes = cast(palettes_location, felt*)
     let palette_name = palettes[palette_index]
-    let (palette_name_str : Str) = str_from_literal(palette_name)
-    return (palette_name=palette_name_str)
+    return (palette_name=palette_name)
 
     palettes_label:
     dw 'cyan'

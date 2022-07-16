@@ -5,14 +5,7 @@ from starkware.cairo.common.alloc import alloc
 from starkware.cairo.common.math import assert_nn_le, unsigned_div_rem
 
 from contracts.pxls_metadata.pxls_colors import get_color
-from caistring.str import (
-    Str,
-    str_from_literal,
-    str_concat_array,
-    str_concat,
-    str_empty,
-    literal_concat_known_length_dangerous,
-)
+from caistring.str import literal_concat_known_length_dangerous
 from libs.colors import Color
 from libs.numbers_literals import number_to_literal_dangerous, number_literal_length
 
@@ -23,9 +16,9 @@ func pixel_coordinates_from_index{
     return (x=x, y=y)
 end
 
-func svg_rect_from_pixel{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    x : felt, y : felt, color : Color
-) -> (svg_rect_str : Str):
+func append_svg_rect_from_pixel{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    x : felt, y : felt, color : Color, destination_len : felt, destination : felt*
+) -> (new_destination_len : felt):
     alloc_locals
 
     let rect_start_literal = '<rect width="10" height="10" x='
@@ -61,8 +54,6 @@ func svg_rect_from_pixel{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range
         x_to_fill_literal, rect_fill_literal, 13
     )  # + 13 = 26
 
-    let (x_to_fill_str : Str) = str_from_literal(x_to_fill_literal)
-
     let (red_to_end_literal) = literal_concat_known_length_dangerous(red_literal, comma_literal, 1)  # 3 + 1 = 4
     let (red_to_end_literal) = literal_concat_known_length_dangerous(
         red_to_end_literal, green_literal, green_literal_length
@@ -77,29 +68,30 @@ func svg_rect_from_pixel{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range
         red_to_end_literal, rect_end_literal, 5
     )  # + 5 = 16
 
-    let (red_to_end_str : Str) = str_from_literal(red_to_end_literal)
+    assert destination[destination_len] = rect_start_literal
+    assert destination[destination_len + 1] = x_to_fill_literal
+    assert destination[destination_len + 2] = red_to_end_literal
 
-    let (rect_start_str : Str) = str_from_literal(rect_start_literal)
-    let (svg_rect_str : Str) = str_concat(rect_start_str, x_to_fill_str)
-    let (svg_rect_str : Str) = str_concat(svg_rect_str, red_to_end_str)
-
-    return (svg_rect_str=svg_rect_str)
+    return (new_destination_len=destination_len + 3)
 end
 
-func svg_rects_from_pixel_grid{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+func append_svg_rects_from_pixel_grid{
+    syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
+}(
     grid_size : felt,
     grid_array_len : felt,
     grid_array : felt*,
     pixel_index : felt,
-    current_str : Str,
-) -> (svg_rects_str : Str):
+    destination_len : felt,
+    destination : felt*,
+) -> (new_destination_len : felt):
     alloc_locals
     # A pixel grid is an array of Color arranged in a size x size grid
     # This method generates each svg <rect> for the grid and concatenates them
 
     # If no more pixel, return the result
     if grid_array_len == 0:
-        return (svg_rects_str=current_str)
+        return (new_destination_len=destination_len)
     end
 
     # Calculate pixel position from its index
@@ -108,31 +100,32 @@ func svg_rects_from_pixel_grid{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*,
     let color_index = grid_array[0]
     let (color : Color) = get_color(color_index)
     # Create rect for this pixel
-    let (pixel_rect_str : Str) = svg_rect_from_pixel(x=x, y=y, color=color)
+    let (new_destination_len : felt) = append_svg_rect_from_pixel(
+        x, y, color, destination_len, destination
+    )
 
     # Tail recursion
-    let (new_current_str : Str) = str_concat(current_str, pixel_rect_str)
-    return svg_rects_from_pixel_grid(
-        grid_size, grid_array_len - 1, grid_array + 1, pixel_index + 1, new_current_str
+    return append_svg_rects_from_pixel_grid(
+        grid_size,
+        grid_array_len - 1,
+        grid_array + 1,
+        pixel_index + 1,
+        new_destination_len,
+        destination,
     )
 end
 
-func svg_start_from_grid_size{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    grid_size : felt
-) -> (svg_start_str : Str):
+func append_svg_start_from_grid_size{
+    syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
+}(grid_size : felt, destination_len : felt, destination : felt*) -> (new_destination_len : felt):
     alloc_locals
 
     let svg_start_literal = '<svg width="'  # length 12
-    # let (svg_start : Str) = str_from_literal('<svg width="')
     let (grid_size_literal) = number_to_literal_dangerous(grid_size)  # max length 3
     let (grid_size_literal_length) = number_literal_length(grid_size)
-    # let (grid_size_str : Str) = str_from_literal(grid_size_literal)
     let svg_height_literal = '0" height="'  # length 11
-    # let (svg_height : Str) = str_from_literal('0" height="')
-    # let svg_xmlns_literal = '0" xmlns="http://www.w3.org/200'  # length 31
-    let (svg_xmlns : Str) = str_from_literal('0" xmlns="http://www.w3.org/200')
-    # let svg_end_literal = '0/svg">'
-    let (svg_end : Str) = str_from_literal('0/svg">')
+    let svg_xmlns_literal = '0" xmlns="http://www.w3.org/200'  # length 31
+    let svg_end_literal = '0/svg">'
 
     let (svg_start_to_height) = literal_concat_known_length_dangerous(
         svg_start_literal, grid_size_literal, grid_size_literal_length
@@ -145,34 +138,31 @@ func svg_start_from_grid_size{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, 
         svg_start_to_height, grid_size_literal, grid_size_literal_length
     )  # 26 + 3 = 29
 
-    let (svg_start_to_height_str : Str) = str_from_literal(svg_start_to_height)
+    assert destination[destination_len] = svg_start_to_height
+    assert destination[destination_len + 1] = svg_xmlns_literal
+    assert destination[destination_len + 2] = svg_end_literal
 
-    let (str_array : Str*) = alloc()
-    assert str_array[0] = svg_start_to_height_str
-    assert str_array[1] = svg_xmlns
-    assert str_array[2] = svg_end
-
-    let (svg_start_str : Str) = str_concat_array(3, str_array)
-
-    return (svg_start_str=svg_start_str)
+    return (new_destination_len=destination_len + 3)
 end
 
-func svg_from_pixel_grid{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    grid_size : felt, grid_array_len : felt, grid_array : felt*
-) -> (svg_str : Str):
+func append_svg_from_pixel_grid{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    grid_size : felt,
+    grid_array_len : felt,
+    grid_array : felt*,
+    destination_len : felt,
+    destination : felt*,
+) -> (new_destination_len : felt):
     alloc_locals
 
     # A pixel grid is an array of colors (represented by their index, a single felt) arranged in a size x size grid
-    let (svg_start : Str) = svg_start_from_grid_size(grid_size)
 
-    let (empty_str : Str) = str_empty()
-    let (svg_rects : Str) = svg_rects_from_pixel_grid(
-        grid_size, grid_array_len, grid_array, 0, empty_str
+    let (new_destination_len) = append_svg_start_from_grid_size(
+        grid_size, destination_len, destination
     )
-
-    let (svg_end : Str) = str_from_literal('</svg>')
-
-    let (svg_unclosed : Str) = str_concat(svg_start, svg_rects)
-    let (svg_str : Str) = str_concat(svg_unclosed, svg_end)
-    return (svg_str=svg_str)
+    let (new_destination_len) = append_svg_rects_from_pixel_grid(
+        grid_size, grid_array_len, grid_array, 0, new_destination_len, destination
+    )
+    # Closing the svg
+    assert destination[new_destination_len] = '</svg>'
+    return (new_destination_len=new_destination_len + 1)
 end

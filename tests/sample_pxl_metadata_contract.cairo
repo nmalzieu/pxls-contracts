@@ -1,71 +1,10 @@
 %lang starknet
+
 from starkware.cairo.common.cairo_builtins import HashBuiltin
-from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.cairo.common.registers import get_label_location
-from starkware.cairo.common.alloc import alloc
-
-from contracts.pxls_metadata.pxls_metadata import append_palette_trait, get_pxl_json_metadata
-from caistring.str import Str
 
 @view
-func test_append_palette_trait{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
-    alloc_locals
-    let (trait : felt*) = alloc()
-    # Palette 2 = magenta, 1 = "yes", with a comma at the end
-    let (trait_len) = append_palette_trait(2, TRUE, FALSE, 0, trait)
-    # Result must be {"trait_type":"magenta","value":"yes"}
-    # in the form of 3 felts :
-    # {"trait_type":"
-    # magenta
-    # ","value":"yes"},
-    assert 3 = trait_len
-    assert '{"trait_type":"' = trait[0]
-    assert 'magenta' = trait[1]
-    assert '","value":"yes"},' = trait[2]
-    return ()
-end
-
-@view
-func test_get_pixel_metadata{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
-    let (pixel_metadata_len : felt, pixel_metadata : felt*) = sample_pixel_metadata(0)
-
-    # First pxl has 4 palettes : "cyan","yellow","magenta","blue" = 0,4,2,1
-    assert 1 = pixel_metadata[0]
-    assert 1 = pixel_metadata[1]
-    assert 1 = pixel_metadata[2]
-    assert 0 = pixel_metadata[3]
-    assert 1 = pixel_metadata[4]
-    assert 0 = pixel_metadata[5]
-
-    # First pxl has 400 colors: pixel_metadata[6] => pixel_metadata[405]
-    # Its 23rd color is #33FFFF . It is supposed to be stored at pixel_metadata[28]
-    # and its value is supposed to be the color index of 33FFFF which is 3 in our list
-    assert 3 = pixel_metadata[28]
-
-    # Its last color is #FFCCFF . It is supposed to be stored at pixel_metadata[405]
-    # and its value is supposed to be the color index of FFCCFF which is 10 in our list
-    assert 10 = pixel_metadata[405]
-    return ()
-end
-
-@view
-func test_get_pxl_json_metadata{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}(
-    ):
-    let (pixel_metadata_len : felt, pixel_metadata : felt*) = sample_pixel_metadata(0)
-    let (pxl_json_metadata_len : felt, pxl_json_metadata : felt*) = get_pxl_json_metadata(
-        grid_size=4, pixel_index=0, pixel_data_len=pixel_metadata_len, pixel_data=pixel_metadata
-    )
-    # length = 4 (beginning) + 3 * 6 (attributes) + 2 (image tag end) + 1204 (svg with one rect) + 1 (json end) = 1229
-    assert 1229 = pxl_json_metadata_len
-    assert 'data:application/json;' = pxl_json_metadata[0]
-    assert 'cyan' = pxl_json_metadata[5]  # Second felt of cyan attribute
-    # Third felt of blue attribute: blue palette is
-    # present and it's not the last palette so end with ,
-    assert '","value":"yes"},' = pxl_json_metadata[9]
-    return ()
-end
-
-func sample_pixel_metadata{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+func get_pixel_metadata{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     pixel_index : felt
 ) -> (pixel_metadata_len : felt, pixel_metadata : felt*):
     let (pixels_location) = get_label_location(pixels_label)

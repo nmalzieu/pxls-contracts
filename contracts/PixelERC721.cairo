@@ -5,13 +5,16 @@ from starkware.cairo.common.uint256 import Uint256, uint256_lt, uint256_eq
 from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.starknet.common.syscalls import get_caller_address
 from starkware.cairo.common.alloc import alloc
+from starkware.cairo.common.math_cmp import is_le
 
 from openzeppelin.token.erc721.library import ERC721
 from openzeppelin.token.erc721_enumerable.library import ERC721_Enumerable
 from openzeppelin.introspection.ERC165 import ERC165
 
 from openzeppelin.security.safemath import SafeUint256
-from openzeppelin.security.initializable import Initializable
+
+from contracts.interfaces import IPXLMetadata
+from contracts.pxls_metadata.pxls_metadata import get_pxl_json_metadata
 
 #
 # Storage
@@ -25,17 +28,50 @@ end
 func matrix_size() -> (size : Uint256):
 end
 
+# The grids with the representation of the 400 PXL NFT
+# have been generated off-chain and stored in 4 different
+# smart contracts to handle max contract size. From these
+# grids, we are able to generate the svg of these PXLS
+# and the JSON metadata, fully on-chain!
+
+@storage_var
+func pxls_1_100() -> (address : felt):
+end
+
+@storage_var
+func pxls_101_200() -> (address : felt):
+end
+
+@storage_var
+func pxls_201_300() -> (address : felt):
+end
+
+@storage_var
+func pxls_301_400() -> (address : felt):
+end
+
 #
 # Constructor
 #
 
 @constructor
 func constructor{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    name : felt, symbol : felt, owner : felt, m_size : Uint256
+    name : felt,
+    symbol : felt,
+    owner : felt,
+    m_size : Uint256,
+    pxls_1_100_address : felt,
+    pxls_101_200_address : felt,
+    pxls_201_300_address : felt,
+    pxls_301_400_address : felt,
 ):
     ERC721.initializer(name, symbol)
     ERC721_Enumerable.initializer()
     matrix_size.write(m_size)
+    pxls_1_100.write(pxls_1_100_address)
+    pxls_101_200.write(pxls_101_200_address)
+    pxls_201_300.write(pxls_201_300_address)
+    pxls_301_400.write(pxls_301_400_address)
     return ()
 end
 
@@ -98,10 +134,52 @@ end
 @view
 func tokenURI{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     tokenId : Uint256
-) -> (tokenURI : felt):
-    # TODO => fixed tokenURI ?
-    let (tokenURI : felt) = ERC721.token_uri(tokenId)
-    return (tokenURI)
+) -> (tokenURI_len : felt, tokenURI : felt*):
+    alloc_locals
+    # The tokenURI is an array of felts
+    # It's an inline json containing an inline svg, all
+    # generated on-chain from grids of data (the colors
+    # of each 400 pixels) stored in 4 smart contracts.
+    let (pxls_data_addresses : felt*) = alloc()
+
+    let (pxls_1_100_address) = pxls_1_100.read()
+    let (pxls_101_200_address) = pxls_101_200.read()
+    let (pxls_201_300_address) = pxls_201_300.read()
+    let (pxls_301_400_address) = pxls_301_400.read()
+
+    pxls_data_addresses[0] = pxls_301_400_address
+    pxls_data_addresses[1] = pxls_201_300_address
+    pxls_data_addresses[2] = pxls_101_200_address
+    pxls_data_addresses[3] = pxls_1_100_address
+
+    let (less_than_100) = is_le(tokenId.low, 100)
+    let (less_than_200) = is_le(tokenId.low, 200)
+    let (less_than_300) = is_le(tokenId.low, 300)
+    let (less_than_400) = is_le(tokenId.low, 400)
+
+    let sum_of_bools = less_than_100 + less_than_200 + less_than_300 + less_than_400
+
+    # sum of bools is:
+    # 4 if 1 <= id <= 100
+    # 3 if 101 <= id <= 200
+    # 2 if 201 <= id <= 300
+    # 1 if 301 <= id <= 400
+
+    let contract_address = pxls_data_addresses[sum_of_bools - 1]
+
+    # Token starts at 1 but pxl index at 0
+    let pixel_index = tokenId.low - 1
+    let (metadata_len : felt, metadata : felt*) = IPXLMetadata.get_pixel_metadata(
+        contract_address=contract_address, pixel_index=pixel_index
+    )
+    let (size : Uint256) = matrix_size.read()
+    let (pxl_json_metadata_len : felt, pxl_json_metadata : felt*) = get_pxl_json_metadata(
+        grid_size=size.low,
+        pixel_index=pixel_index,
+        pixel_data_len=metadata_len,
+        pixel_data=metadata,
+    )
+    return (tokenURI_len=pxl_json_metadata_len, tokenURI=pxl_json_metadata)
 end
 
 @view
@@ -204,19 +282,6 @@ func mint{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(to 
 
     return ()
 end
-
-# @external
-# func setTokenURI{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
-#     tokenId : Uint256, tokenURI : felt
-# ):
-#     ERC721._set_token_uri(tokenId, tokenURI)
-#     return ()
-# end
-
-
-#
-# Helpers
-#
 
 func get_all_pixels_of_owner{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     owner : felt, index : felt, balance : felt, pixels : felt*

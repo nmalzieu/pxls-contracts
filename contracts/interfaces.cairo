@@ -4,6 +4,14 @@ from starkware.cairo.common.uint256 import Uint256
 from libs.colors import Color, PixelColor
 
 @contract_interface
+namespace IPXLMetadata:
+    func get_pixel_metadata(pixel_index : felt) -> (
+        pixel_metadata_len : felt, pixel_metadata : felt*
+    ):
+    end
+end
+
+@contract_interface
 namespace IPixelERC721:
     func initialize(pixel_drawer_address : felt):
     end
@@ -18,6 +26,8 @@ namespace IPixelERC721:
     func pixelsOfOwner(owner : felt) -> (pixels_len : felt, pixels : felt*):
     end
     func transferFrom(from_ : felt, to : felt, tokenId : Uint256):
+    end
+    func tokenURI(tokenId : Uint256) -> (tokenURI_len : felt, tokenURI : felt*):
     end
 end
 

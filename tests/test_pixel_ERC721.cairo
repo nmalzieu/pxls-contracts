@@ -29,132 +29,132 @@ func __setup__{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
     return ()
 end
 
-# @view
-# func test_pixel_erc721_getters{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
-#     tempvar pixel_contract_address
-#     %{ ids.pixel_contract_address = context.pixel_contract_address %}
+@view
+func test_pixel_erc721_getters{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
+    tempvar pixel_contract_address
+    %{ ids.pixel_contract_address = context.pixel_contract_address %}
 
-# let (matrix_size : Uint256) = IPixelERC721.matrixSize(contract_address=pixel_contract_address)
-#     assert matrix_size.low = 2
-#     assert matrix_size.high = 0
+    let (matrix_size : Uint256) = IPixelERC721.matrixSize(contract_address=pixel_contract_address)
+    assert matrix_size.low = 2
+    assert matrix_size.high = 0
 
-# let (max_supply : Uint256) = IPixelERC721.maxSupply(contract_address=pixel_contract_address)
-#     assert max_supply.low = 4
-#     assert max_supply.high = 0
+    let (max_supply : Uint256) = IPixelERC721.maxSupply(contract_address=pixel_contract_address)
+    assert max_supply.low = 4
+    assert max_supply.high = 0
 
-# # Check that minted pixels count is 0
+    # Check that minted pixels count is 0
 
-# let (total_supply : Uint256) = IPixelERC721.totalSupply(contract_address=pixel_contract_address)
-#     assert total_supply.low = 0
-#     assert total_supply.high = 0
+    let (total_supply : Uint256) = IPixelERC721.totalSupply(contract_address=pixel_contract_address)
+    assert total_supply.low = 0
+    assert total_supply.high = 0
 
-# return ()
-# end
+    return ()
+end
 
-# @view
-# func test_pixel_erc721_mint{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
-#     tempvar pixel_contract_address
-#     %{ ids.pixel_contract_address = context.pixel_contract_address %}
+@view
+func test_pixel_erc721_mint{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
+    tempvar pixel_contract_address
+    %{ ids.pixel_contract_address = context.pixel_contract_address %}
 
-# %{ stop_prank = start_prank(123456, target_contract_address=ids.pixel_contract_address) %}
+    %{ stop_prank = start_prank(123456, target_contract_address=ids.pixel_contract_address) %}
 
-# IPixelERC721.mint(contract_address=pixel_contract_address, to=123456)
+    IPixelERC721.mint(contract_address=pixel_contract_address, to=123456)
 
-# # Check that minted pixels count is 1
+    # Check that minted pixels count is 1
 
-# let (total_supply : Uint256) = IPixelERC721.totalSupply(contract_address=pixel_contract_address)
-#     assert total_supply.low = 1
-#     assert total_supply.high = 0
+    let (total_supply : Uint256) = IPixelERC721.totalSupply(contract_address=pixel_contract_address)
+    assert total_supply.low = 1
+    assert total_supply.high = 0
 
-# # Check that can't mint a second one
+    # Check that can't mint a second one
 
-# %{ expect_revert(error_message="123456 already owns a pixel") %}
+    %{ expect_revert(error_message="123456 already owns a pixel") %}
 
-# IPixelERC721.mint(contract_address=pixel_contract_address, to=123456)
+    IPixelERC721.mint(contract_address=pixel_contract_address, to=123456)
 
-# %{ stop_prank() %}
-#     return ()
-# end
+    %{ stop_prank() %}
+    return ()
+end
 
-# @view
-# func test_pixel_erc721_max_supply{
-#     syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
-# }():
-#     tempvar pixel_contract_address
-#     %{ ids.pixel_contract_address = context.pixel_contract_address %}
+@view
+func test_pixel_erc721_max_supply{
+    syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
+}():
+    tempvar pixel_contract_address
+    %{ ids.pixel_contract_address = context.pixel_contract_address %}
 
-# %{ stop_prank = start_prank(123456, target_contract_address=ids.pixel_contract_address) %}
+    %{ stop_prank = start_prank(123456, target_contract_address=ids.pixel_contract_address) %}
 
-# # Let's mint 4 so we get to max supply
+    # Let's mint 4 so we get to max supply
 
-# IPixelERC721.mint(contract_address=pixel_contract_address, to=123456)
-#     IPixelERC721.mint(contract_address=pixel_contract_address, to=123457)
-#     IPixelERC721.mint(contract_address=pixel_contract_address, to=123458)
-#     IPixelERC721.mint(contract_address=pixel_contract_address, to=123459)
+    IPixelERC721.mint(contract_address=pixel_contract_address, to=123456)
+    IPixelERC721.mint(contract_address=pixel_contract_address, to=123457)
+    IPixelERC721.mint(contract_address=pixel_contract_address, to=123458)
+    IPixelERC721.mint(contract_address=pixel_contract_address, to=123459)
 
-# # Check that minted pixels count is 4
+    # Check that minted pixels count is 4
 
-# let (total_supply : Uint256) = IPixelERC721.totalSupply(contract_address=pixel_contract_address)
-#     assert total_supply.low = 4
-#     assert total_supply.high = 0
+    let (total_supply : Uint256) = IPixelERC721.totalSupply(contract_address=pixel_contract_address)
+    assert total_supply.low = 4
+    assert total_supply.high = 0
 
-# # Check that once max supply is reached we can't mint anymore
-#     %{ expect_revert(error_message="Total pixel supply has already been minted") %}
-#     IPixelERC721.mint(contract_address=pixel_contract_address, to=123460)
+    # Check that once max supply is reached we can't mint anymore
+    %{ expect_revert(error_message="Total pixel supply has already been minted") %}
+    IPixelERC721.mint(contract_address=pixel_contract_address, to=123460)
 
-# %{ stop_prank() %}
-#     return ()
-# end
+    %{ stop_prank() %}
+    return ()
+end
 
-# @view
-# func test_pixel_erc721_pixels_of_owner{
-#     syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
-# }():
-#     tempvar pixel_contract_address
-#     %{ ids.pixel_contract_address = context.pixel_contract_address %}
+@view
+func test_pixel_erc721_pixels_of_owner{
+    syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
+}():
+    tempvar pixel_contract_address
+    %{ ids.pixel_contract_address = context.pixel_contract_address %}
 
-# # Let's mint 3 to 3  different addresses
+    # Let's mint 3 to 3  different addresses
 
-# IPixelERC721.mint(contract_address=pixel_contract_address, to=123456)
-#     IPixelERC721.mint(contract_address=pixel_contract_address, to=123457)
-#     IPixelERC721.mint(contract_address=pixel_contract_address, to=123458)
+    IPixelERC721.mint(contract_address=pixel_contract_address, to=123456)
+    IPixelERC721.mint(contract_address=pixel_contract_address, to=123457)
+    IPixelERC721.mint(contract_address=pixel_contract_address, to=123458)
 
-# # Let's check that first address has 1
+    # Let's check that first address has 1
 
-# let (owned_pixels_123456_len, owned_pixels_123456 : felt*) = IPixelERC721.pixelsOfOwner(
-#         pixel_contract_address, 123456
-#     )
-#     assert 1 = owned_pixels_123456_len
+    let (owned_pixels_123456_len, owned_pixels_123456 : felt*) = IPixelERC721.pixelsOfOwner(
+        pixel_contract_address, 123456
+    )
+    assert 1 = owned_pixels_123456_len
 
-# # Let's transfer from 123456 to 123458
+    # Let's transfer from 123456 to 123458
 
-# %{ stop_prank = start_prank(123456, target_contract_address=ids.pixel_contract_address) %}
+    %{ stop_prank = start_prank(123456, target_contract_address=ids.pixel_contract_address) %}
 
-# IPixelERC721.transferFrom(
-#         pixel_contract_address, 123456, 123458, Uint256(owned_pixels_123456[0], 0)
-#     )
+    IPixelERC721.transferFrom(
+        pixel_contract_address, 123456, 123458, Uint256(owned_pixels_123456[0], 0)
+    )
 
-# %{ stop_prank() %}
+    %{ stop_prank() %}
 
-# # Let's check transfer worked
+    # Let's check transfer worked
 
-# let (owned_pixels_123456_len, owned_pixels_123456 : felt*) = IPixelERC721.pixelsOfOwner(
-#         pixel_contract_address, 123456
-#     )
-#     assert 0 = owned_pixels_123456_len
+    let (owned_pixels_123456_len, owned_pixels_123456 : felt*) = IPixelERC721.pixelsOfOwner(
+        pixel_contract_address, 123456
+    )
+    assert 0 = owned_pixels_123456_len
 
-# let (owned_pixels_123458_len, owned_pixels_123458 : felt*) = IPixelERC721.pixelsOfOwner(
-#         pixel_contract_address, 123458
-#     )
-#     assert 2 = owned_pixels_123458_len
+    let (owned_pixels_123458_len, owned_pixels_123458 : felt*) = IPixelERC721.pixelsOfOwner(
+        pixel_contract_address, 123458
+    )
+    assert 2 = owned_pixels_123458_len
 
-# # 123458 first minted the 3rd pixel
-#     assert 3 = owned_pixels_123458[0]
-#     # then got the 1st pixel transfered
-#     assert 1 = owned_pixels_123458[1]
+    # 123458 first minted the 3rd pixel
+    assert 3 = owned_pixels_123458[0]
+    # then got the 1st pixel transfered
+    assert 1 = owned_pixels_123458[1]
 
-# return ()
-# end
+    return ()
+end
 
 @view
 func test_pixel_erc721_token_uri{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}(

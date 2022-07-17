@@ -17,7 +17,6 @@ func __setup__{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
         context.pixel_contract_address = deploy_contract("contracts/PixelERC721.cairo", [
                ids.name,
                ids.symbol,
-               ids.account,
                2,
                0,
                context.sample_pxl_metadata_address,

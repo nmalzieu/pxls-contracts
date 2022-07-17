@@ -44,7 +44,7 @@ On Goerli:
 ## ERC721 Contract
 
   
-    protostar -p testnet deploy ./build/pixel_erc721.json --inputs 1347963987 1347963987 "<owner_account_address>" 20 0 "<pxls_1_100_address>" "<pxls_101_200_address>" "<pxls_201_300_address>" "<pxls_301_400_address>"
+    protostar -p testnet deploy ./build/pixel_erc721.json --inputs 1347963987 1347963987 20 0 "<pxls_1_100_address>" "<pxls_101_200_address>" "<pxls_201_300_address>" "<pxls_301_400_address>"
 
   
   

@@ -58,7 +58,6 @@ end
 func constructor{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     name : felt,
     symbol : felt,
-    owner : felt,
     m_size : Uint256,
     pxls_1_100_address : felt,
     pxls_101_200_address : felt,

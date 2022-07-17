@@ -147,30 +147,35 @@ func tokenURI{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}
     let (pxls_201_300_address) = pxls_201_300.read()
     let (pxls_301_400_address) = pxls_301_400.read()
 
-    pxls_data_addresses[0] = pxls_301_400_address
-    pxls_data_addresses[1] = pxls_201_300_address
-    pxls_data_addresses[2] = pxls_101_200_address
-    pxls_data_addresses[3] = pxls_1_100_address
+    pxls_data_addresses[0] = pxls_1_100_address
+    pxls_data_addresses[1] = pxls_101_200_address
+    pxls_data_addresses[2] = pxls_201_300_address
+    pxls_data_addresses[3] = pxls_301_400_address
 
     let (less_than_100) = is_le(tokenId.low, 100)
     let (less_than_200) = is_le(tokenId.low, 200)
     let (less_than_300) = is_le(tokenId.low, 300)
     let (less_than_400) = is_le(tokenId.low, 400)
 
-    let sum_of_bools = less_than_100 + less_than_200 + less_than_300 + less_than_400
+    let contract_index = 4 - less_than_100 - less_than_200 - less_than_300 - less_than_400
 
-    # sum of bools is:
-    # 4 if 1 <= id <= 100
-    # 3 if 101 <= id <= 200
+    # contract_index is:
+    # 0 if 1 <= id <= 100
+    # 1 if 101 <= id <= 200
     # 2 if 201 <= id <= 300
-    # 1 if 301 <= id <= 400
+    # 3 if 301 <= id <= 400
 
-    let contract_address = pxls_data_addresses[sum_of_bools - 1]
+    let contract_address = pxls_data_addresses[contract_index]
 
     # Token starts at 1 but pxl index at 0
     let pixel_index = tokenId.low - 1
+
+    # Shifting the index so that we query the metadata array
+    # between 0 & 99 for each contract_address
+    let shifted_pixel_index = pixel_index - (contract_index * 100)
+
     let (metadata_len : felt, metadata : felt*) = IPXLMetadata.get_pixel_metadata(
-        contract_address=contract_address, pixel_index=pixel_index
+        contract_address=contract_address, pixel_index=shifted_pixel_index
     )
     let (size : Uint256) = matrix_size.read()
     let (pxl_json_metadata_len : felt, pxl_json_metadata : felt*) = get_pxl_json_metadata(

@@ -21,9 +21,9 @@ func __setup__{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
                2,
                0,
                context.sample_pxl_metadata_address,
-               0,
-               0,
-               0,
+               context.sample_pxl_metadata_address,
+               context.sample_pxl_metadata_address,
+               context.sample_pxl_metadata_address,
                ]).contract_address
     %}
     return ()
@@ -173,6 +173,28 @@ func test_pixel_erc721_token_uri{syscall_ptr : felt*, range_check_ptr, pedersen_
     # Third felt of blue attribute: blue palette is
     # present and it's not the last palette so end with ,
     assert '","value":"yes"},' = token_uri[9]
+
+    # Check that we can also reach other data smart contracts
+    let token_id : Uint256 = Uint256(101, 0)
+    let (token_uri_len : felt, token_uri : felt*) = IPixelERC721.tokenURI(
+        contract_address=pixel_contract_address, tokenId=token_id
+    )
+
+    assert 1630 = token_uri_len
+
+    let token_id : Uint256 = Uint256(201, 0)
+    let (token_uri_len : felt, token_uri : felt*) = IPixelERC721.tokenURI(
+        contract_address=pixel_contract_address, tokenId=token_id
+    )
+
+    assert 1630 = token_uri_len
+
+    let token_id : Uint256 = Uint256(301, 0)
+    let (token_uri_len : felt, token_uri : felt*) = IPixelERC721.tokenURI(
+        contract_address=pixel_contract_address, tokenId=token_id
+    )
+
+    assert 1630 = token_uri_len
 
     return ()
 end

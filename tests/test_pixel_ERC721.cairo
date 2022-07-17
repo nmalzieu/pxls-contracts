@@ -167,7 +167,7 @@ func test_pixel_erc721_token_uri{syscall_ptr : felt*, range_check_ptr, pedersen_
         contract_address=pixel_contract_address, tokenId=token_id
     )
 
-    assert 1230 = token_uri_len
+    assert 1630 = token_uri_len
     assert 'data:application/json;' = token_uri[0]
     assert 'cyan' = token_uri[5]  # Second felt of cyan attribute
     # Third felt of blue attribute: blue palette is

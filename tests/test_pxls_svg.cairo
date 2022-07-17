@@ -63,16 +63,13 @@ func test_append_svg_rect_from_pixel{
     )
 
     # Result is <rect width="10" height="10" x="10" y="20" fill="COLOR" />
-    # in the form of an array of length 3:
+    # in the form of an array of length 4:
 
-    # 1. <rect width="10" height="10" x=
-    # 2. "10" y="20" fill="rgb(
-    # 3. 255,20,100)" />
-
-    assert 3 = svg_rect_str_len
-    assert '<rect width="10" height="10" x=' = svg_rect_str[0]
-    assert '"10" y="20" fill="rgb(' = svg_rect_str[1]
-    assert '255,20,100)" />' = svg_rect_str[2]
+    assert 4 = svg_rect_str_len
+    assert '<rect width=\"10\" height=\"10\' = svg_rect_str[0]
+    assert '" x=\"10\" y=\"2' = svg_rect_str[1]
+    assert '0\" fill=\"rgb(255,20,100' = svg_rect_str[2]
+    assert ')\" />' = svg_rect_str[3]
 
     return ()
 end
@@ -97,31 +94,35 @@ func test_append_svg_rects_from_pixel_grid{
         destination=svg_rects_str,
     )
 
-    assert 12 = svg_rects_str_len
+    assert 16 = svg_rects_str_len
 
     # Pixel 0, x = 0, y = 0, color index 0 => CCFFFF = 204,255,255
 
-    assert '<rect width="10" height="10" x=' = svg_rects_str[0]
-    assert '"00" y="00" fill="rgb(' = svg_rects_str[1]
-    assert '204,255,255)" />' = svg_rects_str[2]
+    assert '<rect width=\"10\" height=\"10\' = svg_rects_str[0]
+    assert '" x=\"00\" y=\"0' = svg_rects_str[1]
+    assert '0\" fill=\"rgb(204,255,255' = svg_rects_str[2]
+    assert ')\" />' = svg_rects_str[3]
 
     # Pixel 1, x = 10, y = 0, color index 3 => 33FFFF = 51,255,255
 
-    assert '<rect width="10" height="10" x=' = svg_rects_str[3]
-    assert '"10" y="00" fill="rgb(' = svg_rects_str[4]
-    assert '51,255,255)" />' = svg_rects_str[5]
+    assert '<rect width=\"10\" height=\"10\' = svg_rects_str[4]
+    assert '" x=\"10\" y=\"0' = svg_rects_str[5]
+    assert '0\" fill=\"rgb(51,255,255' = svg_rects_str[6]
+    assert ')\" />' = svg_rects_str[7]
 
     # Pixel 2, x = 0, y = 10, color index 12 => FF66FF = 255,102,255
 
-    assert '<rect width="10" height="10" x=' = svg_rects_str[6]
-    assert '"00" y="10" fill="rgb(' = svg_rects_str[7]
-    assert '255,102,255)" />' = svg_rects_str[8]
+    assert '<rect width=\"10\" height=\"10\' = svg_rects_str[8]
+    assert '" x=\"00\" y=\"1' = svg_rects_str[9]
+    assert '0\" fill=\"rgb(255,102,255' = svg_rects_str[10]
+    assert ')\" />' = svg_rects_str[11]
 
     # Pixel 3, x = 10, y = 10, color index 20 => FFFFCC = 255,255,204
 
-    assert '<rect width="10" height="10" x=' = svg_rects_str[9]
-    assert '"10" y="10" fill="rgb(' = svg_rects_str[10]
-    assert '255,255,204)" />' = svg_rects_str[11]
+    assert '<rect width=\"10\" height=\"10\' = svg_rects_str[12]
+    assert '" x=\"10\" y=\"1' = svg_rects_str[13]
+    assert '0\" fill=\"rgb(255,255,204' = svg_rects_str[14]
+    assert ')\" />' = svg_rects_str[15]
 
     return ()
 
@@ -148,9 +149,9 @@ func test_append_svg_start_from_grid_size{
     # in the form of an array of length 3:
 
     assert 3 = svg_start_str_len
-    assert '<svg width="200" height="20' = svg_start_str[0]
-    assert '0" xmlns="http://www.w3.org/200' = svg_start_str[1]
-    assert '0/svg">' = svg_start_str[2]
+    assert '<svg width=\"200\" height=\"' = svg_start_str[0]
+    assert '200\" xmlns=' = svg_start_str[1]
+    assert '\"http://www.w3.org/2000/svg\">' = svg_start_str[2]
     return ()
 end
 
@@ -173,11 +174,11 @@ func test_append_svg_from_pixel_grid{
         destination=svg_str,
     )
 
-    # 3 start, 400 rects of length 3, 1 end = 1204
-    assert 1204 = svg_str_len
-    assert '<svg width="200" height="20' = svg_str[0]
-    assert '<rect width="10" height="10" x=' = svg_str[6]
-    assert '</svg>' = svg_str[1203]
+    # 3 start, 400 rects of length 4, 1 end = 1604
+    assert 1604 = svg_str_len
+    assert '<svg width=\"200\" height=\"' = svg_str[0]
+    assert '<rect width=\"10\" height=\"10\' = svg_str[7]
+    assert '</svg>' = svg_str[1603]
 
     return ()
 

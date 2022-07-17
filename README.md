@@ -55,3 +55,19 @@ On Goerli:
 |--|--|
 | PXL ERC721 Contract | 0x06113abe065dd65e33e8d979e1ec6cf7a3047296789119e8a2b5a0781a123dff |
 
+
+
+## Drawer Contract
+
+  
+    protostar -p testnet deploy ./build/pixel_drawer.json --inputs "<pxl_erc721_contract_address>" "<owner_account_address>" "
+
+  
+  
+On Goerli:
+
+  
+| Contract name | Address |
+|--|--|
+| PXL Drawer Contract | 0x0427ab643014d114629eda5e27976f71e4c504a6d75ad4ee290e443b17ba9f97 |
+

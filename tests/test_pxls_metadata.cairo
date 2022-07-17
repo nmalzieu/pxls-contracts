@@ -22,6 +22,12 @@ func test_append_palette_trait{syscall_ptr : felt*, range_check_ptr, pedersen_pt
     assert '{"trait_type":"' = trait[0]
     assert 'magenta' = trait[1]
     assert '","value":"yes"},' = trait[2]
+
+    let (trait_len) = append_palette_trait(3, FALSE, TRUE, trait_len, trait)
+    assert 6 = trait_len
+    assert '{"trait_type":"' = trait[3]
+    assert 'red' = trait[4]
+    assert '","value":"no"}]' = trait[5]
     return ()
 end
 
@@ -55,13 +61,15 @@ func test_get_pxl_json_metadata{syscall_ptr : felt*, range_check_ptr, pedersen_p
     let (pxl_json_metadata_len : felt, pxl_json_metadata : felt*) = get_pxl_json_metadata(
         grid_size=4, pixel_index=0, pixel_data_len=pixel_metadata_len, pixel_data=pixel_metadata
     )
-    # length = 4 (beginning) + 3 * 6 (attributes) + 2 (image tag end) + 1204 (svg with one rect) + 1 (json end) = 1229
-    assert 1229 = pxl_json_metadata_len
+    # length = 4 (beginning) + 3 * 6 (attributes) + 3 (image tag) + 1204 (svg with one rect) + 1 (json end) = 1230
+    assert 1230 = pxl_json_metadata_len
     assert 'data:application/json;' = pxl_json_metadata[0]
     assert 'cyan' = pxl_json_metadata[5]  # Second felt of cyan attribute
     # Third felt of blue attribute: blue palette is
     # present and it's not the last palette so end with ,
     assert '","value":"yes"},' = pxl_json_metadata[9]
+    # Last felt of last palette : must contain ]
+     assert '","value":"no"}]' = pxl_json_metadata[21]
     return ()
 end
 

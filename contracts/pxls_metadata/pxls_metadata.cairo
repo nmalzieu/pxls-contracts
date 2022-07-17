@@ -79,16 +79,16 @@ func get_pxl_json_metadata{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, ran
     )  # green attribute
 
     assert pxl_json_metadata[pxl_json_metadata_len] = ',"image":"data:'
-    assert pxl_json_metadata[pxl_json_metadata_len + 1] = 'image/svg+xml;utf8,'
+    assert pxl_json_metadata[pxl_json_metadata_len + 1] = 'image/svg+xml,<?xml version="1.'
+    assert pxl_json_metadata[pxl_json_metadata_len + 2] = '0" encoding="UTF-8"?>'
 
-
+    # Grid array is just the pixel data minus the 6 first
+    # felts which define which palettes compose the pxl
     let (pxl_json_metadata_len) = append_svg_from_pixel_grid(
         grid_size=grid_size,
-        # Grid array is just the pixel data minus the 6 first
-        # felts which define which palettes compose the pxl
         grid_array_len=pixel_data_len - 6,
         grid_array=pixel_data + 6,
-        destination_len=pxl_json_metadata_len + 2,
+        destination_len=pxl_json_metadata_len + 3,
         destination=pxl_json_metadata,
     )
 

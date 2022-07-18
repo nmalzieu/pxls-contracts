@@ -56,7 +56,7 @@ and keep track of the address to which they are deployed.
   
 | Contract name | Goerli Address |
 |--|--|
-| PXL ERC721 Contract | [0x029a840248e3bdaf9fbd4e121ccb9c8746003d9198926d5c017957fae58f7a66](https://goerli.voyager.online/contract/0x029a840248e3bdaf9fbd4e121ccb9c8746003d9198926d5c017957fae58f7a66) |
+| PXL ERC721 Contract | [0x079ef76b8d73f897ee0df12ac1a2733cfdb09787e8cd93a26cf6e14510bbbe0c](https://goerli.voyager.online/contract/0x079ef76b8d73f897ee0df12ac1a2733cfdb09787e8cd93a26cf6e14510bbbe0c) |
 
 ### NFT Collection Metadata
 

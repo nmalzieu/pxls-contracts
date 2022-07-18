@@ -12,7 +12,7 @@ func __setup__{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
     let symbol = 'PXLS'
     let account = 123456
 
-    # These contracts take a lot of time to deploy, lot of data in them
+    # Data contracts are heavy, deploying just a sample
     %{ context.sample_pxl_metadata_address = deploy_contract("tests/sample_pxl_metadata_contract.cairo", []).contract_address %}
 
     %{

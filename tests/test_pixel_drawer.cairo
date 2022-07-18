@@ -14,7 +14,22 @@ func __setup__{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
 
     %{ context.account = 123456 %}
 
-    %{ context.pixel_contract_address = deploy_contract("contracts/PixelERC721.cairo", [ids.name, ids.symbol, context.account, 20, 0]).contract_address %}
+    # Data contracts are heavy, deploying just a sample
+    %{ context.sample_pxl_metadata_address = deploy_contract("tests/sample_pxl_metadata_contract.cairo", []).contract_address %}
+
+    %{
+        context.pixel_contract_address = deploy_contract("contracts/PixelERC721.cairo", [
+            ids.name,
+            ids.symbol,
+            20,
+            0,
+            context.account,
+            context.sample_pxl_metadata_address,
+            context.sample_pxl_metadata_address,
+            context.sample_pxl_metadata_address,
+            context.sample_pxl_metadata_address
+        ]).contract_address
+    %}
     %{ context.drawer_contract_address = deploy_contract("contracts/PixelDrawer.cairo", [context.pixel_contract_address, context.account]).contract_address %}
 
     %{ stop_prank_pixel = start_prank(context.account, target_contract_address=context.pixel_contract_address) %}
@@ -324,9 +339,7 @@ func test_pixel_index_to_pixel_color_with_rounds{
 
     # Launch new round
 
-    IPixelDrawer.launchNewRoundIfNecessary(
-        contract_address=drawer_contract_address
-    )
+    IPixelDrawer.launchNewRoundIfNecessary(contract_address=drawer_contract_address)
 
     let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
     assert round = 2
@@ -356,9 +369,7 @@ func test_pixel_index_to_pixel_color_with_rounds{
 end
 
 @view
-func test_pixel_get_grid{
-    syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
-}():
+func test_pixel_get_grid{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
     tempvar pixel_contract_address
     %{ ids.pixel_contract_address = context.pixel_contract_address %}
 
@@ -388,9 +399,7 @@ func test_pixel_get_grid{
 
     # Launch new round
 
-    IPixelDrawer.launchNewRoundIfNecessary(
-        contract_address=drawer_contract_address
-    )
+    IPixelDrawer.launchNewRoundIfNecessary(contract_address=drawer_contract_address)
 
     let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
     assert round = 2
@@ -403,8 +412,12 @@ func test_pixel_get_grid{
     # We know pixel #1 position is 378 for round 1, then 199 for round 2
     # let's check if pixel color history is well saved in the state
 
-    let (grid_1_len : felt, grid_1 : felt*) = IPixelDrawer.getGrid(contract_address=drawer_contract_address, round=1)
-    let (grid_2_len : felt, grid_2 : felt*) = IPixelDrawer.getGrid(contract_address=drawer_contract_address, round=2)
+    let (grid_1_len : felt, grid_1 : felt*) = IPixelDrawer.getGrid(
+        contract_address=drawer_contract_address, round=1
+    )
+    let (grid_2_len : felt, grid_2 : felt*) = IPixelDrawer.getGrid(
+        contract_address=drawer_contract_address, round=2
+    )
 
     # Length is # of pixel * 4 (see PixelColor struct)
     assert 20 * 20 * 4 = grid_1_len

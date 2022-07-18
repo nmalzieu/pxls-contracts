@@ -44,7 +44,7 @@ On Goerli:
 ## ERC721 Contract
 
   
-    protostar -p testnet deploy ./build/pixel_erc721.json --inputs 1347963987 1347963987 20 0 "<pxls_1_100_address>" "<pxls_101_200_address>" "<pxls_201_300_address>" "<pxls_301_400_address>"
+    protostar -p testnet deploy ./build/pixel_erc721.json --inputs 1350069363 1347963987 20 0 "<owner_account_address>" "<pxls_1_100_address>" "<pxls_101_200_address>" "<pxls_201_300_address>" "<pxls_301_400_address>"
 
   
   
@@ -55,7 +55,12 @@ On Goerli:
 |--|--|
 | PXL ERC721 Contract | 0x06113abe065dd65e33e8d979e1ec6cf7a3047296789119e8a2b5a0781a123dff |
 
+### NFT Collection Metadata
 
+The @view method `contractURI` returns an IPFS link to a JSON file containing the collection metadata.
+The hash is a list of short strings, it can be updated via the `setContractURIHash` method.
+
+Current IPFS CID : `QmbyCfLSj9yRwrtJ6EcpFKSxVXeiMzZb1qN3FSrY38qqQd`
 
 ## Drawer Contract
 

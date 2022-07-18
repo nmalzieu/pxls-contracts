@@ -7,10 +7,10 @@ from starkware.starknet.common.syscalls import get_caller_address
 from starkware.cairo.common.alloc import alloc
 from starkware.cairo.common.math_cmp import is_le
 
+from openzeppelin.access.ownable import Ownable
 from openzeppelin.token.erc721.library import ERC721
 from openzeppelin.token.erc721_enumerable.library import ERC721_Enumerable
 from openzeppelin.introspection.ERC165 import ERC165
-
 from openzeppelin.security.safemath import SafeUint256
 
 from contracts.interfaces import IPXLMetadata
@@ -26,6 +26,10 @@ end
 
 @storage_var
 func matrix_size() -> (size : Uint256):
+end
+
+@storage_var
+func contract_uri_hash(index : felt) -> (hash : felt):
 end
 
 # The grids with the representation of the 400 PXL NFT
@@ -59,6 +63,7 @@ func constructor{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_p
     name : felt,
     symbol : felt,
     m_size : Uint256,
+    owner : felt,
     pxls_1_100_address : felt,
     pxls_101_200_address : felt,
     pxls_201_300_address : felt,
@@ -66,6 +71,7 @@ func constructor{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_p
 ):
     ERC721.initializer(name, symbol)
     ERC721_Enumerable.initializer()
+    Ownable.initializer(owner)
     matrix_size.write(m_size)
     pxls_1_100.write(pxls_1_100_address)
     pxls_101_200.write(pxls_101_200_address)
@@ -128,6 +134,22 @@ func isApprovedForAll{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_ch
 ) -> (isApproved : felt):
     let (isApproved : felt) = ERC721.is_approved_for_all(owner, operator)
     return (isApproved)
+end
+
+@view
+func contractURI{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}() -> (
+    contractURI_len : felt, contractURI : felt*
+):
+    # Max length of CID can be stored in 3 short strings
+    let (ipfs_hash_0) = contract_uri_hash.read(0)
+    let (ipfs_hash_1) = contract_uri_hash.read(1)
+    let (ipfs_hash_2) = contract_uri_hash.read(2)
+    let (contract_uri : felt*) = alloc()
+    assert contract_uri[0] = 'ipfs://'
+    assert contract_uri[1] = ipfs_hash_0
+    assert contract_uri[2] = ipfs_hash_1
+    assert contract_uri[3] = ipfs_hash_2
+    return (contractURI_len=4, contractURI=contract_uri)
 end
 
 @view
@@ -222,6 +244,12 @@ func pixelsOfOwner{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check
     return (pixels_len=balance.low, pixels=pixels)
 end
 
+@view
+func owner{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}() -> (owner : felt):
+    let (owner : felt) = Ownable.owner()
+    return (owner)
+end
+
 #
 # Externals
 #
@@ -284,6 +312,15 @@ func mint{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(to 
     minted_count.write(newTokenId)
     ERC721_Enumerable._mint(to, newTokenId)
 
+    return ()
+end
+
+@external
+func setContractURIHash{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
+    index : felt, hash : felt
+):
+    Ownable.assert_only_owner()
+    contract_uri_hash.write(index, hash)
     return ()
 end
 

@@ -50,6 +50,9 @@ func test_pixel_drawer_getters{syscall_ptr : felt*, range_check_ptr, pedersen_pt
     let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
     assert round = 1
 
+    let (owner : felt) = IPixelDrawer.owner(contract_address=pixel_contract_address)
+    assert 123456 = owner
+
     # Timestamp must have been set to the deployment timestamp
 
     let (returned_timestamp) = IPixelDrawer.currentDrawingTimestamp(

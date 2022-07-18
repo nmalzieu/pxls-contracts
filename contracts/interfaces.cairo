@@ -27,7 +27,13 @@ namespace IPixelERC721:
     end
     func transferFrom(from_ : felt, to : felt, tokenId : Uint256):
     end
+    func setContractURIHash(index : felt, hash : felt):
+    end
+    func contractURI() -> (contractURI_len : felt, contractURI : felt*):
+    end
     func tokenURI(tokenId : Uint256) -> (tokenURI_len : felt, tokenURI : felt*):
+    end
+    func owner() -> (owner : felt):
     end
 end
 
@@ -52,5 +58,7 @@ namespace IPixelDrawer:
     func pixelIndexToPixelColor(round : felt, pixelIndex : felt) -> (color : PixelColor):
     end
     func getGrid(round : felt) -> (grid_len : felt, grid : felt*):
+    end
+    func owner() -> (owner : felt):
     end
 end

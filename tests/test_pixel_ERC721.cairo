@@ -19,6 +19,7 @@ func __setup__{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
                ids.symbol,
                2,
                0,
+               ids.account,
                context.sample_pxl_metadata_address,
                context.sample_pxl_metadata_address,
                context.sample_pxl_metadata_address,
@@ -41,11 +42,46 @@ func test_pixel_erc721_getters{syscall_ptr : felt*, range_check_ptr, pedersen_pt
     assert max_supply.low = 4
     assert max_supply.high = 0
 
+    let (owner : felt) = IPixelERC721.owner(contract_address=pixel_contract_address)
+    assert 123456 = owner
+
     # Check that minted pixels count is 0
 
     let (total_supply : Uint256) = IPixelERC721.totalSupply(contract_address=pixel_contract_address)
     assert total_supply.low = 0
     assert total_supply.high = 0
+
+    return ()
+end
+
+@view
+func test_pixel_erc721_contract_uri{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
+    tempvar pixel_contract_address
+    %{ ids.pixel_contract_address = context.pixel_contract_address %}
+
+    let (contract_uri_len : felt, contract_uri : felt*) = IPixelERC721.contractURI(contract_address=pixel_contract_address)
+    assert 4 = contract_uri_len
+    assert 'ipfs://' = contract_uri[0]
+    assert 0 = contract_uri[1]
+    assert 0 = contract_uri[2]
+    assert 0 = contract_uri[3]
+    
+    %{ stop_prank = start_prank(123456, target_contract_address=ids.pixel_contract_address) %}
+    IPixelERC721.setContractURIHash(contract_address=pixel_contract_address, index=0, hash='vez2qw8z6poiozzgjqnbapzcekb4h8j')
+    IPixelERC721.setContractURIHash(contract_address=pixel_contract_address, index=1, hash='hsiuxvjaqqb4e6p0synfwnxobnes6m7')
+    IPixelERC721.setContractURIHash(contract_address=pixel_contract_address, index=2, hash='j66w')
+    let (contract_uri_len : felt, contract_uri : felt*) = IPixelERC721.contractURI(contract_address=pixel_contract_address)
+    assert 4 = contract_uri_len
+    assert 'ipfs://' = contract_uri[0]
+    assert 'vez2qw8z6poiozzgjqnbapzcekb4h8j' = contract_uri[1]
+    assert 'hsiuxvjaqqb4e6p0synfwnxobnes6m7' = contract_uri[2]
+    assert 'j66w' = contract_uri[3]
+
+    %{ stop_prank() %}
+
+    # Verify that only owner can set contract uri hash
+    %{ expect_revert(error_message="Ownable: caller is not the owner") %}
+    IPixelERC721.setContractURIHash(contract_address=pixel_contract_address, index=0, hash='vez2qw8z6poiozzgjqnbapzcekb4h8j')
 
     return ()
 end

@@ -57,6 +57,28 @@ func test_pixel_erc721_getters{syscall_ptr : felt*, range_check_ptr, pedersen_pt
 end
 
 @view
+func test_pixel_transfer_ownership{
+    syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
+}():
+    tempvar pixel_contract_address
+    %{ ids.pixel_contract_address = context.pixel_contract_address %}
+    let (owner : felt) = IPixelERC721.owner(contract_address=pixel_contract_address)
+    assert 123456 = owner
+
+    %{ stop_prank = start_prank(123456, target_contract_address=ids.pixel_contract_address) %}
+    IPixelERC721.transferOwnership(pixel_contract_address, 123457)
+    %{ stop_prank() %}
+
+    let (owner : felt) = IPixelERC721.owner(contract_address=pixel_contract_address)
+    assert 123457 = owner
+
+    %{ expect_revert(error_message="Ownable: caller is not the owner") %}
+    IPixelERC721.transferOwnership(pixel_contract_address, 123457)
+
+    return ()
+end
+
+@view
 func test_pixel_erc721_contract_uri{
     syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
 }():

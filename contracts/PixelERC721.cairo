@@ -326,6 +326,20 @@ func setContractURIHash{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_
     return ()
 end
 
+@external
+func transferOwnership{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    newOwner : felt
+):
+    Ownable.transfer_ownership(newOwner)
+    return ()
+end
+
+@external
+func renounceOwnership{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}():
+    Ownable.renounce_ownership()
+    return ()
+end
+
 func get_all_pixels_of_owner{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     owner : felt, index : felt, balance : felt, pixels : felt*
 ) -> ():

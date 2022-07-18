@@ -35,6 +35,8 @@ namespace IPixelERC721:
     end
     func owner() -> (owner : felt):
     end
+    func transferOwnership(newOwner : felt) -> ():
+    end
 end
 
 @contract_interface
@@ -60,5 +62,7 @@ namespace IPixelDrawer:
     func getGrid(round : felt) -> (grid_len : felt, grid : felt*):
     end
     func owner() -> (owner : felt):
+    end
+    func transferOwnership(newOwner : felt) -> ():
     end
 end

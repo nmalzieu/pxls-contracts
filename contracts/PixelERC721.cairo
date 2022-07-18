@@ -317,10 +317,12 @@ end
 
 @external
 func setContractURIHash{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
-    index : felt, hash : felt
+    hash_len : felt, hash : felt*
 ):
     Ownable.assert_only_owner()
-    contract_uri_hash.write(index, hash)
+    contract_uri_hash.write(0, hash[0])
+    contract_uri_hash.write(1, hash[1])
+    contract_uri_hash.write(2, hash[2])
     return ()
 end
 

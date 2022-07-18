@@ -27,7 +27,7 @@ namespace IPixelERC721:
     end
     func transferFrom(from_ : felt, to : felt, tokenId : Uint256):
     end
-    func setContractURIHash(index : felt, hash : felt):
+    func setContractURIHash(hash_len : felt, hash : felt*):
     end
     func contractURI() -> (contractURI_len : felt, contractURI : felt*):
     end

@@ -2,6 +2,8 @@
 
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.uint256 import Uint256
+from starkware.cairo.common.alloc import alloc
+
 from contracts.interfaces import IPixelERC721
 
 @view
@@ -55,22 +57,32 @@ func test_pixel_erc721_getters{syscall_ptr : felt*, range_check_ptr, pedersen_pt
 end
 
 @view
-func test_pixel_erc721_contract_uri{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
-    tempvar pixel_contract_address
+func test_pixel_erc721_contract_uri{
+    syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
+}():
+    alloc_locals
+
+    local pixel_contract_address
     %{ ids.pixel_contract_address = context.pixel_contract_address %}
 
-    let (contract_uri_len : felt, contract_uri : felt*) = IPixelERC721.contractURI(contract_address=pixel_contract_address)
+    let (contract_uri_len : felt, contract_uri : felt*) = IPixelERC721.contractURI(
+        contract_address=pixel_contract_address
+    )
     assert 4 = contract_uri_len
     assert 'ipfs://' = contract_uri[0]
     assert 0 = contract_uri[1]
     assert 0 = contract_uri[2]
     assert 0 = contract_uri[3]
-    
+
     %{ stop_prank = start_prank(123456, target_contract_address=ids.pixel_contract_address) %}
-    IPixelERC721.setContractURIHash(contract_address=pixel_contract_address, index=0, hash='vez2qw8z6poiozzgjqnbapzcekb4h8j')
-    IPixelERC721.setContractURIHash(contract_address=pixel_contract_address, index=1, hash='hsiuxvjaqqb4e6p0synfwnxobnes6m7')
-    IPixelERC721.setContractURIHash(contract_address=pixel_contract_address, index=2, hash='j66w')
-    let (contract_uri_len : felt, contract_uri : felt*) = IPixelERC721.contractURI(contract_address=pixel_contract_address)
+    let (hash : felt*) = alloc()
+    assert hash[0] = 'vez2qw8z6poiozzgjqnbapzcekb4h8j'
+    assert hash[1] = 'hsiuxvjaqqb4e6p0synfwnxobnes6m7'
+    assert hash[2] = 'j66w'
+    IPixelERC721.setContractURIHash(contract_address=pixel_contract_address, hash_len=3, hash=hash)
+    let (contract_uri_len : felt, contract_uri : felt*) = IPixelERC721.contractURI(
+        contract_address=pixel_contract_address
+    )
     assert 4 = contract_uri_len
     assert 'ipfs://' = contract_uri[0]
     assert 'vez2qw8z6poiozzgjqnbapzcekb4h8j' = contract_uri[1]
@@ -81,7 +93,7 @@ func test_pixel_erc721_contract_uri{syscall_ptr : felt*, range_check_ptr, peders
 
     # Verify that only owner can set contract uri hash
     %{ expect_revert(error_message="Ownable: caller is not the owner") %}
-    IPixelERC721.setContractURIHash(contract_address=pixel_contract_address, index=0, hash='vez2qw8z6poiozzgjqnbapzcekb4h8j')
+    IPixelERC721.setContractURIHash(contract_address=pixel_contract_address, hash_len=3, hash=hash)
 
     return ()
 end

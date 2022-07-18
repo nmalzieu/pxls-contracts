@@ -13,7 +13,10 @@ There are two main contracts right now:
 - PixelERC72 is the NFT contract for the 400 Pxls NFT. Each Pxls NFT holder will be able to colorize a pixel of the daily rtwrk.
 - PixelDrawer is the Drawer contract: everyday each Pxls NFT will have a new "position" in a 20x20 grid and the holder will be able to colorize this pixel.
 
-There are also 4 data contracts that contain the grids representing the visuals of the 400 Pxls NFTs. A Pxls NFT grid representation is just an array of 400 felts, where each felt represents a predefined color. From these grids, the ERC-721 smart contracts generates the SVG and the JSON metadata using on-chain short string concatenation. Once the SVG is generated, it is inserted in the JSON as a `data:image/svg+xml` URI. Once the JSON metadata is generated, it is returned in the tokenURI contract method as a `data:application/json` URI.
+There are also 4 data contracts that contain the grids representing the visuals of the 400 Pxls NFTs (splitted in 4 contracts because of the contract size limit on Starknet).
+A Pxls NFT grid representation is just an array of 400 felts, where each felt represents a predefined color. From these grids, the ERC-721 smart contracts generates the SVG and the JSON metadata using on-chain short string concatenation. Once the SVG is generated, it is inserted in the JSON as a `data:image/svg+xml` URI. Once the JSON metadata is generated, it is returned in the tokenURI contract method as a `data:application/json` URI.
+
+
 ### Build
 
 

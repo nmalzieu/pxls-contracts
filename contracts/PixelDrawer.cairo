@@ -266,12 +266,7 @@ func get_grid{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}
     )
 end
 
-#
-# Externals
-#
-
-@external
-func setPixelColor{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
+func set_pixel_color{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
     tokenId : Uint256, color : Color
 ):
     assert_valid_color(color)
@@ -289,6 +284,33 @@ func setPixelColor{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check
     let (round) = current_drawing_round.read()
     pixel_index_to_pixel_color.write(round, pixel_index, pixel_color)
     return ()
+end
+
+func set_pixels_colors{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
+    tokenIds_len : felt, tokenIds : Uint256*, colors_len : felt, colors : Color*
+):
+    if tokenIds_len == 0:
+        return ()
+    end
+    set_pixel_color(tokenIds[0], colors[0])
+
+    return set_pixels_colors(
+        tokenIds_len - 1, tokenIds + Uint256.SIZE, colors_len - 1, colors + Color.SIZE
+    )
+end
+
+#
+# Externals
+#
+
+@external
+func setPixelsColors{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
+    tokenIds_len : felt, tokenIds : Uint256*, colors_len : felt, colors : Color*
+):
+    with_attr error_message("tokenId and colors array length don't match"):
+        assert tokenIds_len = colors_len
+    end
+    return set_pixels_colors(tokenIds_len, tokenIds, colors_len, colors)
 end
 
 @external

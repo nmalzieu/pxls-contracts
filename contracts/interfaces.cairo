@@ -37,6 +37,8 @@ namespace IPixelERC721:
     end
     func transferOwnership(newOwner : felt) -> ():
     end
+    func balanceOf(owner : felt) -> (balance : Uint256):
+    end
 end
 
 @contract_interface
@@ -45,7 +47,9 @@ namespace IPixelDrawer:
     end
     func pixelERC721Address() -> (address : felt):
     end
-    func setPixelColor(tokenId : Uint256, color : Color):
+    func setPixelsColors(
+        tokenIds_len : felt, tokenIds : Uint256*, colors_len : felt, colors : Color*
+    ):
     end
     func pixelColor(tokenId : Uint256) -> (color : PixelColor):
     end

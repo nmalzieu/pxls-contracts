@@ -44,7 +44,7 @@ end
 
 @constructor
 func constructor{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    pixel_erc721_address : felt, owner : felt
+    owner : felt, pixel_erc721_address : felt
 ):
     Ownable.initializer(owner)
     pixel_erc721.write(pixel_erc721_address)
@@ -118,7 +118,9 @@ func getGrid{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
     let (contract_address : felt) = pixel_erc721.read()
     let (max_supply : Uint256) = IPixelERC721.maxSupply(contract_address=contract_address)
     let (local grid : felt*) = alloc()
-    let (grid_len : felt) = get_grid(round=round, pixel_index=0, max_supply=max_supply.low, grid_len=0, grid=grid)
+    let (grid_len : felt) = get_grid(
+        round=round, pixel_index=0, max_supply=max_supply.low, grid_len=0, grid=grid
+    )
     return (grid_len=grid_len, grid=grid)
 end
 
@@ -244,9 +246,9 @@ func launch_new_round_if_necessary{
     end
 end
 
-func get_grid{
-    syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
-}(round : felt, pixel_index : felt, max_supply : felt, grid_len : felt, grid : felt*) -> (grid_len : felt):
+func get_grid{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    round : felt, pixel_index : felt, max_supply : felt, grid_len : felt, grid : felt*
+) -> (grid_len : felt):
     if pixel_index == max_supply:
         return (grid_len=grid_len)
     end
@@ -255,7 +257,13 @@ func get_grid{
     assert grid[grid_len + 1] = pixel_color.color.red
     assert grid[grid_len + 2] = pixel_color.color.green
     assert grid[grid_len + 3] = pixel_color.color.blue
-    return get_grid(round=round, pixel_index=pixel_index + 1, max_supply=max_supply, grid_len=grid_len + 4, grid=grid)
+    return get_grid(
+        round=round,
+        pixel_index=pixel_index + 1,
+        max_supply=max_supply,
+        grid_len=grid_len + 4,
+        grid=grid,
+    )
 end
 
 #
@@ -305,7 +313,6 @@ func launchNewRoundIfNecessary{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*,
     let (launched) = launch_new_round_if_necessary()
     return (launched=launched)
 end
-
 
 @external
 func transferOwnership{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(

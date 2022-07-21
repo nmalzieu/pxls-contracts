@@ -30,7 +30,7 @@ func __setup__{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
             context.sample_pxl_metadata_address
         ]).contract_address
     %}
-    %{ context.drawer_contract_address = deploy_contract("contracts/PixelDrawer.cairo", [context.pixel_contract_address, context.account]).contract_address %}
+    %{ context.drawer_contract_address = deploy_contract("contracts/PixelDrawer.cairo", [context.account, context.pixel_contract_address]).contract_address %}
 
     %{ stop_prank_pixel = start_prank(context.account, target_contract_address=context.pixel_contract_address) %}
     %{ stop_prank_drawer = start_prank(context.account, target_contract_address=context.drawer_contract_address) %}

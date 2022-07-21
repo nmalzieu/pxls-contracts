@@ -65,17 +65,13 @@ The hash is a list of short strings, it can be updated via the `setContractURIHa
 
 Current IPFS CID : `QmQvfChVRwfmzsjnHvm27R3c4UYqUod8fzzYrvLNuRhAHK`
 
-<!-- ## Drawer Contract
+## Drawer Contract
 
   
-    protostar -p testnet deploy ./build/pixel_drawer.json --inputs "<pxl_erc721_contract_address>" "<owner_account_address>" "
+    protostar -p testnet deploy ./build/pixel_drawer.json --inputs "<owner_account_address>" "<pxl_erc721_contract_address>"
 
-  
-  
-On Goerli:
 
-  
-| Contract name | Address |
-|--|--|
-| PXL Drawer Contract | 0x0427ab643014d114629eda5e27976f71e4c504a6d75ad4ee290e443b17ba9f97 |
- -->
+
+| Contract name | Goerli Address | Mainnet Address |
+|--|--|--|
+| PXL Drawer Contract | [](https://goerli.voyager.online/contract/) | [](https://voyager.online/contract/) |

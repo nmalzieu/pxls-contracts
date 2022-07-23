@@ -17,6 +17,7 @@ func __setup__{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
 
     # Data contracts are heavy, deploying just a sample
     %{ context.sample_pxl_metadata_address = deploy_contract("tests/sample_pxl_metadata_contract.cairo", []).contract_address %}
+    %{ context.sample_drawer_grid_data_address = deploy_contract("tests/sample_drawer_grid_data_contract.cairo", []).contract_address %}
 
     %{
         context.pixel_contract_address = deploy_contract("contracts/PixelERC721.cairo", [
@@ -31,7 +32,13 @@ func __setup__{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
             context.sample_pxl_metadata_address
         ]).contract_address
     %}
-    %{ context.drawer_contract_address = deploy_contract("contracts/PixelDrawer.cairo", [context.account, context.pixel_contract_address]).contract_address %}
+    %{
+        context.drawer_contract_address = deploy_contract("contracts/PixelDrawer.cairo", [
+               context.account,
+               context.pixel_contract_address,
+               context.sample_drawer_grid_data_address
+               ]).contract_address
+    %}
 
     %{ stop_prank_pixel = start_prank(context.account, target_contract_address=context.pixel_contract_address) %}
     %{ stop_prank_drawer = start_prank(context.account, target_contract_address=context.drawer_contract_address) %}
@@ -61,8 +68,14 @@ func test_pixel_drawer_getters{syscall_ptr : felt*, range_check_ptr, pedersen_pt
     tempvar drawer_contract_address
     %{ ids.drawer_contract_address = context.drawer_contract_address %}
 
+    tempvar grids_data_address
+    %{ ids.grids_data_address = context.sample_drawer_grid_data_address %}
+
     let (p_address) = IPixelDrawer.pixelERC721Address(contract_address=drawer_contract_address)
     assert p_address = pixel_contract_address
+
+    let (g_address) = IPixelDrawer.gridsDataAddress(contract_address=drawer_contract_address)
+    assert g_address = grids_data_address
 
     let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
     assert round = 1
@@ -279,24 +292,25 @@ func test_pixel_drawer_set_pixels_colors{
 end
 
 @view
-func test_pixel_drawer_shuffle_result{
+func test_pixel_drawer_grids_data{
     syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
 }():
     tempvar drawer_contract_address
     %{ ids.drawer_contract_address = context.drawer_contract_address %}
 
-    # Check pixel shuffle
-    # For a given matrix size, result is deterministic
-    # For 20x20, first token position is 378 = 1 * 373 + 5 % 400
-    # last token position is 5 = 400 * 373 + 5 % 400
+    # Check that we can access the data from the grid data contract
+    # We generated 100 grids of 400 pixel positions off-chain
+    # and put it in a data contract. The Pixel drawer contract
+    # accesses this data contract to know the grid for a given round.
+
     let (pixel_index_first) = IPixelDrawer.currentTokenPixelIndex(
         drawer_contract_address, Uint256(1, 0)
     )
-    assert 378 = pixel_index_first
+    assert 392 = pixel_index_first
     let (pixel_index_last) = IPixelDrawer.currentTokenPixelIndex(
         drawer_contract_address, Uint256(400, 0)
     )
-    assert 5 = pixel_index_last
+    assert 111 = pixel_index_last
     return ()
 end
 
@@ -353,22 +367,22 @@ func test_pixel_launch_new_round_if_necessary{
     let (pixel_index_first) = IPixelDrawer.currentTokenPixelIndex(
         drawer_contract_address, Uint256(1, 0)
     )
-    assert 199 = pixel_index_first
+    assert 197 = pixel_index_first
     let (pixel_index_last) = IPixelDrawer.currentTokenPixelIndex(
         drawer_contract_address, Uint256(400, 0)
     )
-    assert 270 = pixel_index_last
+    assert 204 = pixel_index_last
 
     # Verify we can still get old positions
 
     let (old_pixel_index_first) = IPixelDrawer.tokenPixelIndex(
         drawer_contract_address, 1, Uint256(1, 0)
     )
-    assert 378 = old_pixel_index_first
+    assert 392 = old_pixel_index_first
     let (old_pixel_index_last) = IPixelDrawer.tokenPixelIndex(
         drawer_contract_address, 1, Uint256(400, 0)
     )
-    assert 5 = old_pixel_index_last
+    assert 111 = old_pixel_index_last
 
     return ()
 end
@@ -481,14 +495,14 @@ func test_pixel_index_to_pixel_color_with_rounds{
 
     %{ stop_prank_drawer() %}
 
-    # We know pixel #1 position is 378 for round 1, then 199 for round 2
+    # We know pixel #1 position is 392 for round 1, then 197 for round 2
     # let's check if pixel color history is well saved in the state
 
     let (round_1_color : PixelColor) = IPixelDrawer.pixelIndexToPixelColor(
-        contract_address=drawer_contract_address, round=1, pixelIndex=378
+        contract_address=drawer_contract_address, round=1, pixelIndex=392
     )
     let (round_2_color : PixelColor) = IPixelDrawer.pixelIndexToPixelColor(
-        contract_address=drawer_contract_address, round=2, pixelIndex=199
+        contract_address=drawer_contract_address, round=2, pixelIndex=197
     )
 
     assert round_1_color.set = TRUE
@@ -563,19 +577,19 @@ func test_pixel_get_grid{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : Ha
     assert 20 * 20 * 4 = grid_1_len
     assert 20 * 20 * 4 = grid_2_len
 
-    # Pixel 378 of round 1 set to 255, 0, 100
+    # Pixel 392 of round 1 set to 255, 0, 100
 
-    assert TRUE = grid_1[378 * 4]
-    assert 255 = grid_1[378 * 4 + 1]
-    assert 0 = grid_1[378 * 4 + 2]
-    assert 100 = grid_1[378 * 4 + 3]
+    assert TRUE = grid_1[392 * 4]
+    assert 255 = grid_1[392 * 4 + 1]
+    assert 0 = grid_1[392 * 4 + 2]
+    assert 100 = grid_1[392 * 4 + 3]
 
-    # Pixel 199 of round 2 set to 123, 200, 0
+    # Pixel 197 of round 2 set to 123, 200, 0
 
-    assert TRUE = grid_2[199 * 4]
-    assert 123 = grid_2[199 * 4 + 1]
-    assert 200 = grid_2[199 * 4 + 2]
-    assert 0 = grid_2[199 * 4 + 3]
+    assert TRUE = grid_2[197 * 4]
+    assert 123 = grid_2[197 * 4 + 1]
+    assert 200 = grid_2[197 * 4 + 2]
+    assert 0 = grid_2[197 * 4 + 3]
 
     return ()
 end

@@ -12,6 +12,12 @@ namespace IPXLMetadata:
 end
 
 @contract_interface
+namespace IPixelDrawerGridData:
+    func get_grid_for_round(round : felt) -> (grid_len : felt, grid : felt*):
+    end
+end
+
+@contract_interface
 namespace IPixelERC721:
     func initialize(pixel_drawer_address : felt):
     end
@@ -46,6 +52,8 @@ namespace IPixelDrawer:
     func start():
     end
     func pixelERC721Address() -> (address : felt):
+    end
+    func gridsDataAddress() -> (address : felt):
     end
     func setPixelsColors(
         tokenIds_len : felt, tokenIds : Uint256*, colors_len : felt, colors : Color*

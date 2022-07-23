@@ -55,7 +55,11 @@ namespace IPixelDrawer:
     end
     func currentDrawingTimestamp() -> (timestamp : felt):
     end
+    func drawingTimestamp(round : felt) -> (timestamp : felt):
+    end
     func currentTokenPixelIndex(tokenId : Uint256) -> (pixelIndex : felt):
+    end
+    func tokenPixelIndex(round : felt, tokenId : Uint256) -> (pixelIndex : felt):
     end
     func currentDrawingRound() -> (round : felt):
     end

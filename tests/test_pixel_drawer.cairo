@@ -292,11 +292,11 @@ func test_pixel_drawer_shuffle_result{
     let (pixel_index_first) = IPixelDrawer.currentTokenPixelIndex(
         drawer_contract_address, Uint256(1, 0)
     )
-    assert pixel_index_first = 378
+    assert 378 = pixel_index_first
     let (pixel_index_last) = IPixelDrawer.currentTokenPixelIndex(
         drawer_contract_address, Uint256(400, 0)
     )
-    assert pixel_index_last = 5
+    assert 5 = pixel_index_last
     return ()
 end
 
@@ -338,16 +338,37 @@ func test_pixel_launch_new_round_if_necessary{
     let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
     assert round = 2
 
+    let (current_timestamp) = IPixelDrawer.currentDrawingTimestamp(
+        contract_address=drawer_contract_address
+    )
+    assert new_timestamp = current_timestamp
+
+    let (previous_timestamp) = IPixelDrawer.drawingTimestamp(
+        contract_address=drawer_contract_address, round=1
+    )
+    assert 'start_timestamp' = previous_timestamp
+
     # When a new round is launched, the pixel repartition is shuffled
 
     let (pixel_index_first) = IPixelDrawer.currentTokenPixelIndex(
         drawer_contract_address, Uint256(1, 0)
     )
-    assert pixel_index_first = 199
+    assert 199 = pixel_index_first
     let (pixel_index_last) = IPixelDrawer.currentTokenPixelIndex(
         drawer_contract_address, Uint256(400, 0)
     )
-    assert pixel_index_last = 270
+    assert 270 = pixel_index_last
+
+    # Verify we can still get old positions
+
+    let (old_pixel_index_first) = IPixelDrawer.tokenPixelIndex(
+        drawer_contract_address, 1, Uint256(1, 0)
+    )
+    assert 378 = old_pixel_index_first
+    let (old_pixel_index_last) = IPixelDrawer.tokenPixelIndex(
+        drawer_contract_address, 1, Uint256(400, 0)
+    )
+    assert 5 = old_pixel_index_last
 
     return ()
 end

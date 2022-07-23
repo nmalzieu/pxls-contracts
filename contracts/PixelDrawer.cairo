@@ -9,7 +9,6 @@ from starkware.cairo.common.alloc import alloc
 
 from openzeppelin.access.ownable import Ownable
 from openzeppelin.token.erc721.interfaces.IERC721 import IERC721
-from openzeppelin.security.initializable import Initializable
 
 from libs.colors import Color, PixelColor, assert_valid_color
 from contracts.interfaces import IPixelERC721
@@ -27,7 +26,7 @@ func pixel_index_to_pixel_color(drawing_round : felt, pixel_index : felt) -> (co
 end
 
 @storage_var
-func current_token_id_to_pixel_index(token_id : Uint256) -> (pixel_index : felt):
+func token_id_to_pixel_index(drawing_round : felt, token_id : Uint256) -> (pixel_index : felt):
 end
 
 @storage_var
@@ -48,6 +47,7 @@ func constructor{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_p
 ):
     Ownable.initializer(owner)
     pixel_erc721.write(pixel_erc721_address)
+    initialize_grid()
     return ()
 end
 
@@ -70,10 +70,18 @@ func owner{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}() 
 end
 
 @view
-func tokenPixelIndex{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
+func currentTokenPixelIndex{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
     tokenId : Uint256
 ) -> (pixelIndex : felt):
-    let (pixel_index) = current_token_id_to_pixel_index.read(tokenId)
+    let (round) = current_drawing_round.read()
+    return tokenPixelIndex(round, tokenId)
+end
+
+@view
+func tokenPixelIndex{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
+    round : felt, tokenId : Uint256
+) -> (pixelIndex : felt):
+    let (pixel_index) = token_id_to_pixel_index.read(round, tokenId)
     return (pixelIndex=pixel_index)
 end
 
@@ -81,8 +89,8 @@ end
 func pixelColor{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
     tokenId : Uint256
 ) -> (color : PixelColor):
-    let (pixel_index) = tokenPixelIndex(tokenId)
     let (round) = current_drawing_round.read()
+    let (pixel_index) = tokenPixelIndex(round, tokenId)
     let (color) = pixel_index_to_pixel_color.read(round, pixel_index)
     return (color=color)
 end
@@ -91,6 +99,13 @@ end
 func currentDrawingTimestamp{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
     ) -> (timestamp : felt):
     let (round) = current_drawing_round.read()
+    return drawingTimestamp(round)
+end
+
+@view
+func drawingTimestamp{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
+    round : felt
+) -> (timestamp : felt):
     let (timestamp) = drawing_timestamp.read(round)
     return (timestamp=timestamp)
 end
@@ -152,18 +167,8 @@ func assert_pixel_owner{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_
     return ()
 end
 
-func get_token_pixel_index_for_shuffle{
-    syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
-}(token_id : Uint256, is_initial_shuffle) -> (index : felt):
-    if is_initial_shuffle == TRUE:
-        return (token_id.low)
-    end
-    let (current_index) = current_token_id_to_pixel_index.read(token_id)
-    return (current_index)
-end
-
 func _shuffle_pixel_position{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    token_id : Uint256, max_supply, is_initial_shuffle
+    new_round : felt, token_id : Uint256, max_supply
 ):
     if token_id.low == 0:
         if token_id.high == 0:
@@ -178,26 +183,24 @@ func _shuffle_pixel_position{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, r
     # "randomness" for a 20x20 grid : it takes 81 iterations to loop
     # and come back to first position
 
-    let (token_index) = get_token_pixel_index_for_shuffle(token_id, is_initial_shuffle)
-    let calculation = 373 * token_index + 5
+    let (current_index) = token_id_to_pixel_index.read(new_round - 1, token_id)
+    let calculation = 373 * current_index + 5
     let (q, r) = unsigned_div_rem(calculation, max_supply)
-    current_token_id_to_pixel_index.write(token_id, r)
+    token_id_to_pixel_index.write(new_round, token_id, r)
     let (next_token_id : Uint256) = uint256_sub(token_id, Uint256(1, 0))
-    _shuffle_pixel_position(
-        token_id=next_token_id, max_supply=max_supply, is_initial_shuffle=is_initial_shuffle
-    )
+    _shuffle_pixel_position(new_round=new_round, token_id=next_token_id, max_supply=max_supply)
     return ()
 end
 
 func shuffle_pixel_positions{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    is_initial_shuffle
+    new_round : felt
 ):
     let (contract_address : felt) = pixel_erc721.read()
-    let (token_id : Uint256) = IPixelERC721.maxSupply(contract_address=contract_address)
+    let (last_token_id : Uint256) = IPixelERC721.maxSupply(contract_address=contract_address)
 
     # We go over all the tokens, and for each one we determine
     # a new position (= pixel index)
-    _shuffle_pixel_position(token_id, token_id.low, is_initial_shuffle)
+    _shuffle_pixel_position(new_round, last_token_id, last_token_id.low)
     return ()
 end
 
@@ -214,13 +217,12 @@ func should_launch_new_round{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, r
     return (should_launch=should_launch)
 end
 
-func launch_new_round{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    is_initial_round : felt
-):
-    shuffle_pixel_positions(is_initial_shuffle=is_initial_round)
-
+func launch_new_round{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}():
+    alloc_locals
     let (current_round) = current_drawing_round.read()
     let new_round = current_round + 1
+    shuffle_pixel_positions(new_round)
+
     let (block_timestamp) = get_block_timestamp()
     drawing_timestamp.write(new_round, block_timestamp)
     current_drawing_round.write(new_round)
@@ -233,7 +235,7 @@ func launch_new_round_if_necessary{
 }() -> (launched : felt):
     let (should_launch) = should_launch_new_round()
     if should_launch == TRUE:
-        launch_new_round(is_initial_round=FALSE)
+        launch_new_round()
         # See https://www.cairo-lang.org/docs/how_cairo_works/builtins.html#revoked-implicit-arguments
         tempvar syscall_ptr = syscall_ptr
         tempvar pedersen_ptr = pedersen_ptr
@@ -281,8 +283,8 @@ func set_pixel_color{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_che
     assert_pixel_owner(caller_address, tokenId)
     let pixel_color = PixelColor(set=TRUE, color=color)
 
-    let (pixel_index) = tokenPixelIndex(tokenId)
     let (round) = current_drawing_round.read()
+    let (pixel_index) = tokenPixelIndex(round, tokenId)
     pixel_index_to_pixel_color.write(round, pixel_index, pixel_color)
     return ()
 end
@@ -300,6 +302,27 @@ func set_pixels_colors{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_c
     )
 end
 
+func initialize_grid{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}():
+    # Called by constructor to initialize grid position
+    let (contract_address : felt) = pixel_erc721.read()
+    let (last_token_id : Uint256) = IPixelERC721.maxSupply(contract_address=contract_address)
+    _initialize_grid(last_token_id)
+    return ()
+end
+
+func _initialize_grid{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
+    token_id : Uint256
+):
+    if token_id.low == 0:
+        if token_id.high == 0:
+            return ()
+        end
+    end
+    token_id_to_pixel_index.write(0, token_id, token_id.low)
+    let (next_token_id : Uint256) = uint256_sub(token_id, Uint256(1, 0))
+    return _initialize_grid(next_token_id)
+end
+
 #
 # Externals
 #
@@ -312,21 +335,6 @@ func setPixelsColors{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_che
         assert tokenIds_len = colors_len
     end
     return set_pixels_colors(tokenIds_len, tokenIds, colors_len, colors)
-end
-
-@external
-func start{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}():
-    Ownable.assert_only_owner()
-    let (initialized) = Initializable.initialized()
-    with_attr error_message("Drawer contract already started"):
-        assert initialized = FALSE
-    end
-
-    Initializable.initialize()
-
-    launch_new_round(is_initial_round=TRUE)
-
-    return ()
 end
 
 @external

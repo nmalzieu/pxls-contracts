@@ -42,10 +42,11 @@ func __setup__{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
     tempvar drawer_contract_address
     %{ ids.drawer_contract_address = context.drawer_contract_address %}
 
-    # Warping time before starting the drawer contract
+    # Warping time before launching the initial round
     let start_timestamp = 'start_timestamp'
     %{ warp(ids.start_timestamp, context.drawer_contract_address) %}
-    IPixelDrawer.start(contract_address=drawer_contract_address)
+    # Launching the initial round
+    IPixelDrawer.launchNewRoundIfNecessary(contract_address=drawer_contract_address)
 
     %{ stop_prank_pixel() %}
     %{ stop_prank_drawer() %}
@@ -288,9 +289,13 @@ func test_pixel_drawer_shuffle_result{
     # For a given matrix size, result is deterministic
     # For 20x20, first token position is 378 = 1 * 373 + 5 % 400
     # last token position is 5 = 400 * 373 + 5 % 400
-    let (pixel_index_first) = IPixelDrawer.tokenPixelIndex(drawer_contract_address, Uint256(1, 0))
+    let (pixel_index_first) = IPixelDrawer.currentTokenPixelIndex(
+        drawer_contract_address, Uint256(1, 0)
+    )
     assert pixel_index_first = 378
-    let (pixel_index_last) = IPixelDrawer.tokenPixelIndex(drawer_contract_address, Uint256(400, 0))
+    let (pixel_index_last) = IPixelDrawer.currentTokenPixelIndex(
+        drawer_contract_address, Uint256(400, 0)
+    )
     assert pixel_index_last = 5
     return ()
 end
@@ -335,9 +340,13 @@ func test_pixel_launch_new_round_if_necessary{
 
     # When a new round is launched, the pixel repartition is shuffled
 
-    let (pixel_index_first) = IPixelDrawer.tokenPixelIndex(drawer_contract_address, Uint256(1, 0))
+    let (pixel_index_first) = IPixelDrawer.currentTokenPixelIndex(
+        drawer_contract_address, Uint256(1, 0)
+    )
     assert pixel_index_first = 199
-    let (pixel_index_last) = IPixelDrawer.tokenPixelIndex(drawer_contract_address, Uint256(400, 0))
+    let (pixel_index_last) = IPixelDrawer.currentTokenPixelIndex(
+        drawer_contract_address, Uint256(400, 0)
+    )
     assert pixel_index_last = 270
 
     return ()

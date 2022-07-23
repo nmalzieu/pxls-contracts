@@ -31,7 +31,7 @@ func current_token_id_to_pixel_index(token_id : Uint256) -> (pixel_index : felt)
 end
 
 @storage_var
-func current_drawing_timestamp() -> (timestamp : felt):
+func drawing_timestamp(drawing_round : felt) -> (timestamp : felt):
 end
 
 @storage_var
@@ -90,7 +90,8 @@ end
 @view
 func currentDrawingTimestamp{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
     ) -> (timestamp : felt):
-    let (timestamp) = current_drawing_timestamp.read()
+    let (round) = current_drawing_round.read()
+    let (timestamp) = drawing_timestamp.read(round)
     return (timestamp=timestamp)
 end
 
@@ -204,7 +205,7 @@ func should_launch_new_round{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, r
     ) -> (should_launch : felt):
     alloc_locals
     let (block_timestamp) = get_block_timestamp()
-    let (last_drawing_timestamp) = current_drawing_timestamp.read()
+    let (last_drawing_timestamp) = currentDrawingTimestamp()
     let duration = block_timestamp - last_drawing_timestamp
     # 1 full day in seconds (get_block_timestamp returns timestamp in seconds)
     const DAY_DURATION = 86400
@@ -218,11 +219,11 @@ func launch_new_round{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_ch
 ):
     shuffle_pixel_positions(is_initial_shuffle=is_initial_round)
 
-    let (block_timestamp) = get_block_timestamp()
-    current_drawing_timestamp.write(block_timestamp)
-
     let (current_round) = current_drawing_round.read()
-    current_drawing_round.write(current_round + 1)
+    let new_round = current_round + 1
+    let (block_timestamp) = get_block_timestamp()
+    drawing_timestamp.write(new_round, block_timestamp)
+    current_drawing_round.write(new_round)
 
     return ()
 end

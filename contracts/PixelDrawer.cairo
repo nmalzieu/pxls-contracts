@@ -26,10 +26,6 @@ func pixel_index_to_pixel_color(drawing_round : felt, pixel_index : felt) -> (co
 end
 
 @storage_var
-func token_id_to_pixel_index(drawing_round : felt, token_id : Uint256) -> (pixel_index : felt):
-end
-
-@storage_var
 func drawing_timestamp(drawing_round : felt) -> (timestamp : felt):
 end
 
@@ -47,7 +43,6 @@ func constructor{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_p
 ):
     Ownable.initializer(owner)
     pixel_erc721.write(pixel_erc721_address)
-    initialize_grid()
     return ()
 end
 
@@ -74,23 +69,24 @@ func currentTokenPixelIndex{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, ra
     tokenId : Uint256
 ) -> (pixelIndex : felt):
     let (round) = current_drawing_round.read()
-    return tokenPixelIndex(round, tokenId)
+    return token_pixel_index(round, tokenId)
 end
 
 @view
 func tokenPixelIndex{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
     round : felt, tokenId : Uint256
 ) -> (pixelIndex : felt):
-    let (pixel_index) = token_id_to_pixel_index.read(round, tokenId)
-    return (pixelIndex=pixel_index)
+    assert_round_exists(round)
+    return token_pixel_index(round, tokenId)
 end
 
 @view
 func pixelColor{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
     tokenId : Uint256
 ) -> (color : PixelColor):
+    alloc_locals
     let (round) = current_drawing_round.read()
-    let (pixel_index) = tokenPixelIndex(round, tokenId)
+    let (pixel_index) = token_pixel_index(round, tokenId)
     let (color) = pixel_index_to_pixel_color.read(round, pixel_index)
     return (color=color)
 end
@@ -99,15 +95,15 @@ end
 func currentDrawingTimestamp{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
     ) -> (timestamp : felt):
     let (round) = current_drawing_round.read()
-    return drawingTimestamp(round)
+    return get_drawing_timestamp(round)
 end
 
 @view
 func drawingTimestamp{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
     round : felt
 ) -> (timestamp : felt):
-    let (timestamp) = drawing_timestamp.read(round)
-    return (timestamp=timestamp)
+    assert_round_exists(round)
+    return get_drawing_timestamp(round)
 end
 
 @view
@@ -167,40 +163,15 @@ func assert_pixel_owner{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_
     return ()
 end
 
-func _shuffle_pixel_position{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    new_round : felt, token_id : Uint256, max_supply
+func assert_round_exists{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    round : felt
 ):
-    if token_id.low == 0:
-        if token_id.high == 0:
-            return ()
-        end
+    alloc_locals
+    let (current_round) = current_drawing_round.read()
+    let (round_exists) = is_le(round, current_round)
+    with_attr error_message("Round {round} does not exist"):
+        assert round_exists = TRUE
     end
-
-    # We use the fact that (a x + b) % n will visit all
-    # integer values in [0,n) exactly once as x iterates
-    # through the integers in [0, n), as long as a is coprime with n.
-    # 373 is prime and a good choice for
-    # "randomness" for a 20x20 grid : it takes 81 iterations to loop
-    # and come back to first position
-
-    let (current_index) = token_id_to_pixel_index.read(new_round - 1, token_id)
-    let calculation = 373 * current_index + 5
-    let (q, r) = unsigned_div_rem(calculation, max_supply)
-    token_id_to_pixel_index.write(new_round, token_id, r)
-    let (next_token_id : Uint256) = uint256_sub(token_id, Uint256(1, 0))
-    _shuffle_pixel_position(new_round=new_round, token_id=next_token_id, max_supply=max_supply)
-    return ()
-end
-
-func shuffle_pixel_positions{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    new_round : felt
-):
-    let (contract_address : felt) = pixel_erc721.read()
-    let (last_token_id : Uint256) = IPixelERC721.maxSupply(contract_address=contract_address)
-
-    # We go over all the tokens, and for each one we determine
-    # a new position (= pixel index)
-    _shuffle_pixel_position(new_round, last_token_id, last_token_id.low)
     return ()
 end
 
@@ -221,11 +192,9 @@ func launch_new_round{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_ch
     alloc_locals
     let (current_round) = current_drawing_round.read()
     let new_round = current_round + 1
-    shuffle_pixel_positions(new_round)
-
+    current_drawing_round.write(new_round)
     let (block_timestamp) = get_block_timestamp()
     drawing_timestamp.write(new_round, block_timestamp)
-    current_drawing_round.write(new_round)
 
     return ()
 end
@@ -272,6 +241,7 @@ end
 func set_pixel_color{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
     tokenId : Uint256, color : Color
 ):
+    alloc_locals
     assert_valid_color(color)
 
     let (should_launch) = should_launch_new_round()
@@ -284,7 +254,7 @@ func set_pixel_color{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_che
     let pixel_color = PixelColor(set=TRUE, color=color)
 
     let (round) = current_drawing_round.read()
-    let (pixel_index) = tokenPixelIndex(round, tokenId)
+    let (pixel_index) = token_pixel_index(round, tokenId)
     pixel_index_to_pixel_color.write(round, pixel_index, pixel_color)
     return ()
 end
@@ -302,25 +272,29 @@ func set_pixels_colors{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_c
     )
 end
 
-func initialize_grid{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}():
-    # Called by constructor to initialize grid position
-    let (contract_address : felt) = pixel_erc721.read()
-    let (last_token_id : Uint256) = IPixelERC721.maxSupply(contract_address=contract_address)
-    _initialize_grid(last_token_id)
-    return ()
+func get_drawing_timestamp{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
+    round : felt
+) -> (timestamp : felt):
+    let (timestamp) = drawing_timestamp.read(round)
+    return (timestamp=timestamp)
 end
 
-func _initialize_grid{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
-    token_id : Uint256
-):
-    if token_id.low == 0:
-        if token_id.high == 0:
-            return ()
-        end
-    end
-    token_id_to_pixel_index.write(0, token_id, token_id.low)
-    let (next_token_id : Uint256) = uint256_sub(token_id, Uint256(1, 0))
-    return _initialize_grid(next_token_id)
+func token_pixel_index{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
+    round : felt, tokenId : Uint256
+) -> (pixelIndex : felt):
+    let (round_timestamp) = get_drawing_timestamp(round)
+
+    # We use the fact that (a x + b) % n will visit all
+    # integer values in [0,n) exactly once as x iterates
+    # through the integers in [0, n), as long as a is coprime with n.
+    # 373 is prime so coprime with n and a good choice for a.
+    # To introduce "randomness" we choose the round timestamp for b.
+
+    let (erc_address : felt) = pixel_erc721.read()
+    let (max_supply : Uint256) = IPixelERC721.maxSupply(contract_address=erc_address)
+    let calculation = 373 * tokenId.low + round_timestamp
+    let (q, r) = unsigned_div_rem(calculation, max_supply.low)
+    return (pixelIndex=r)
 end
 
 #

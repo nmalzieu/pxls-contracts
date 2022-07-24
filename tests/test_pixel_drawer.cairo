@@ -286,17 +286,17 @@ func test_pixel_drawer_shuffle_result{
     %{ ids.drawer_contract_address = context.drawer_contract_address %}
 
     # Check pixel shuffle
-    # For a given matrix size, result is deterministic
-    # For 20x20, first token position is 378 = 1 * 373 + 5 % 400
-    # last token position is 5 = 400 * 373 + 5 % 400
+    # For a given matrix size, result is deterministic (but based on block timestamp)
+    # For 20x20, first token position is (373 * 1 + 'start_timestamp') % 400 = 101
+    # last token position is (373 * 400 + 'start_timestamp') % 400 = 270
     let (pixel_index_first) = IPixelDrawer.currentTokenPixelIndex(
         drawer_contract_address, Uint256(1, 0)
     )
-    assert 378 = pixel_index_first
+    assert 101 = pixel_index_first
     let (pixel_index_last) = IPixelDrawer.currentTokenPixelIndex(
         drawer_contract_address, Uint256(400, 0)
     )
-    assert 5 = pixel_index_last
+    assert 128 = pixel_index_last
     return ()
 end
 
@@ -325,9 +325,9 @@ func test_pixel_launch_new_round_if_necessary{
     let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
     assert round = 1
 
-    # 25 hour is enough to launch new round
+    # 24+ hour is enough to launch new round
 
-    let new_timestamp = 'start_timestamp' + (25 * 3600)
+    let new_timestamp = 'start_timestamp' + (24 * 3600 + 136)
     %{ warp(ids.new_timestamp, context.drawer_contract_address) %}
 
     let (launched) = IPixelDrawer.launchNewRoundIfNecessary(
@@ -353,22 +353,30 @@ func test_pixel_launch_new_round_if_necessary{
     let (pixel_index_first) = IPixelDrawer.currentTokenPixelIndex(
         drawer_contract_address, Uint256(1, 0)
     )
-    assert 199 = pixel_index_first
+    assert 237 = pixel_index_first
     let (pixel_index_last) = IPixelDrawer.currentTokenPixelIndex(
         drawer_contract_address, Uint256(400, 0)
     )
-    assert 270 = pixel_index_last
+    assert 264 = pixel_index_last
 
     # Verify we can still get old positions
 
     let (old_pixel_index_first) = IPixelDrawer.tokenPixelIndex(
         drawer_contract_address, 1, Uint256(1, 0)
     )
-    assert 378 = old_pixel_index_first
+    assert 101 = old_pixel_index_first
     let (old_pixel_index_last) = IPixelDrawer.tokenPixelIndex(
         drawer_contract_address, 1, Uint256(400, 0)
     )
-    assert 5 = old_pixel_index_last
+    assert 128 = old_pixel_index_last
+
+    # We can't get positions for future rounds
+
+    %{ expect_revert(error_message="Round 3 does not exist") %}
+
+    let (future_pixel_index_first) = IPixelDrawer.tokenPixelIndex(
+        drawer_contract_address, 3, Uint256(1, 0)
+    )
 
     return ()
 end
@@ -416,9 +424,9 @@ func test_pixel_drawing_fails_if_old_round{
     let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
     assert round = 1
 
-    # 25 hour is enough to launch new round
+    # 24+ hour is enough to launch new round
 
-    let new_timestamp = 'start_timestamp' + (25 * 3600)
+    let new_timestamp = 'start_timestamp' + (24 * 3600 + 136)
     %{ warp(ids.new_timestamp, context.drawer_contract_address) %}
 
     # Drawing pixel after 1 day fails if no new round has been launched
@@ -462,9 +470,9 @@ func test_pixel_index_to_pixel_color_with_rounds{
 
     IPixelDrawer.setPixelsColors(drawer_contract_address, 1, tokens, 1, colors)
 
-    # 25 hour is enough to launch new round
+    # 24+ hour is enough to launch new round
 
-    let new_timestamp = 'start_timestamp' + (25 * 3600)
+    let new_timestamp = 'start_timestamp' + (24 * 3600 + 136)
     %{ warp(ids.new_timestamp, context.drawer_contract_address) %}
 
     # Launch new round
@@ -481,14 +489,14 @@ func test_pixel_index_to_pixel_color_with_rounds{
 
     %{ stop_prank_drawer() %}
 
-    # We know pixel #1 position is 378 for round 1, then 199 for round 2
+    # We know pixel #1 position is 101 for round 1, then 237 for round 2
     # let's check if pixel color history is well saved in the state
 
     let (round_1_color : PixelColor) = IPixelDrawer.pixelIndexToPixelColor(
-        contract_address=drawer_contract_address, round=1, pixelIndex=378
+        contract_address=drawer_contract_address, round=1, pixelIndex=101
     )
     let (round_2_color : PixelColor) = IPixelDrawer.pixelIndexToPixelColor(
-        contract_address=drawer_contract_address, round=2, pixelIndex=199
+        contract_address=drawer_contract_address, round=2, pixelIndex=237
     )
 
     assert round_1_color.set = TRUE
@@ -530,9 +538,9 @@ func test_pixel_get_grid{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : Ha
 
     IPixelDrawer.setPixelsColors(drawer_contract_address, 1, tokens, 1, colors)
 
-    # 25 hour is enough to launch new round
+    # 24+ hour is enough to launch new round
 
-    let new_timestamp = 'start_timestamp' + (25 * 3600)
+    let new_timestamp = 'start_timestamp' + (24 * 3600 + 136)
     %{ warp(ids.new_timestamp, context.drawer_contract_address) %}
 
     # Launch new round
@@ -549,7 +557,7 @@ func test_pixel_get_grid{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : Ha
 
     %{ stop_prank_drawer() %}
 
-    # We know pixel #1 position is 378 for round 1, then 199 for round 2
+    # We know pixel #1 position is 101 for round 1, then 237 for round 2
     # let's check if pixel color history is well saved in the state
 
     let (grid_1_len : felt, grid_1 : felt*) = IPixelDrawer.getGrid(
@@ -563,19 +571,19 @@ func test_pixel_get_grid{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : Ha
     assert 20 * 20 * 4 = grid_1_len
     assert 20 * 20 * 4 = grid_2_len
 
-    # Pixel 378 of round 1 set to 255, 0, 100
+    # Pixel 101 of round 1 set to 255, 0, 100
 
-    assert TRUE = grid_1[378 * 4]
-    assert 255 = grid_1[378 * 4 + 1]
-    assert 0 = grid_1[378 * 4 + 2]
-    assert 100 = grid_1[378 * 4 + 3]
+    assert TRUE = grid_1[101 * 4]
+    assert 255 = grid_1[101 * 4 + 1]
+    assert 0 = grid_1[101 * 4 + 2]
+    assert 100 = grid_1[101 * 4 + 3]
 
-    # Pixel 199 of round 2 set to 123, 200, 0
+    # Pixel 237 of round 2 set to 123, 200, 0
 
-    assert TRUE = grid_2[199 * 4]
-    assert 123 = grid_2[199 * 4 + 1]
-    assert 200 = grid_2[199 * 4 + 2]
-    assert 0 = grid_2[199 * 4 + 3]
+    assert TRUE = grid_2[237 * 4]
+    assert 123 = grid_2[237 * 4 + 1]
+    assert 200 = grid_2[237 * 4 + 2]
+    assert 0 = grid_2[237 * 4 + 3]
 
     return ()
 end

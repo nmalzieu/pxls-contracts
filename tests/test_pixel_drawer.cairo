@@ -67,8 +67,13 @@ func test_pixel_drawer_getters{syscall_ptr : felt*, range_check_ptr, pedersen_pt
     let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
     assert round = 1
 
-    let (owner : felt) = IPixelDrawer.owner(contract_address=pixel_contract_address)
+    let (owner : felt) = IPixelDrawer.owner(contract_address=drawer_contract_address)
     assert 123456 = owner
+
+    let (bool : felt) = IPixelDrawer.everyoneCanLaunchRound(
+        contract_address=drawer_contract_address
+    )
+    assert FALSE = bool
 
     # Timestamp must have been set to the deployment timestamp
 
@@ -307,6 +312,8 @@ func test_pixel_launch_new_round_if_necessary{
     tempvar drawer_contract_address
     %{ ids.drawer_contract_address = context.drawer_contract_address %}
 
+    %{ stop_prank_drawer = start_prank(context.account, target_contract_address=ids.drawer_contract_address) %}
+
     # after calling start() in setup, we're at round 1
 
     let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
@@ -377,6 +384,8 @@ func test_pixel_launch_new_round_if_necessary{
     let (future_pixel_index_first) = IPixelDrawer.tokenPixelIndex(
         drawer_contract_address, 3, Uint256(1, 0)
     )
+
+    %{ stop_prank_drawer() %}
 
     return ()
 end
@@ -584,6 +593,107 @@ func test_pixel_get_grid{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : Ha
     assert 123 = grid_2[237 * 4 + 1]
     assert 200 = grid_2[237 * 4 + 2]
     assert 0 = grid_2[237 * 4 + 3]
+
+    return ()
+end
+
+@view
+func test_pixel_owner_can_change_launch_flag{
+    syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
+}():
+    tempvar drawer_contract_address
+    %{ ids.drawer_contract_address = context.drawer_contract_address %}
+
+    let (bool : felt) = IPixelDrawer.everyoneCanLaunchRound(
+        contract_address=drawer_contract_address
+    )
+    assert FALSE = bool
+
+    # Check that owner can, indeed, modify the flag
+    %{ stop_prank_drawer = start_prank(context.account, target_contract_address=ids.drawer_contract_address) %}
+    IPixelDrawer.setEveryoneCanLaunchRound(contract_address=drawer_contract_address, bool=TRUE)
+
+    let (bool : felt) = IPixelDrawer.everyoneCanLaunchRound(
+        contract_address=drawer_contract_address
+    )
+    assert TRUE = bool
+
+    %{ stop_prank_drawer() %}
+
+    # Check that non owner cannot update flag
+    %{ expect_revert(error_message="Ownable: caller is not the owner") %}
+    IPixelDrawer.setEveryoneCanLaunchRound(contract_address=drawer_contract_address, bool=FALSE)
+
+    return ()
+end
+
+@view
+func test_pixel_not_everyone_can_launch_new_round{
+    syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
+}():
+    tempvar drawer_contract_address
+    %{ ids.drawer_contract_address = context.drawer_contract_address %}
+
+    # At beginning, not everyone can launch new round!
+
+    let (bool : felt) = IPixelDrawer.everyoneCanLaunchRound(
+        contract_address=drawer_contract_address
+    )
+    assert FALSE = bool
+
+    let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
+    assert 1 = round
+
+    # Check that owner can launch new round
+    %{ stop_prank_drawer = start_prank(context.account, target_contract_address=ids.drawer_contract_address) %}
+
+    # 24+ hour is enough to launch new round
+    let new_timestamp = 'start_timestamp' + (24 * 3600 + 136)
+    %{ warp(ids.new_timestamp, context.drawer_contract_address) %}
+
+    IPixelDrawer.launchNewRoundIfNecessary(contract_address=drawer_contract_address)
+
+    let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
+    assert 2 = round
+
+    # Check that non owner cannot launch new round
+
+    %{ stop_prank_drawer() %}
+
+    # Check that non owner cannot update flag
+    %{ expect_revert(error_message="Ownable: caller is not the owner") %}
+    IPixelDrawer.launchNewRoundIfNecessary(contract_address=drawer_contract_address)
+
+    return ()
+end
+
+@view
+func test_pixel_everyone_can_launch_new_round{
+    syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
+}():
+    tempvar drawer_contract_address
+    %{ ids.drawer_contract_address = context.drawer_contract_address %}
+
+    # Owner can update flag
+    %{ stop_prank_drawer = start_prank(context.account, target_contract_address=ids.drawer_contract_address) %}
+    IPixelDrawer.setEveryoneCanLaunchRound(contract_address=drawer_contract_address, bool=TRUE)
+
+    let (bool : felt) = IPixelDrawer.everyoneCanLaunchRound(
+        contract_address=drawer_contract_address
+    )
+    assert TRUE = bool
+
+    %{ stop_prank_drawer() %}
+
+    # 24+ hour is enough to launch new round
+    let new_timestamp = 'start_timestamp' + (24 * 3600 + 136)
+    %{ warp(ids.new_timestamp, context.drawer_contract_address) %}
+
+    # We're not owner but we can now launch new round
+    IPixelDrawer.launchNewRoundIfNecessary(contract_address=drawer_contract_address)
+
+    let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
+    assert 2 = round
 
     return ()
 end

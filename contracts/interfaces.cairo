@@ -73,4 +73,8 @@ namespace IPixelDrawer:
     end
     func transferOwnership(newOwner : felt) -> ():
     end
+    func everyoneCanLaunchRound() -> (bool : felt):
+    end
+    func setEveryoneCanLaunchRound(bool : felt):
+    end
 end

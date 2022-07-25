@@ -33,6 +33,10 @@ end
 func current_drawing_round() -> (round : felt):
 end
 
+@storage_var
+func everyone_can_launch_round() -> (bool : felt):
+end
+
 #
 # Constructor
 #
@@ -134,6 +138,13 @@ func getGrid{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
         round=round, pixel_index=0, max_supply=max_supply.low, grid_len=0, grid=grid
     )
     return (grid_len=grid_len, grid=grid)
+end
+
+@view
+func everyoneCanLaunchRound{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    ) -> (bool : felt):
+    let (bool) = everyone_can_launch_round.read()
+    return (bool=bool)
 end
 
 #
@@ -314,9 +325,26 @@ end
 @external
 func launchNewRoundIfNecessary{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
     ) -> (launched : felt):
+    alloc_locals
+    let (bool) = everyone_can_launch_round.read()
+    tempvar syscall_ptr = syscall_ptr
+    tempvar pedersen_ptr = pedersen_ptr
+    tempvar range_check_ptr = range_check_ptr
+    if bool == FALSE:
+        Ownable.assert_only_owner()
+    end
     # Method to just launch a new round with drawing a pixel
     let (launched) = launch_new_round_if_necessary()
     return (launched=launched)
+end
+
+@external
+func setEveryoneCanLaunchRound{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
+    bool : felt
+):
+    Ownable.assert_only_owner()
+    everyone_can_launch_round.write(bool)
+    return ()
 end
 
 @external

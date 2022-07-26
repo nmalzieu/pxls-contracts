@@ -1,5 +1,5 @@
 %lang starknet
-from starkware.cairo.common.cairo_builtins import HashBuiltin, SignatureBuiltin
+from starkware.cairo.common.cairo_builtins import HashBuiltin, BitwiseBuiltin
 from starkware.cairo.common.uint256 import Uint256, uint256_sub
 from starkware.cairo.common.math import unsigned_div_rem
 from starkware.cairo.common.math_cmp import is_le
@@ -11,7 +11,12 @@ from openzeppelin.access.ownable import Ownable
 from openzeppelin.token.erc721.interfaces.IERC721 import IERC721
 
 from libs.colors import Color, PixelColor, assert_valid_color
+from libs.starknet_felt_packing.bits_manipulation import external as bits_manipulation
+
 from contracts.interfaces import IPixelERC721
+
+const COLOR_SET_BIT_SIZE = 1
+const COLOR_COMPONENT_BIT_SIZE = 8
 
 #
 # Storage
@@ -22,7 +27,7 @@ func pixel_erc721() -> (address : felt):
 end
 
 @storage_var
-func pixel_index_to_pixel_color(drawing_round : felt, pixel_index : felt) -> (color : PixelColor):
+func pixel_index_to_pixel_color(drawing_round : felt, pixel_index : felt) -> (color_packed : felt):
 end
 
 @storage_var
@@ -85,13 +90,13 @@ func tokenPixelIndex{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_che
 end
 
 @view
-func pixelColor{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
+func pixelColor{bitwise_ptr : BitwiseBuiltin*, pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
     tokenId : Uint256
 ) -> (color : PixelColor):
     alloc_locals
     let (round) = current_drawing_round.read()
     let (pixel_index) = token_pixel_index(round, tokenId)
-    let (color) = pixel_index_to_pixel_color.read(round, pixel_index)
+    let (color) = get_pixel_color_from_pixel_index(round, pixel_index)
     return (color=color)
 end
 
@@ -119,15 +124,15 @@ func currentDrawingRound{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range
 end
 
 @view
-func pixelIndexToPixelColor{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
+func pixelIndexToPixelColor{bitwise_ptr : BitwiseBuiltin*, pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
     round : felt, pixelIndex : felt
 ) -> (color : PixelColor):
-    let (color) = pixel_index_to_pixel_color.read(round, pixelIndex)
+    let (color) = get_pixel_color_from_pixel_index(round, pixelIndex)
     return (color=color)
 end
 
 @view
-func getGrid{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(round : felt) -> (
+func getGrid{bitwise_ptr : BitwiseBuiltin*, pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(round : felt) -> (
     grid_len : felt, grid : felt*
 ):
     alloc_locals
@@ -229,13 +234,13 @@ func launch_new_round_if_necessary{
     end
 end
 
-func get_grid{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+func get_grid{bitwise_ptr : BitwiseBuiltin*, syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     round : felt, pixel_index : felt, max_supply : felt, grid_len : felt, grid : felt*
 ) -> (grid_len : felt):
     if pixel_index == max_supply:
         return (grid_len=grid_len)
     end
-    let (pixel_color : PixelColor) = pixel_index_to_pixel_color.read(round, pixel_index)
+    let (pixel_color : PixelColor) = get_pixel_color_from_pixel_index(round, pixel_index)
     assert grid[grid_len] = pixel_color.set
     assert grid[grid_len + 1] = pixel_color.color.red
     assert grid[grid_len + 2] = pixel_color.color.green
@@ -249,28 +254,36 @@ func get_grid{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}
     )
 end
 
-func set_pixel_color{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
+func set_pixel_color{bitwise_ptr : BitwiseBuiltin*, pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
     tokenId : Uint256, color : Color
 ):
     alloc_locals
     assert_valid_color(color)
 
-    let (should_launch) = should_launch_new_round()
-    with_attr error_message("This drawing round is finished, please launch a new one"):
-        assert should_launch = FALSE
-    end
-
     let (caller_address) = get_caller_address()
     assert_pixel_owner(caller_address, tokenId)
-    let pixel_color = PixelColor(set=TRUE, color=color)
 
     let (round) = current_drawing_round.read()
     let (pixel_index) = token_pixel_index(round, tokenId)
-    pixel_index_to_pixel_color.write(round, pixel_index, pixel_color)
+
+    # Pixel color is 4 felts : first one is boolean (set / non set) and the three
+    # others are color components (R, G, B between 0 and 255)
+
+    let (v1) = bits_manipulation.actual_set_element_at(0, 0, COLOR_SET_BIT_SIZE, TRUE)
+    let (v2) = bits_manipulation.actual_set_element_at(
+        v1, COLOR_SET_BIT_SIZE, COLOR_COMPONENT_BIT_SIZE, color.red
+    )
+    let (v3) = bits_manipulation.actual_set_element_at(
+        v2, COLOR_SET_BIT_SIZE + COLOR_COMPONENT_BIT_SIZE, COLOR_COMPONENT_BIT_SIZE, color.green
+    )
+    let (v4) = bits_manipulation.actual_set_element_at(
+        v3, COLOR_SET_BIT_SIZE + 2 * COLOR_COMPONENT_BIT_SIZE, COLOR_COMPONENT_BIT_SIZE, color.blue
+    )
+    pixel_index_to_pixel_color.write(round, pixel_index, v4)
     return ()
 end
 
-func set_pixels_colors{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
+func set_pixels_colors{bitwise_ptr : BitwiseBuiltin*, pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
     tokenIds_len : felt, tokenIds : Uint256*, colors_len : felt, colors : Color*
 ):
     if tokenIds_len == 0:
@@ -308,16 +321,41 @@ func token_pixel_index{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_c
     return (pixelIndex=r)
 end
 
+func get_pixel_color_from_pixel_index{
+    bitwise_ptr : BitwiseBuiltin*, pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr
+}(round : felt, pixel_index : felt) -> (pixel_color : PixelColor):
+    alloc_locals
+    # Get the single packed felt from storage and decode it
+    let (color_packed) = pixel_index_to_pixel_color.read(round, pixel_index)
+    let (set) = bits_manipulation.actual_get_element_at(color_packed, 0, COLOR_SET_BIT_SIZE)
+    let (red) = bits_manipulation.actual_get_element_at(
+        color_packed, COLOR_SET_BIT_SIZE, COLOR_COMPONENT_BIT_SIZE
+    )
+    let (green) = bits_manipulation.actual_get_element_at(
+        color_packed, COLOR_SET_BIT_SIZE + COLOR_COMPONENT_BIT_SIZE, COLOR_COMPONENT_BIT_SIZE
+    )
+    let (blue) = bits_manipulation.actual_get_element_at(
+        color_packed, COLOR_SET_BIT_SIZE + 2 * COLOR_COMPONENT_BIT_SIZE, COLOR_COMPONENT_BIT_SIZE
+    )
+    let color = Color(red=red, green=green, blue=blue)
+    let pixel_color = PixelColor(set=set, color=color)
+    return (pixel_color=pixel_color)
+end
+
 #
 # Externals
 #
 
 @external
-func setPixelsColors{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
+func setPixelsColors{bitwise_ptr : BitwiseBuiltin*, pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
     tokenIds_len : felt, tokenIds : Uint256*, colors_len : felt, colors : Color*
 ):
     with_attr error_message("tokenId and colors array length don't match"):
         assert tokenIds_len = colors_len
+    end
+    let (should_launch) = should_launch_new_round()
+    with_attr error_message("This drawing round is finished, please launch a new one"):
+        assert should_launch = FALSE
     end
     return set_pixels_colors(tokenIds_len, tokenIds, colors_len, colors)
 end

@@ -4,7 +4,7 @@ from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.uint256 import Uint256
 from starkware.cairo.common.alloc import alloc
 
-from contracts.interfaces import IPixelERC721
+from pxls.interfaces import IPixelERC721
 
 @view
 func __setup__{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
@@ -16,7 +16,7 @@ func __setup__{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
     %{ context.sample_pxl_metadata_address = deploy_contract("tests/sample_pxl_metadata_contract.cairo", []).contract_address %}
 
     %{
-        context.pixel_contract_address = deploy_contract("contracts/PixelERC721.cairo", [
+        context.pixel_contract_address = deploy_contract("contracts/pxls/PixelERC721/PixelERC721.cairo", [
                ids.name,
                ids.symbol,
                2,

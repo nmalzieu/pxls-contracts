@@ -10,10 +10,10 @@ from starkware.cairo.common.alloc import alloc
 from openzeppelin.access.ownable import Ownable
 from openzeppelin.token.erc721.interfaces.IERC721 import IERC721
 
-from libs.colors import Color, PixelColor, assert_valid_color
-from libs.starknet_felt_packing.bits_manipulation import external as bits_manipulation
+from starknet_felt_packing.bits_manipulation import external as bits_manipulation
 
-from contracts.interfaces import IPixelERC721
+from pxls.utils.colors import Color, PixelColor, assert_valid_color
+from pxls.interfaces import IPixelERC721
 
 const COLOR_SET_BIT_SIZE = 1
 const COLOR_COMPONENT_BIT_SIZE = 8

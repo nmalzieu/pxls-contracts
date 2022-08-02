@@ -1,7 +1,7 @@
 %lang starknet
 
 from starkware.cairo.common.uint256 import Uint256
-from libs.colors import Color, PixelColor
+from pxls.utils.colors import Color, PixelColor
 
 @contract_interface
 namespace IPXLMetadata:

@@ -13,8 +13,8 @@ from openzeppelin.token.erc721_enumerable.library import ERC721_Enumerable
 from openzeppelin.introspection.ERC165 import ERC165
 from openzeppelin.security.safemath import SafeUint256
 
-from contracts.interfaces import IPXLMetadata
-from contracts.pxls_metadata.pxls_metadata import get_pxl_json_metadata
+from pxls.interfaces import IPXLMetadata
+from pxls.PixelERC721.pxls_metadata.pxls_metadata import get_pxl_json_metadata
 
 #
 # Storage

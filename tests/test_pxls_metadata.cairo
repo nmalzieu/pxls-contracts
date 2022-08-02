@@ -4,8 +4,8 @@ from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.cairo.common.registers import get_label_location
 from starkware.cairo.common.alloc import alloc
 
-from contracts.pxls_metadata.pxls_metadata import append_palette_trait, get_pxl_json_metadata
 from caistring.str import Str
+from pxls.PixelERC721.pxls_metadata.pxls_metadata import append_palette_trait, get_pxl_json_metadata
 
 @view
 func test_append_palette_trait{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():

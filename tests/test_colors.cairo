@@ -1,7 +1,7 @@
 %lang starknet
 
 from starkware.cairo.common.cairo_builtins import HashBuiltin
-from libs.colors import Color, assert_valid_color_component, assert_valid_color
+from pxls.utils.colors import Color, assert_valid_color_component, assert_valid_color
 
 @view
 func test_color_component{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():

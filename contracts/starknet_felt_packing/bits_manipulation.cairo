@@ -3,7 +3,7 @@ from starkware.cairo.common.cairo_builtins import HashBuiltin, BitwiseBuiltin
 from starkware.cairo.common.bool import TRUE
 from starkware.cairo.common.bitwise import bitwise_and, bitwise_or, ALL_ONES
 from starkware.cairo.common.math_cmp import is_le
-from libs.starknet_felt_packing.pow2 import pow2
+from starknet_felt_packing.pow2 import pow2
 
 #
 # @title Bits Manipulation

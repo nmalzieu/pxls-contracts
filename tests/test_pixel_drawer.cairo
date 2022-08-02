@@ -5,8 +5,8 @@ from starkware.cairo.common.uint256 import Uint256
 from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.cairo.common.alloc import alloc
 
-from libs.colors import Color, PixelColor
-from contracts.interfaces import IPixelERC721, IPixelDrawer
+from pxls.utils.colors import Color, PixelColor
+from pxls.interfaces import IPixelERC721, IPixelDrawer
 
 @view
 func __setup__{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
@@ -19,7 +19,7 @@ func __setup__{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
     %{ context.sample_pxl_metadata_address = deploy_contract("tests/sample_pxl_metadata_contract.cairo", []).contract_address %}
 
     %{
-        context.pixel_contract_address = deploy_contract("contracts/PixelERC721.cairo", [
+        context.pixel_contract_address = deploy_contract("contracts/pxls/PixelERC721/PixelERC721.cairo", [
             ids.name,
             ids.symbol,
             20,
@@ -31,7 +31,7 @@ func __setup__{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
             context.sample_pxl_metadata_address
         ]).contract_address
     %}
-    %{ context.drawer_contract_address = deploy_contract("contracts/PixelDrawer.cairo", [context.account, context.pixel_contract_address]).contract_address %}
+    %{ context.drawer_contract_address = deploy_contract("contracts/pxls/PixelDrawer/PixelDrawer.cairo", [context.account, context.pixel_contract_address]).contract_address %}
 
     %{ stop_prank_pixel = start_prank(context.account, target_contract_address=context.pixel_contract_address) %}
     %{ stop_prank_drawer = start_prank(context.account, target_contract_address=context.drawer_contract_address) %}

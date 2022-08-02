@@ -2,7 +2,7 @@
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.alloc import alloc
 
-from contracts.pxls_metadata.pxls_colors import get_color_palette_name, get_color
+from pxls.PixelERC721.pxls_metadata.pxls_colors import get_color_palette_name, get_color
 
 @view
 func test_get_color_palette_name{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}(

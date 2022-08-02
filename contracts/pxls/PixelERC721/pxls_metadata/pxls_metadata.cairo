@@ -5,12 +5,12 @@ from starkware.cairo.common.registers import get_label_location
 from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.cairo.common.alloc import alloc
 
-from libs.colors import Color
-from libs.numbers_literals import number_to_literal_dangerous
 from caistring.str import literal_concat_known_length_dangerous
 
-from contracts.pxls_metadata.pxls_svg import append_svg_from_pixel_grid
-from contracts.pxls_metadata.pxls_colors import get_color_palette_name
+from pxls.utils.numbers_literals import number_to_literal_dangerous
+from pxls.utils.colors import Color
+from pxls.PixelERC721.pxls_metadata.pxls_svg import append_svg_from_pixel_grid
+from pxls.PixelERC721.pxls_metadata.pxls_colors import get_color_palette_name
 
 func get_yes_no_str{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     boolean : felt

@@ -4,10 +4,10 @@ from starkware.cairo.common.registers import get_label_location
 from starkware.cairo.common.alloc import alloc
 from starkware.cairo.common.math import assert_nn_le, unsigned_div_rem
 
-from contracts.pxls_metadata.pxls_colors import get_color
 from caistring.str import literal_concat_known_length_dangerous
-from libs.colors import Color
-from libs.numbers_literals import number_to_literal_dangerous, number_literal_length
+from pxls.PixelERC721.pxls_metadata.pxls_colors import get_color
+from pxls.utils.colors import Color
+from pxls.utils.numbers_literals import number_to_literal_dangerous, number_literal_length
 
 func pixel_coordinates_from_index{
     syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr

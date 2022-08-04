@@ -1,8 +1,10 @@
 %lang starknet
-from starkware.cairo.common.cairo_builtins import HashBuiltin, BitwiseBuiltin
+from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.uint256 import Uint256
 from starkware.cairo.common.bool import FALSE
 from starkware.cairo.common.alloc import alloc
+from starkware.starknet.common.syscalls import get_caller_address
+from starkware.cairo.common.math import assert_le
 
 from openzeppelin.access.ownable import Ownable
 
@@ -15,12 +17,15 @@ from pxls.PixelDrawer.round import (
     assert_current_round_running,
     launch_new_round_if_necessary,
 )
-from pxls.PixelDrawer.grid import (
-    token_pixel_index,
-    get_pixel_color_from_pixel_index,
-    get_grid,
-    set_pixels_colors,
+from pxls.PixelDrawer.access import assert_pixel_owner
+from pxls.PixelDrawer.colorization import (
+    UserColorizations,
+    Colorization,
+    save_drawing_user_colorizations,
+    get_all_drawing_user_colorizations,
+    count_colorizations_from_token_id,
 )
+from pxls.PixelDrawer.grid import get_grid
 
 #
 # Constructor
@@ -54,33 +59,6 @@ func owner{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}() 
 end
 
 @view
-func currentTokenPixelIndex{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
-    tokenId : Uint256
-) -> (pixelIndex : felt):
-    let (round) = current_drawing_round.read()
-    return token_pixel_index(round, tokenId)
-end
-
-@view
-func tokenPixelIndex{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
-    round : felt, tokenId : Uint256
-) -> (pixelIndex : felt):
-    assert_round_exists(round)
-    return token_pixel_index(round, tokenId)
-end
-
-@view
-func pixelColor{
-    bitwise_ptr : BitwiseBuiltin*, pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr
-}(tokenId : Uint256) -> (color : PixelColor):
-    alloc_locals
-    let (round) = current_drawing_round.read()
-    let (pixel_index) = token_pixel_index(round, tokenId)
-    let (color) = get_pixel_color_from_pixel_index(round, pixel_index)
-    return (color=color)
-end
-
-@view
 func currentDrawingTimestamp{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
     ) -> (timestamp : felt):
     let (round) = current_drawing_round.read()
@@ -104,24 +82,40 @@ func currentDrawingRound{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range
 end
 
 @view
-func pixelIndexToPixelColor{
-    bitwise_ptr : BitwiseBuiltin*, pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr
-}(round : felt, pixelIndex : felt) -> (color : PixelColor):
-    let (color) = get_pixel_color_from_pixel_index(round, pixelIndex)
+func currentDrawingPixelColor{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
+    pixelIndex : felt
+) -> (color : PixelColor):
+    alloc_locals
+    let (round) = current_drawing_round.read()
+    return pixelColor(round, pixelIndex)
+end
+
+@view
+func pixelColor{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
+    round : felt, pixelIndex : felt
+) -> (color : PixelColor):
+    alloc_locals
+    let (contract_address : felt) = pixel_erc721.read()
+    let (max_supply : Uint256) = IPixelERC721.maxSupply(contract_address=contract_address)
+    with_attr error_message("Max pixel index value is {max_supply}"):
+        assert_le(pixelIndex, max_supply.low)
+    end
+    let (grid_len : felt, grid : felt*) = get_grid(round=round, max_supply=max_supply.low)
+    let color = PixelColor(
+        set=grid[4 * pixelIndex],
+        color=Color(grid[4 * pixelIndex + 1], grid[4 * pixelIndex + 2], grid[4 * pixelIndex + 3]),
+    )
     return (color=color)
 end
 
 @view
-func getGrid{
-    bitwise_ptr : BitwiseBuiltin*, pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr
-}(round : felt) -> (grid_len : felt, grid : felt*):
+func getGrid{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(round : felt) -> (
+    grid_len : felt, grid : felt*
+):
     alloc_locals
     let (contract_address : felt) = pixel_erc721.read()
     let (max_supply : Uint256) = IPixelERC721.maxSupply(contract_address=contract_address)
-    let (local grid : felt*) = alloc()
-    let (grid_len : felt) = get_grid(
-        round=round, pixel_index=0, max_supply=max_supply.low, grid_len=0, grid=grid
-    )
+    let (grid_len : felt, grid : felt*) = get_grid(round=round, max_supply=max_supply.low)
     return (grid_len=grid_len, grid=grid)
 end
 
@@ -132,19 +126,38 @@ func everyoneCanLaunchRound{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, ra
     return (bool=bool)
 end
 
+@view
+func numberOfColorizations{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    round : felt, tokenId : Uint256
+) -> (count : felt):
+    let (
+        stored_user_colorizations_len : felt, stored_user_colorizations : UserColorizations*
+    ) = get_all_drawing_user_colorizations(round)
+    let (colorization_count) = count_colorizations_from_token_id{
+        pedersen_ptr=pedersen_ptr, syscall_ptr=syscall_ptr, range_check_ptr=range_check_ptr
+    }(tokenId, stored_user_colorizations_len, stored_user_colorizations, 0)
+    return (colorization_count)
+end
+
 #
 # Externals
 #
 
 @external
-func setPixelsColors{
-    bitwise_ptr : BitwiseBuiltin*, pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr
-}(tokenIds_len : felt, tokenIds : Uint256*, colors_len : felt, colors : Color*):
-    with_attr error_message("tokenId and colors array length don't match"):
-        assert tokenIds_len = colors_len
-    end
+func colorizePixels{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
+    tokenId : Uint256, colorizations_len : felt, colorizations : Colorization*
+):
+    let (caller_address) = get_caller_address()
+
+    assert_pixel_owner(caller_address, tokenId)
     assert_current_round_running()
-    return set_pixels_colors(tokenIds_len, tokenIds, colors_len, colors)
+
+    let (round) = current_drawing_round.read()
+
+    save_drawing_user_colorizations(
+        round, UserColorizations(tokenId, colorizations_len, colorizations)
+    )
+    return ()
 end
 
 @external

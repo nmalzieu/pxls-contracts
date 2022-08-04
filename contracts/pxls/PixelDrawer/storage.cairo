@@ -14,6 +14,11 @@ end
 func pixel_index_to_pixel_color(drawing_round : felt, pixel_index : felt) -> (color_packed : felt):
 end
 
+# For each rtwrk, we save each user colorization
+@storage_var
+func drawing_user_colorizations(drawing_round : felt, index : felt) -> (user_colorizations_packed : felt):
+end
+
 # This saves the start timestamp of an rtwrk
 @storage_var
 func drawing_timestamp(drawing_round : felt) -> (timestamp : felt):

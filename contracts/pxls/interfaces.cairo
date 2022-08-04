@@ -2,6 +2,7 @@
 
 from starkware.cairo.common.uint256 import Uint256
 from pxls.utils.colors import Color, PixelColor
+from pxls.PixelDrawer.colorization import Colorization
 
 @contract_interface
 namespace IPXLMetadata:
@@ -47,25 +48,19 @@ namespace IPixelDrawer:
     end
     func pixelERC721Address() -> (address : felt):
     end
-    func setPixelsColors(
-        tokenIds_len : felt, tokenIds : Uint256*, colors_len : felt, colors : Color*
-    ):
+    func colorizePixels(tokenId : Uint256, colorizations_len : felt, colorizations : Colorization*):
     end
-    func pixelColor(tokenId : Uint256) -> (color : PixelColor):
+    func pixelColor(round : felt, pixelIndex : felt) -> (color : PixelColor):
+    end
+    func currentDrawingPixelColor(pixelIndex : felt) -> (color : PixelColor):
     end
     func currentDrawingTimestamp() -> (timestamp : felt):
     end
     func drawingTimestamp(round : felt) -> (timestamp : felt):
     end
-    func currentTokenPixelIndex(tokenId : Uint256) -> (pixelIndex : felt):
-    end
-    func tokenPixelIndex(round : felt, tokenId : Uint256) -> (pixelIndex : felt):
-    end
     func currentDrawingRound() -> (round : felt):
     end
     func launchNewRoundIfNecessary() -> (launched : felt):
-    end
-    func pixelIndexToPixelColor(round : felt, pixelIndex : felt) -> (color : PixelColor):
     end
     func getGrid(round : felt) -> (grid_len : felt, grid : felt*):
     end

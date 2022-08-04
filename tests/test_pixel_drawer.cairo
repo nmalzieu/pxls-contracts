@@ -6,6 +6,7 @@ from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.cairo.common.alloc import alloc
 
 from pxls.utils.colors import Color, PixelColor
+from pxls.PixelDrawer.colorization import Colorization
 from pxls.interfaces import IPixelERC721, IPixelDrawer
 
 @view
@@ -116,12 +117,12 @@ func test_pixel_drawer_pixel_owner_nonexistent_token{
 
     %{ expect_revert(error_message="ERC721: owner query for nonexistent token") %}
 
-    let (tokens : Uint256*) = alloc()
-    assert tokens[0] = Uint256(1, 0)
-    let (colors : Color*) = alloc()
-    assert colors[0] = Color(255, 0, 100)
+    # Nobody owns pxl 1 so it should fail
 
-    IPixelDrawer.setPixelsColors(drawer_contract_address, 1, tokens, 1, colors)
+    let (colorizations : Colorization*) = alloc()
+    assert colorizations[0] = Colorization(pixel_index=12, color_index=3)
+
+    IPixelDrawer.colorizePixels(drawer_contract_address, Uint256(1, 0), 1, colorizations)
 
     return ()
 end
@@ -143,12 +144,11 @@ func test_pixel_drawer_pixel_non_token_owner{
 
     # Non owner can't draw pixel
     %{ expect_revert(error_message="Address does not own pixel") %}
-    let (tokens : Uint256*) = alloc()
-    assert tokens[0] = Uint256(1, 0)
-    let (colors : Color*) = alloc()
-    assert colors[0] = Color(255, 0, 100)
 
-    IPixelDrawer.setPixelsColors(drawer_contract_address, 1, tokens, 1, colors)
+    let (colorizations : Colorization*) = alloc()
+    assert colorizations[0] = Colorization(pixel_index=12, color_index=3)
+
+    IPixelDrawer.colorizePixels(drawer_contract_address, Uint256(1, 0), 1, colorizations)
 
     %{ stop_prank() %}
     return ()
@@ -165,7 +165,9 @@ func test_pixel_drawer_pixel_wrong_color{
     %{ ids.drawer_contract_address = context.drawer_contract_address %}
 
     # Get current color
-    let (pixel_color : PixelColor) = IPixelDrawer.pixelColor(drawer_contract_address, Uint256(1, 0))
+    let (pixel_color : PixelColor) = IPixelDrawer.currentDrawingPixelColor(
+        drawer_contract_address, 12
+    )
     assert pixel_color.set = 0  # Unset
     assert pixel_color.color = Color(0, 0, 0)
 
@@ -178,20 +180,18 @@ func test_pixel_drawer_pixel_wrong_color{
     IPixelERC721.mint(contract_address=pixel_contract_address, to=account)
 
     # Pixel owner cannot draw pixel with wrong color
-    %{ expect_revert() %}
-    let (tokens : Uint256*) = alloc()
-    assert tokens[0] = Uint256(1, 0)
-    let (colors : Color*) = alloc()
-    assert colors[0] = Color(265, 0, 100)
+    %{ expect_revert(error_message="Color index is out of bounds") %}
+    let (colorizations : Colorization*) = alloc()
+    assert colorizations[0] = Colorization(pixel_index=12, color_index=95)
 
-    IPixelDrawer.setPixelsColors(drawer_contract_address, 1, tokens, 1, colors)
+    IPixelDrawer.colorizePixels(drawer_contract_address, Uint256(1, 0), 1, colorizations)
 
     %{ stop_prank_drawer() %}
     return ()
 end
 
 @view
-func test_pixel_drawer_set_pixels_colors{
+func test_pixel_drawer_colorize_pixels{
     syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
 }():
     alloc_locals
@@ -202,17 +202,17 @@ func test_pixel_drawer_set_pixels_colors{
     %{ ids.drawer_contract_address = context.drawer_contract_address %}
 
     # Get current colors
-    let (pixel_1_color : PixelColor) = IPixelDrawer.pixelColor(
-        drawer_contract_address, Uint256(1, 0)
+    let (pixel_1_color : PixelColor) = IPixelDrawer.currentDrawingPixelColor(
+        drawer_contract_address, 12
     )
-    assert pixel_1_color.set = 0  # Unset
-    assert pixel_1_color.color = Color(0, 0, 0)
+    assert 0 = pixel_1_color.set  # Unset
+    assert Color(0, 0, 0) = pixel_1_color.color
 
-    let (pixel_2_color : PixelColor) = IPixelDrawer.pixelColor(
-        drawer_contract_address, Uint256(2, 0)
+    let (pixel_2_color : PixelColor) = IPixelDrawer.currentDrawingPixelColor(
+        drawer_contract_address, 300
     )
-    assert pixel_2_color.set = 0  # Unset
-    assert pixel_2_color.color = Color(0, 0, 0)
+    assert 0 = pixel_2_color.set  # Unset
+    assert Color(0, 0, 0) = pixel_2_color.color
 
     %{ stop_prank_drawer = start_prank(context.account, target_contract_address=ids.drawer_contract_address) %}
 
@@ -222,86 +222,27 @@ func test_pixel_drawer_set_pixels_colors{
     # Minting first pixel
     IPixelERC721.mint(contract_address=pixel_contract_address, to=account)
 
-    # Minting second pixel with other account and transfering
+    # Pixel owner can draw multiple pixels with right colors
 
-    %{ stop_prank_pixel = start_prank(1234567, target_contract_address=ids.pixel_contract_address) %}
+    let (colorizations : Colorization*) = alloc()
+    assert colorizations[0] = Colorization(pixel_index=12, color_index=93)
+    assert colorizations[1] = Colorization(pixel_index=300, color_index=2)
 
-    IPixelERC721.mint(contract_address=pixel_contract_address, to=1234567)
-    IPixelERC721.transferFrom(
-        contract_address=pixel_contract_address, from_=1234567, to=account, tokenId=Uint256(2, 0)
-    )
-
-    %{ stop_prank_pixel() %}
-
-    # Verify owns two pixels
-    let (balance : Uint256) = IPixelERC721.balanceOf(pixel_contract_address, account)
-    assert 2 = balance.low
-    assert 0 = balance.high
-
-    # Pixel owner can draw multiple pixels with right color
-    let (tokens : Uint256*) = alloc()
-    assert tokens[0] = Uint256(1, 0)
-    assert tokens[1] = Uint256(2, 0)
-    let (colors : Color*) = alloc()
-    assert colors[0] = Color(255, 0, 100)
-    assert colors[1] = Color(128, 250, 0)
-
-    IPixelDrawer.setPixelsColors(drawer_contract_address, 2, tokens, 2, colors)
+    IPixelDrawer.colorizePixels(drawer_contract_address, Uint256(1, 0), 2, colorizations)
 
     # Check pixel colors have been set
-    let (pixel_1_color : PixelColor) = IPixelDrawer.pixelColor(
-        drawer_contract_address, Uint256(1, 0)
+    let (pixel_1_color : PixelColor) = IPixelDrawer.currentDrawingPixelColor(
+        drawer_contract_address, 12
     )
-    assert pixel_1_color.set = TRUE  # Set
-    assert pixel_1_color.color = Color(255, 0, 100)
-    let (pixel_2_color : PixelColor) = IPixelDrawer.pixelColor(
-        drawer_contract_address, Uint256(2, 0)
+    assert TRUE = pixel_1_color.set  # Set
+    assert Color(217, 217, 217) = pixel_1_color.color
+    let (pixel_2_color : PixelColor) = IPixelDrawer.currentDrawingPixelColor(
+        drawer_contract_address, 300
     )
-    assert pixel_2_color.set = TRUE  # Set
-    assert pixel_2_color.color = Color(128, 250, 0)
-
-    let (colors : Color*) = alloc()
-    assert colors[0] = Color(100, 23, 190)
-    assert colors[1] = Color(0, 168, 23)
-
-    # Pixel owner can set pixels colors again
-    IPixelDrawer.setPixelsColors(drawer_contract_address, 2, tokens, 2, colors)
-
-    # Check pixels colors have been set over
-    let (pixel_1_color : PixelColor) = IPixelDrawer.pixelColor(
-        drawer_contract_address, Uint256(1, 0)
-    )
-    assert pixel_1_color.set = TRUE  # Set
-    assert pixel_1_color.color = Color(100, 23, 190)
-    let (pixel_2_color : PixelColor) = IPixelDrawer.pixelColor(
-        drawer_contract_address, Uint256(2, 0)
-    )
-    assert pixel_2_color.set = TRUE  # Set
-    assert pixel_2_color.color = Color(0, 168, 23)
+    assert TRUE = pixel_2_color.set  # Set
+    assert Color(244, 67, 54) = pixel_2_color.color
 
     %{ stop_prank_drawer() %}
-    return ()
-end
-
-@view
-func test_pixel_drawer_shuffle_result{
-    syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
-}():
-    tempvar drawer_contract_address
-    %{ ids.drawer_contract_address = context.drawer_contract_address %}
-
-    # Check pixel shuffle
-    # For a given matrix size, result is deterministic (but based on block timestamp)
-    # For 20x20, first token position is (373 * 1 + 'start_timestamp') % 400 = 101
-    # last token position is (373 * 400 + 'start_timestamp') % 400 = 270
-    let (pixel_index_first) = IPixelDrawer.currentTokenPixelIndex(
-        drawer_contract_address, Uint256(1, 0)
-    )
-    assert 101 = pixel_index_first
-    let (pixel_index_last) = IPixelDrawer.currentTokenPixelIndex(
-        drawer_contract_address, Uint256(400, 0)
-    )
-    assert 128 = pixel_index_last
     return ()
 end
 
@@ -355,36 +296,6 @@ func test_pixel_launch_new_round_if_necessary{
     )
     assert 'start_timestamp' = previous_timestamp
 
-    # When a new round is launched, the pixel repartition is shuffled
-
-    let (pixel_index_first) = IPixelDrawer.currentTokenPixelIndex(
-        drawer_contract_address, Uint256(1, 0)
-    )
-    assert 237 = pixel_index_first
-    let (pixel_index_last) = IPixelDrawer.currentTokenPixelIndex(
-        drawer_contract_address, Uint256(400, 0)
-    )
-    assert 264 = pixel_index_last
-
-    # Verify we can still get old positions
-
-    let (old_pixel_index_first) = IPixelDrawer.tokenPixelIndex(
-        drawer_contract_address, 1, Uint256(1, 0)
-    )
-    assert 101 = old_pixel_index_first
-    let (old_pixel_index_last) = IPixelDrawer.tokenPixelIndex(
-        drawer_contract_address, 1, Uint256(400, 0)
-    )
-    assert 128 = old_pixel_index_last
-
-    # We can't get positions for future rounds
-
-    %{ expect_revert(error_message="Round 3 does not exist") %}
-
-    let (future_pixel_index_first) = IPixelDrawer.tokenPixelIndex(
-        drawer_contract_address, 3, Uint256(1, 0)
-    )
-
     %{ stop_prank_drawer() %}
 
     return ()
@@ -415,12 +326,10 @@ func test_pixel_drawing_fails_if_old_round{
     IPixelERC721.mint(contract_address=pixel_contract_address, to=account)
 
     # Pixel owner can draw pixel
-    let (tokens : Uint256*) = alloc()
-    assert tokens[0] = Uint256(1, 0)
-    let (colors : Color*) = alloc()
-    assert colors[0] = Color(255, 0, 100)
+    let (colorizations : Colorization*) = alloc()
+    assert colorizations[0] = Colorization(pixel_index=12, color_index=3)
 
-    IPixelDrawer.setPixelsColors(drawer_contract_address, 1, tokens, 1, colors)
+    IPixelDrawer.colorizePixels(drawer_contract_address, Uint256(1, 0), 1, colorizations)
 
     # 23 hour is not enough to launch new round
 
@@ -428,7 +337,7 @@ func test_pixel_drawing_fails_if_old_round{
     %{ warp(ids.new_timestamp, context.drawer_contract_address) %}
 
     # Drawing pixel after < 1 day does not launch new round
-    IPixelDrawer.setPixelsColors(drawer_contract_address, 1, tokens, 1, colors)
+    IPixelDrawer.colorizePixels(drawer_contract_address, Uint256(1, 0), 1, colorizations)
 
     let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
     assert round = 1
@@ -440,79 +349,9 @@ func test_pixel_drawing_fails_if_old_round{
 
     # Drawing pixel after 1 day fails if no new round has been launched
     %{ expect_revert(error_message="This drawing round is finished, please launch a new one") %}
-    IPixelDrawer.setPixelsColors(drawer_contract_address, 1, tokens, 1, colors)
+    IPixelDrawer.colorizePixels(drawer_contract_address, Uint256(1, 0), 1, colorizations)
 
     %{ stop_prank_drawer() %}
-
-    return ()
-end
-
-@view
-func test_pixel_index_to_pixel_color_with_rounds{
-    syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
-}():
-    alloc_locals
-    local pixel_contract_address
-    %{ ids.pixel_contract_address = context.pixel_contract_address %}
-
-    local drawer_contract_address
-    %{ ids.drawer_contract_address = context.drawer_contract_address %}
-
-    # after calling start() in setup, we're at round 1
-
-    let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
-    assert round = 1
-
-    local account
-    %{ ids.account = context.account %}
-
-    %{ stop_prank_drawer = start_prank(context.account, target_contract_address=ids.drawer_contract_address) %}
-
-    # Minting first pixel
-    IPixelERC721.mint(contract_address=pixel_contract_address, to=account)
-
-    # Pixel owner can draw pixel
-    let (tokens : Uint256*) = alloc()
-    assert tokens[0] = Uint256(1, 0)
-    let (colors : Color*) = alloc()
-    assert colors[0] = Color(255, 0, 100)
-
-    IPixelDrawer.setPixelsColors(drawer_contract_address, 1, tokens, 1, colors)
-
-    # 24+ hour is enough to launch new round
-
-    let new_timestamp = 'start_timestamp' + (24 * 3600 + 136)
-    %{ warp(ids.new_timestamp, context.drawer_contract_address) %}
-
-    # Launch new round
-
-    IPixelDrawer.launchNewRoundIfNecessary(contract_address=drawer_contract_address)
-
-    let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
-    assert round = 2
-
-    # Drawing pixel after launching new round
-    let (colors : Color*) = alloc()
-    assert colors[0] = Color(123, 200, 0)
-    IPixelDrawer.setPixelsColors(drawer_contract_address, 1, tokens, 1, colors)
-
-    %{ stop_prank_drawer() %}
-
-    # We know pixel #1 position is 101 for round 1, then 237 for round 2
-    # let's check if pixel color history is well saved in the state
-
-    let (round_1_color : PixelColor) = IPixelDrawer.pixelIndexToPixelColor(
-        contract_address=drawer_contract_address, round=1, pixelIndex=101
-    )
-    let (round_2_color : PixelColor) = IPixelDrawer.pixelIndexToPixelColor(
-        contract_address=drawer_contract_address, round=2, pixelIndex=237
-    )
-
-    assert round_1_color.set = TRUE
-    assert round_1_color.color = Color(255, 0, 100)
-
-    assert round_2_color.set = TRUE
-    assert round_2_color.color = Color(123, 200, 0)
 
     return ()
 end
@@ -540,12 +379,10 @@ func test_pixel_get_grid{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : Ha
     IPixelERC721.mint(contract_address=pixel_contract_address, to=account)
 
     # Pixel owner can draw pixel
-    let (tokens : Uint256*) = alloc()
-    assert tokens[0] = Uint256(1, 0)
-    let (colors : Color*) = alloc()
-    assert colors[0] = Color(255, 0, 100)
+    let (colorizations : Colorization*) = alloc()
+    assert colorizations[0] = Colorization(pixel_index=12, color_index=3)
 
-    IPixelDrawer.setPixelsColors(drawer_contract_address, 1, tokens, 1, colors)
+    IPixelDrawer.colorizePixels(drawer_contract_address, Uint256(1, 0), 1, colorizations)
 
     # 24+ hour is enough to launch new round
 
@@ -560,14 +397,12 @@ func test_pixel_get_grid{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : Ha
     assert round = 2
 
     # Drawing pixel after launching new round
-    let (colors : Color*) = alloc()
-    assert colors[0] = Color(123, 200, 0)
-    IPixelDrawer.setPixelsColors(drawer_contract_address, 1, tokens, 1, colors)
+    let (colorizations : Colorization*) = alloc()
+    assert colorizations[0] = Colorization(pixel_index=18, color_index=63)
+
+    IPixelDrawer.colorizePixels(drawer_contract_address, Uint256(1, 0), 1, colorizations)
 
     %{ stop_prank_drawer() %}
-
-    # We know pixel #1 position is 101 for round 1, then 237 for round 2
-    # let's check if pixel color history is well saved in the state
 
     let (grid_1_len : felt, grid_1 : felt*) = IPixelDrawer.getGrid(
         contract_address=drawer_contract_address, round=1
@@ -580,19 +415,19 @@ func test_pixel_get_grid{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : Ha
     assert 20 * 20 * 4 = grid_1_len
     assert 20 * 20 * 4 = grid_2_len
 
-    # Pixel 101 of round 1 set to 255, 0, 100
+    # Pixel 12 of round 1 set to color 3 = 229	115	115
 
-    assert TRUE = grid_1[101 * 4]
-    assert 255 = grid_1[101 * 4 + 1]
-    assert 0 = grid_1[101 * 4 + 2]
-    assert 100 = grid_1[101 * 4 + 3]
+    assert TRUE = grid_1[12 * 4]
+    assert 229 = grid_1[12 * 4 + 1]
+    assert 115 = grid_1[12 * 4 + 2]
+    assert 115 = grid_1[12 * 4 + 3]
 
-    # Pixel 237 of round 2 set to 123, 200, 0
+    # Pixel 18 of round 2 set to color 64 = 255	241	118
 
-    assert TRUE = grid_2[237 * 4]
-    assert 123 = grid_2[237 * 4 + 1]
-    assert 200 = grid_2[237 * 4 + 2]
-    assert 0 = grid_2[237 * 4 + 3]
+    assert TRUE = grid_2[18 * 4]
+    assert 255 = grid_2[18 * 4 + 1]
+    assert 241 = grid_2[18 * 4 + 2]
+    assert 118 = grid_2[18 * 4 + 3]
 
     return ()
 end

@@ -269,7 +269,7 @@ func test_pixel_drawer_colorize_pixels{
         drawer_contract_address, 12
     )
     assert TRUE = pixel_1_color.set  # Set
-    assert Color(217, 217, 217) = pixel_1_color.color
+    assert Color(242, 242, 242) = pixel_1_color.color
     let (pixel_2_color : PixelColor) = IPixelDrawer.currentDrawingPixelColor(
         drawer_contract_address, 300
     )
@@ -518,7 +518,8 @@ end
 func test_pixel_not_everyone_can_launch_new_round{
     syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
 }():
-    tempvar drawer_contract_address
+    alloc_locals
+    local drawer_contract_address
     %{ ids.drawer_contract_address = context.drawer_contract_address %}
 
     # At beginning, not everyone can launch new round!
@@ -565,7 +566,8 @@ end
 func test_pixel_everyone_can_launch_new_round{
     syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
 }():
-    tempvar drawer_contract_address
+    alloc_locals
+    local drawer_contract_address
     %{ ids.drawer_contract_address = context.drawer_contract_address %}
 
     # Owner can update flag

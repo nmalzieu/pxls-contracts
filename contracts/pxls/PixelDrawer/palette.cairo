@@ -295,9 +295,9 @@ func get_palette_color{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : Hash
     dw 150
     dw 150
     dw 150
-    dw 217
-    dw 217
-    dw 217
+    dw 242
+    dw 242
+    dw 242
     dw 255
     dw 255
     dw 255

@@ -9,14 +9,16 @@
 func pixel_erc721() -> (address : felt):
 end
 
-# For each rtwrk, saves the color of each pixel index
-@storage_var
-func pixel_index_to_pixel_color(drawing_round : felt, pixel_index : felt) -> (color_packed : felt):
-end
-
 # For each rtwrk, we save each user colorization
 @storage_var
-func drawing_user_colorizations(drawing_round : felt, index : felt) -> (user_colorizations_packed : felt):
+func drawing_user_colorizations(drawing_round : felt, index : felt) -> (
+    user_colorizations_packed : felt
+):
+end
+
+# The max number of colorizations per token / rwtrk is a variable
+@storage_var
+func max_colorizations_per_token() -> (max : felt):
 end
 
 # This saves the start timestamp of an rtwrk

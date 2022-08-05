@@ -17,6 +17,7 @@ from pxls.PixelDrawer.colorization import (
     save_drawing_user_colorizations,
     get_all_drawing_user_colorizations,
 )
+from pxls.PixelDrawer.storage import max_colorizations_per_token
 
 from pxls.PixelDrawer.grid import get_grid
 
@@ -130,9 +131,6 @@ func test_unpack_multiple_colorizations{
     assert 300 = colorizations[7].pixel_index
     assert 12 = colorizations[7].color_index
 
-    # assert 76 = colorizations[8].pixel_index
-    # assert 76 = colorizations[8].color_index
-
     return ()
 end
 
@@ -185,9 +183,6 @@ func test_unpack_user_colorizations{
     assert 300 = user_colorizations.colorizations[7].pixel_index
     assert 12 = user_colorizations.colorizations[7].color_index
 
-    # assert 76 = colorizations[8].pixel_index
-    # assert 76 = colorizations[8].color_index
-
     return ()
 end
 
@@ -196,11 +191,22 @@ func test_save_drawing_user_colorizations{
     syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
 }():
     alloc_locals
+    max_colorizations_per_token.write(40)
     let (one_user_colorizations : UserColorizations) = fixture_user_colorizations_1()
     let (other_user_colorizations : UserColorizations) = fixture_user_colorizations_2()
 
-    save_drawing_user_colorizations(1, one_user_colorizations)
-    save_drawing_user_colorizations(1, other_user_colorizations)
+    save_drawing_user_colorizations(
+        1,
+        one_user_colorizations.token_id,
+        one_user_colorizations.colorizations_len,
+        one_user_colorizations.colorizations,
+    )
+    save_drawing_user_colorizations(
+        1,
+        other_user_colorizations.token_id,
+        other_user_colorizations.colorizations_len,
+        other_user_colorizations.colorizations,
+    )
 
     let (
         user_colorizations_len : felt, user_colorizations : UserColorizations*
@@ -249,6 +255,55 @@ func test_save_drawing_user_colorizations{
     assert 26 = grid[4 * 48 + 1]
     assert 35 = grid[4 * 48 + 2]
     assert 126 = grid[4 * 48 + 3]  # Second value has overwritten the first value!
+
+    return ()
+end
+
+@view
+func test_save_drawing_user_colorizations_per_batch{
+    syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
+}():
+    alloc_locals
+    max_colorizations_per_token.write(40)
+    let (colorizations : Colorization*) = alloc()
+
+    assert colorizations[0] = Colorization(pixel_index=399, color_index=94)
+    assert colorizations[1] = Colorization(pixel_index=128, color_index=85)
+    assert colorizations[2] = Colorization(pixel_index=36, color_index=2)
+    assert colorizations[3] = Colorization(pixel_index=360, color_index=78)
+    assert colorizations[4] = Colorization(pixel_index=220, color_index=57)
+    assert colorizations[5] = Colorization(pixel_index=48, color_index=32)
+    assert colorizations[6] = Colorization(pixel_index=178, color_index=90)
+    assert colorizations[7] = Colorization(pixel_index=300, color_index=12)
+    assert colorizations[8] = Colorization(pixel_index=360, color_index=74)
+    assert colorizations[9] = Colorization(pixel_index=123, color_index=57)
+    assert colorizations[10] = Colorization(pixel_index=332, color_index=32)
+    assert colorizations[11] = Colorization(pixel_index=22, color_index=90)
+    assert colorizations[12] = Colorization(pixel_index=1, color_index=12)
+
+    # Saving 13 colorizations, more than 8, so 2 batches (1 of 8 and 1 of 5)
+    save_drawing_user_colorizations(1, Uint256(35, 0), 13, colorizations)
+
+    let (
+        user_colorizations_len : felt, user_colorizations : UserColorizations*
+    ) = get_all_drawing_user_colorizations(1)
+
+    assert 2 = user_colorizations_len
+
+    # Verifying some data points
+
+    assert 0 = user_colorizations[0].token_id.high
+    assert 35 = user_colorizations[0].token_id.low
+
+    assert 399 = user_colorizations[0].colorizations[0].pixel_index
+    assert 94 = user_colorizations[0].colorizations[0].color_index
+
+    assert 0 = user_colorizations[1].token_id.high
+    assert 35 = user_colorizations[1].token_id.low
+
+    # Correponds to 9nth coloriztion
+    assert 360 = user_colorizations[1].colorizations[0].pixel_index
+    assert 74 = user_colorizations[1].colorizations[0].color_index
 
     return ()
 end

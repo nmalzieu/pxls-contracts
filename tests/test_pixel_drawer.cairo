@@ -32,7 +32,7 @@ func __setup__{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
             context.sample_pxl_metadata_address
         ]).contract_address
     %}
-    %{ context.drawer_contract_address = deploy_contract("contracts/pxls/PixelDrawer/PixelDrawer.cairo", [context.account, context.pixel_contract_address]).contract_address %}
+    %{ context.drawer_contract_address = deploy_contract("contracts/pxls/PixelDrawer/PixelDrawer.cairo", [context.account, context.pixel_contract_address, 5]).contract_address %}
 
     %{ stop_prank_pixel = start_prank(context.account, target_contract_address=context.pixel_contract_address) %}
     %{ stop_prank_drawer = start_prank(context.account, target_contract_address=context.drawer_contract_address) %}
@@ -82,6 +82,30 @@ func test_pixel_drawer_getters{syscall_ptr : felt*, range_check_ptr, pedersen_pt
         contract_address=drawer_contract_address
     )
     assert returned_timestamp = 'start_timestamp'
+
+    # Max has been set during deploy also
+    let (max) = IPixelDrawer.maxColorizationsPerToken(drawer_contract_address)
+    assert 5 = max
+
+    return ()
+end
+
+@view
+func test_pixel_drawer_max_colorizations_update{
+    syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
+}():
+    tempvar drawer_contract_address
+    %{ ids.drawer_contract_address = context.drawer_contract_address %}
+
+    %{ stop_prank = start_prank(context.account, target_contract_address=ids.drawer_contract_address) %}
+
+    IPixelDrawer.setMaxColorizationsPerToken(drawer_contract_address, 10)
+
+    # Max has been set during deploy also
+    let (new_max) = IPixelDrawer.maxColorizationsPerToken(drawer_contract_address)
+    assert 10 = new_max
+
+    %{ stop_prank() %}
 
     return ()
 end
@@ -530,5 +554,79 @@ func test_pixel_everyone_can_launch_new_round{
     let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
     assert 2 = round
 
+    return ()
+end
+
+@view
+func test_pixel_drawer_number_colorizations{
+    syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
+}():
+    alloc_locals
+    local pixel_contract_address
+    %{ ids.pixel_contract_address = context.pixel_contract_address %}
+
+    local drawer_contract_address
+    %{ ids.drawer_contract_address = context.drawer_contract_address %}
+
+    # Get current color
+    let (pixel_color : PixelColor) = IPixelDrawer.currentDrawingPixelColor(
+        drawer_contract_address, 12
+    )
+    assert pixel_color.set = 0  # Unset
+    assert pixel_color.color = Color(0, 0, 0)
+
+    %{ stop_prank_drawer = start_prank(context.account, target_contract_address=ids.drawer_contract_address) %}
+
+    local account
+    %{ ids.account = context.account %}
+
+    IPixelDrawer.setMaxColorizationsPerToken(drawer_contract_address, 13)
+
+    # Minting first pixel
+    IPixelERC721.mint(contract_address=pixel_contract_address, to=account)
+
+    # Getting current # of colorizations
+
+    let (count) = IPixelDrawer.numberOfColorizations(drawer_contract_address, 1, Uint256(1, 0))
+    assert 0 = count
+
+    let (colorizations : Colorization*) = alloc()
+    assert colorizations[0] = Colorization(pixel_index=12, color_index=92)
+    assert colorizations[1] = Colorization(pixel_index=18, color_index=3)
+    assert colorizations[2] = Colorization(pixel_index=1, color_index=12)
+
+    IPixelDrawer.colorizePixels(drawer_contract_address, Uint256(1, 0), 3, colorizations)
+
+    let (count) = IPixelDrawer.numberOfColorizations(drawer_contract_address, 1, Uint256(1, 0))
+    assert 3 = count
+
+    let (colorizations : Colorization*) = alloc()
+    assert colorizations[0] = Colorization(pixel_index=399, color_index=94)
+    assert colorizations[1] = Colorization(pixel_index=128, color_index=85)
+    assert colorizations[2] = Colorization(pixel_index=36, color_index=2)
+    assert colorizations[3] = Colorization(pixel_index=360, color_index=78)
+    assert colorizations[4] = Colorization(pixel_index=220, color_index=57)
+    assert colorizations[5] = Colorization(pixel_index=48, color_index=32)
+    assert colorizations[6] = Colorization(pixel_index=178, color_index=90)
+    assert colorizations[7] = Colorization(pixel_index=300, color_index=12)
+    assert colorizations[8] = Colorization(pixel_index=27, color_index=18)
+    assert colorizations[9] = Colorization(pixel_index=82, color_index=92)
+    IPixelDrawer.colorizePixels(drawer_contract_address, Uint256(1, 0), 10, colorizations)
+
+    # 10 colorizations that will be batched in 2 felts
+
+    let (count) = IPixelDrawer.numberOfColorizations(drawer_contract_address, 1, Uint256(1, 0))
+    assert 13 = count
+
+    # We updated the contract with 13 as max colorizations / round so can't write anymore !
+
+    let (colorizations : Colorization*) = alloc()
+    assert colorizations[0] = Colorization(pixel_index=399, color_index=94)
+
+    %{ expect_revert(error_message="You have reached the max number of allowed colorizations for this round") %}
+
+    IPixelDrawer.colorizePixels(drawer_contract_address, Uint256(1, 0), 1, colorizations)
+
+    %{ stop_prank_drawer() %}
     return ()
 end

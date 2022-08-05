@@ -10,7 +10,12 @@ from openzeppelin.access.ownable import Ownable
 
 from pxls.utils.colors import Color, PixelColor
 from pxls.interfaces import IPixelERC721
-from pxls.PixelDrawer.storage import pixel_erc721, current_drawing_round, everyone_can_launch_round
+from pxls.PixelDrawer.storage import (
+    pixel_erc721,
+    current_drawing_round,
+    everyone_can_launch_round,
+    max_colorizations_per_token,
+)
 from pxls.PixelDrawer.round import (
     assert_round_exists,
     get_drawing_timestamp,
@@ -33,10 +38,12 @@ from pxls.PixelDrawer.grid import get_grid
 
 @constructor
 func constructor{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    owner : felt, pixel_erc721_address : felt
+    owner : felt, pixel_erc721_address : felt, max_colorizations : felt
 ):
     Ownable.initializer(owner)
     pixel_erc721.write(pixel_erc721_address)
+    # Written during deploy but could be changed later
+    max_colorizations_per_token.write(max_colorizations)
     return ()
 end
 
@@ -139,6 +146,13 @@ func numberOfColorizations{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, ran
     return (colorization_count)
 end
 
+@view
+func maxColorizationsPerToken{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    ) -> (max : felt):
+    let (max) = max_colorizations_per_token.read()
+    return (max)
+end
+
 #
 # Externals
 #
@@ -154,9 +168,7 @@ func colorizePixels{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_chec
 
     let (round) = current_drawing_round.read()
 
-    save_drawing_user_colorizations(
-        round, UserColorizations(tokenId, colorizations_len, colorizations)
-    )
+    save_drawing_user_colorizations(round, tokenId, colorizations_len, colorizations)
     return ()
 end
 
@@ -196,5 +208,14 @@ end
 @external
 func renounceOwnership{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}():
     Ownable.renounce_ownership()
+    return ()
+end
+
+@external
+func setMaxColorizationsPerToken{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    new_max : felt
+):
+    Ownable.assert_only_owner()
+    max_colorizations_per_token.write(new_max)
     return ()
 end

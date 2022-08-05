@@ -10,7 +10,7 @@ from pxls.PixelDrawer.colorization import (
     UserColorizations,
     get_all_drawing_user_colorizations,
 )
-from pxls.PixelDrawer.storage import current_drawing_round, pixel_index_to_pixel_color, pixel_erc721
+from pxls.PixelDrawer.storage import current_drawing_round, pixel_erc721
 from pxls.PixelDrawer.round import get_drawing_timestamp
 from pxls.PixelDrawer.palette import get_palette_color
 from pxls.interfaces import IPixelERC721

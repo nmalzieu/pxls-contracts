@@ -194,6 +194,9 @@ func launchNewRoundIfNecessary{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*,
     theme_len : felt, theme : felt*
 ) -> (launched : felt):
     alloc_locals
+    with_attr error_message("Theme too long"):
+        assert_le(theme_len, 5)
+    end
     let (bool) = everyone_can_launch_round.read()
     tempvar syscall_ptr = syscall_ptr
     tempvar pedersen_ptr = pedersen_ptr

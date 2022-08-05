@@ -68,7 +68,7 @@ Current IPFS CID : `QmQvfChVRwfmzsjnHvm27R3c4UYqUod8fzzYrvLNuRhAHK`
 ## Drawer Contract
 
   
-    protostar -p testnet deploy ./build/pixel_drawer.json --inputs "<owner_account_address>" "<pxl_erc721_contract_address>"
+    protostar -p testnet deploy ./build/pixel_drawer.json --inputs "<owner_account_address>" "<pxl_erc721_contract_address>" <max_colorizations_per_token>
 
 
 

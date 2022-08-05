@@ -46,8 +46,13 @@ func __setup__{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
     # Warping time before launching the initial round
     let start_timestamp = 'start_timestamp'
     %{ warp(ids.start_timestamp, context.drawer_contract_address) %}
+
+    let (theme : felt*) = alloc()
+    assert theme[0] = 'Super theme'
     # Launching the initial round
-    IPixelDrawer.launchNewRoundIfNecessary(contract_address=drawer_contract_address)
+    IPixelDrawer.launchNewRoundIfNecessary(
+        contract_address=drawer_contract_address, theme_len=1, theme=theme
+    )
 
     %{ stop_prank_pixel() %}
     %{ stop_prank_drawer() %}
@@ -86,6 +91,11 @@ func test_pixel_drawer_getters{syscall_ptr : felt*, range_check_ptr, pedersen_pt
     # Max has been set during deploy also
     let (max) = IPixelDrawer.maxColorizationsPerToken(drawer_contract_address)
     assert 5 = max
+
+    # Getting theme
+    let (theme_len : felt, theme : felt*) = IPixelDrawer.drawingTheme(drawer_contract_address, 1)
+    assert 1 = theme_len
+    assert 'Super theme' = theme[0]
 
     return ()
 end
@@ -274,7 +284,8 @@ end
 func test_pixel_launch_new_round_if_necessary{
     syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
 }():
-    tempvar drawer_contract_address
+    alloc_locals
+    local drawer_contract_address
     %{ ids.drawer_contract_address = context.drawer_contract_address %}
 
     %{ stop_prank_drawer = start_prank(context.account, target_contract_address=ids.drawer_contract_address) %}
@@ -289,8 +300,12 @@ func test_pixel_launch_new_round_if_necessary{
     let new_timestamp = 'start_timestamp' + (23 * 3600)
     %{ warp(ids.new_timestamp, context.drawer_contract_address) %}
 
+    let (theme : felt*) = alloc()
+    assert theme[0] = 'Ceci est un theme qui fait plus'
+    assert theme[1] = 'que 31 characteres'
+
     let (launched) = IPixelDrawer.launchNewRoundIfNecessary(
-        contract_address=drawer_contract_address
+        contract_address=drawer_contract_address, theme_len=2, theme=theme
     )
     assert launched = FALSE
 
@@ -303,7 +318,7 @@ func test_pixel_launch_new_round_if_necessary{
     %{ warp(ids.new_timestamp, context.drawer_contract_address) %}
 
     let (launched) = IPixelDrawer.launchNewRoundIfNecessary(
-        contract_address=drawer_contract_address
+        contract_address=drawer_contract_address, theme_len=2, theme=theme
     )
     assert launched = TRUE
 
@@ -319,6 +334,14 @@ func test_pixel_launch_new_round_if_necessary{
         contract_address=drawer_contract_address, round=1
     )
     assert 'start_timestamp' = previous_timestamp
+
+    # Let's verify we can get back the 2 felt theme
+
+    # Getting theme
+    let (theme_len : felt, theme : felt*) = IPixelDrawer.drawingTheme(drawer_contract_address, 2)
+    assert 2 = theme_len
+    assert 'Ceci est un theme qui fait plus' = theme[0]
+    assert 'que 31 characteres' = theme[1]
 
     %{ stop_prank_drawer() %}
 
@@ -415,7 +438,12 @@ func test_pixel_get_grid{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : Ha
 
     # Launch new round
 
-    IPixelDrawer.launchNewRoundIfNecessary(contract_address=drawer_contract_address)
+    let (theme : felt*) = alloc()
+    assert theme[0] = 'Super theme'
+
+    IPixelDrawer.launchNewRoundIfNecessary(
+        contract_address=drawer_contract_address, theme_len=1, theme=theme
+    )
 
     let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
     assert round = 2
@@ -510,7 +538,12 @@ func test_pixel_not_everyone_can_launch_new_round{
     let new_timestamp = 'start_timestamp' + (24 * 3600 + 136)
     %{ warp(ids.new_timestamp, context.drawer_contract_address) %}
 
-    IPixelDrawer.launchNewRoundIfNecessary(contract_address=drawer_contract_address)
+    let (theme : felt*) = alloc()
+    assert theme[0] = 'Super theme'
+
+    IPixelDrawer.launchNewRoundIfNecessary(
+        contract_address=drawer_contract_address, theme_len=1, theme=theme
+    )
 
     let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
     assert 2 = round
@@ -521,7 +554,9 @@ func test_pixel_not_everyone_can_launch_new_round{
 
     # Check that non owner cannot update flag
     %{ expect_revert(error_message="Ownable: caller is not the owner") %}
-    IPixelDrawer.launchNewRoundIfNecessary(contract_address=drawer_contract_address)
+    IPixelDrawer.launchNewRoundIfNecessary(
+        contract_address=drawer_contract_address, theme_len=1, theme=theme
+    )
 
     return ()
 end
@@ -548,8 +583,13 @@ func test_pixel_everyone_can_launch_new_round{
     let new_timestamp = 'start_timestamp' + (24 * 3600 + 136)
     %{ warp(ids.new_timestamp, context.drawer_contract_address) %}
 
+    let (theme : felt*) = alloc()
+    assert theme[0] = 'Super theme'
+
     # We're not owner but we can now launch new round
-    IPixelDrawer.launchNewRoundIfNecessary(contract_address=drawer_contract_address)
+    IPixelDrawer.launchNewRoundIfNecessary(
+        contract_address=drawer_contract_address, theme_len=1, theme=theme
+    )
 
     let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
     assert 2 = round
@@ -626,6 +666,80 @@ func test_pixel_drawer_number_colorizations{
     %{ expect_revert(error_message="You have reached the max number of allowed colorizations for this round") %}
 
     IPixelDrawer.colorizePixels(drawer_contract_address, Uint256(1, 0), 1, colorizations)
+
+    %{ stop_prank_drawer() %}
+    return ()
+end
+
+func mint_two_pixels{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
+    alloc_locals
+    local pixel_contract_address
+    %{ ids.pixel_contract_address = context.pixel_contract_address %}
+    local account
+    %{ ids.account = context.account %}
+
+    %{ stop_prank_pixel = start_prank(context.account, target_contract_address=ids.pixel_contract_address) %}
+    # Mint the first directly from account
+    IPixelERC721.mint(contract_address=pixel_contract_address, to=account)
+
+    %{ stop_prank_pixel() %}
+
+    %{ stop_prank_pixel = start_prank(4321, target_contract_address=ids.pixel_contract_address) %}
+    # Mint the second from other account and transfer
+    IPixelERC721.mint(contract_address=pixel_contract_address, to=4321)
+    IPixelERC721.transferFrom(pixel_contract_address, 4321, account, Uint256(2, 0))
+
+    %{ stop_prank_pixel() %}
+    return ()
+end
+
+@view
+func test_pixel_drawer_number_colorizers{
+    syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
+}():
+    alloc_locals
+
+    local drawer_contract_address
+    %{ ids.drawer_contract_address = context.drawer_contract_address %}
+
+    mint_two_pixels()
+
+    %{ stop_prank_drawer = start_prank(context.account, target_contract_address=ids.drawer_contract_address) %}
+
+    # Colorize from token 1 and count colorizers (=1)
+
+    let (colorizations : Colorization*) = alloc()
+    assert colorizations[0] = Colorization(pixel_index=12, color_index=92)
+    assert colorizations[1] = Colorization(pixel_index=18, color_index=3)
+    assert colorizations[2] = Colorization(pixel_index=1, color_index=12)
+
+    IPixelDrawer.colorizePixels(drawer_contract_address, Uint256(1, 0), 3, colorizations)
+
+    let (colorizers_count) = IPixelDrawer.numberOfColorizers(drawer_contract_address, 1)
+    assert 1 = colorizers_count
+
+    # Recolorize from same token and count colorizers (=1)
+
+    let (colorizations : Colorization*) = alloc()
+    assert colorizations[0] = Colorization(pixel_index=12, color_index=92)
+    assert colorizations[1] = Colorization(pixel_index=18, color_index=3)
+
+    IPixelDrawer.colorizePixels(drawer_contract_address, Uint256(1, 0), 2, colorizations)
+
+    let (colorizers_count) = IPixelDrawer.numberOfColorizers(drawer_contract_address, 1)
+    assert 1 = colorizers_count
+
+    # Colorize from second token and count colorizers (=2)
+
+    let (colorizations : Colorization*) = alloc()
+    assert colorizations[0] = Colorization(pixel_index=12, color_index=92)
+    assert colorizations[1] = Colorization(pixel_index=18, color_index=3)
+    assert colorizations[2] = Colorization(pixel_index=1, color_index=12)
+
+    IPixelDrawer.colorizePixels(drawer_contract_address, Uint256(2, 0), 3, colorizations)
+
+    let (colorizers_count) = IPixelDrawer.numberOfColorizers(drawer_contract_address, 1)
+    assert 2 = colorizers_count
 
     %{ stop_prank_drawer() %}
     return ()

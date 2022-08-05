@@ -36,3 +36,9 @@ end
 @storage_var
 func everyone_can_launch_round() -> (bool : felt):
 end
+
+# Each round can have a theme that is an array
+# of short strings
+@storage_var
+func drawing_theme(drawing_round : felt, index : felt) -> (short_string : felt):
+end

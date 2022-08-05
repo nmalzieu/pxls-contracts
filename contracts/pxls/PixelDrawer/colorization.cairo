@@ -5,6 +5,9 @@ from starkware.cairo.common.math_cmp import is_le
 from starkware.cairo.common.alloc import alloc
 from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.cairo.common.uint256 import Uint256, uint256_eq
+from starkware.cairo.common.default_dict import default_dict_new, default_dict_finalize
+from starkware.cairo.common.dict_access import DictAccess
+from starkware.cairo.common.dict import dict_write, dict_read
 
 from pxls.utils.colors import Color
 from pxls.PixelDrawer.storage import drawing_user_colorizations, max_colorizations_per_token
@@ -307,4 +310,57 @@ func _reverse_colorizations{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, ra
     return _reverse_colorizations(
         colorizations_len - 1, colorizations, colorizations_reversed_len + 1, colorizations_reversed
     )
+end
+
+func get_number_of_colorizers{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    drawing_round : felt
+) -> (count : felt):
+    alloc_locals
+    # Returns the number of tokenId (= number of people)
+    # that did at least one colorization during a given round
+
+    # First get all colorizations for this round
+    let (
+        user_colorizations_len : felt, user_colorizations : UserColorizations*
+    ) = get_all_drawing_user_colorizations(drawing_round)
+
+    let (token_id_has_colorizations : DictAccess*) = default_dict_new(default_value=FALSE)
+    default_dict_finalize(token_id_has_colorizations, token_id_has_colorizations, FALSE)
+    let (number_of_colorizers) = fill_colorizations_per_token_id(
+        0, token_id_has_colorizations, user_colorizations_len, user_colorizations
+    )
+    return (number_of_colorizers)
+end
+
+func fill_colorizations_per_token_id{
+    syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
+}(
+    number_of_colorizers : felt,
+    token_id_has_colorizations : DictAccess*,
+    user_colorizations_len : felt,
+    user_colorizations : UserColorizations*,
+) -> (number_of_colorizers : felt):
+    if user_colorizations_len == 0:
+        return (number_of_colorizers)
+    end
+    let token_id = user_colorizations[0].token_id
+    let (token_has_already_colorized) = dict_read{dict_ptr=token_id_has_colorizations}(
+        key=token_id.low
+    )
+    if token_has_already_colorized == TRUE:
+        return fill_colorizations_per_token_id(
+            number_of_colorizers,
+            token_id_has_colorizations,
+            user_colorizations_len - 1,
+            user_colorizations + UserColorizations.SIZE,
+        )
+    else:
+        dict_write{dict_ptr=token_id_has_colorizations}(key=token_id.low, new_value=TRUE)
+        return fill_colorizations_per_token_id(
+            number_of_colorizers + 1,
+            token_id_has_colorizations,
+            user_colorizations_len - 1,
+            user_colorizations + UserColorizations.SIZE,
+        )
+    end
 end

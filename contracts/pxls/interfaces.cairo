@@ -60,7 +60,7 @@ namespace IPixelDrawer:
     end
     func currentDrawingRound() -> (round : felt):
     end
-    func launchNewRoundIfNecessary() -> (launched : felt):
+    func launchNewRoundIfNecessary(theme_len : felt, theme : felt*) -> (launched : felt):
     end
     func getGrid(round : felt) -> (grid_len : felt, grid : felt*):
     end
@@ -77,5 +77,9 @@ namespace IPixelDrawer:
     func maxColorizationsPerToken() -> (max : felt):
     end
     func setMaxColorizationsPerToken(new_max : felt):
+    end
+    func numberOfColorizers(round : felt) -> (count : felt):
+    end
+    func drawingTheme(round : felt) -> (theme_len : felt, theme : felt*):
     end
 end

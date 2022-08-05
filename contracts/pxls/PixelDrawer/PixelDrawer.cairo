@@ -21,6 +21,7 @@ from pxls.PixelDrawer.round import (
     get_drawing_timestamp,
     assert_current_round_running,
     launch_new_round_if_necessary,
+    read_theme,
 )
 from pxls.PixelDrawer.access import assert_pixel_owner
 from pxls.PixelDrawer.colorization import (
@@ -29,6 +30,7 @@ from pxls.PixelDrawer.colorization import (
     save_drawing_user_colorizations,
     get_all_drawing_user_colorizations,
     count_colorizations_from_token_id,
+    get_number_of_colorizers,
 )
 from pxls.PixelDrawer.grid import get_grid
 
@@ -153,6 +155,21 @@ func maxColorizationsPerToken{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, 
     return (max)
 end
 
+@view
+func numberOfColorizers{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    drawing_round : felt
+) -> (count : felt):
+    assert_round_exists(drawing_round)
+    return get_number_of_colorizers(drawing_round)
+end
+
+@view
+func drawingTheme{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    drawing_round : felt
+) -> (theme_len : felt, theme : felt*):
+    return read_theme(drawing_round)
+end
+
 #
 # Externals
 #
@@ -174,7 +191,8 @@ end
 
 @external
 func launchNewRoundIfNecessary{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
-    ) -> (launched : felt):
+    theme_len : felt, theme : felt*
+) -> (launched : felt):
     alloc_locals
     let (bool) = everyone_can_launch_round.read()
     tempvar syscall_ptr = syscall_ptr
@@ -184,7 +202,7 @@ func launchNewRoundIfNecessary{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*,
         Ownable.assert_only_owner()
     end
     # Method to just launch a new round with drawing a pixel
-    let (launched) = launch_new_round_if_necessary()
+    let (launched) = launch_new_round_if_necessary(theme_len, theme)
     return (launched=launched)
 end
 

@@ -74,4 +74,4 @@ Current IPFS CID : `QmQvfChVRwfmzsjnHvm27R3c4UYqUod8fzzYrvLNuRhAHK`
 
 | Contract name | Goerli Address | Mainnet Address |
 |--|--|--|
-| PXL Drawer Contract | [0x0621b85c17b616d3ad91eb8787f5cc18d44c3792564a77548a45bd65a7c32eb6](https://goerli.voyager.online/contract/0x0621b85c17b616d3ad91eb8787f5cc18d44c3792564a77548a45bd65a7c32eb6) | [0x03f91e81765e37ff745af38283bd6b9ffbb5c7b1be89c3544051ac3af7b51a8a](https://voyager.online/contract/0x03f91e81765e37ff745af38283bd6b9ffbb5c7b1be89c3544051ac3af7b51a8a) |
+| PXL Drawer Contract | [0x072c85dca4b7688fc5afea3dde0c5283bea335484d88c53b0aedd190871b90d1](https://goerli.voyager.online/contract/0x072c85dca4b7688fc5afea3dde0c5283bea335484d88c53b0aedd190871b90d1) | [0x03f91e81765e37ff745af38283bd6b9ffbb5c7b1be89c3544051ac3af7b51a8a](https://voyager.online/contract/0x03f91e81765e37ff745af38283bd6b9ffbb5c7b1be89c3544051ac3af7b51a8a) |

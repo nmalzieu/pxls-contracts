@@ -7,6 +7,10 @@ from starkware.starknet.common.syscalls import get_block_timestamp
 
 from pxls.PixelDrawer.storage import current_drawing_round, drawing_timestamp, drawing_theme
 
+# 1 full day in seconds (get_block_timestamp returns timestamp in seconds)
+# 24 hours + margin of 2 hours for block time
+const DAY_DURATION = 93600
+
 #
 # Methods about the current round, if a round
 # exists, and if we should launch a new round
@@ -40,8 +44,6 @@ func should_launch_new_round{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, r
     let (block_timestamp) = get_block_timestamp()
     let (last_drawing_timestamp) = current_drawing_timestamp()
     let duration = block_timestamp - last_drawing_timestamp
-    # 1 full day in seconds (get_block_timestamp returns timestamp in seconds)
-    const DAY_DURATION = 86400
     # if duration >= DAY_DURATION (last drawing lasted 1 day)
     let (should_launch) = is_le(DAY_DURATION, duration)
     return (should_launch=should_launch)

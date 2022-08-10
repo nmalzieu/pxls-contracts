@@ -295,9 +295,9 @@ func test_pixel_launch_new_round_if_necessary{
     let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
     assert round = 1
 
-    # 23 hour is not enough to launch new round
+    # 25 hour is not enough to launch new round
 
-    let new_timestamp = 'start_timestamp' + (23 * 3600)
+    let new_timestamp = 'start_timestamp' + (25 * 3600)
     %{ warp(ids.new_timestamp, context.drawer_contract_address) %}
 
     let (theme : felt*) = alloc()
@@ -312,9 +312,9 @@ func test_pixel_launch_new_round_if_necessary{
     let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
     assert round = 1
 
-    # 24+ hour is enough to launch new round
+    # 26+ hour is enough to launch new round
 
-    let new_timestamp = 'start_timestamp' + (24 * 3600 + 136)
+    let new_timestamp = 'start_timestamp' + (26 * 3600 + 136)
     %{ warp(ids.new_timestamp, context.drawer_contract_address) %}
 
     let (launched) = IPixelDrawer.launchNewRoundIfNecessary(
@@ -378,9 +378,9 @@ func test_pixel_drawing_fails_if_old_round{
 
     IPixelDrawer.colorizePixels(drawer_contract_address, Uint256(1, 0), 1, colorizations)
 
-    # 23 hour is not enough to launch new round
+    # 25 hour is not enough to launch new round
 
-    let new_timestamp = 'start_timestamp' + (23 * 3600)
+    let new_timestamp = 'start_timestamp' + (25 * 3600)
     %{ warp(ids.new_timestamp, context.drawer_contract_address) %}
 
     # Drawing pixel after < 1 day does not launch new round
@@ -389,9 +389,9 @@ func test_pixel_drawing_fails_if_old_round{
     let (round) = IPixelDrawer.currentDrawingRound(contract_address=drawer_contract_address)
     assert round = 1
 
-    # 24+ hour is enough to launch new round
+    # 26+ hour is enough to launch new round
 
-    let new_timestamp = 'start_timestamp' + (24 * 3600 + 136)
+    let new_timestamp = 'start_timestamp' + (26 * 3600 + 136)
     %{ warp(ids.new_timestamp, context.drawer_contract_address) %}
 
     # Drawing pixel after 1 day fails if no new round has been launched
@@ -431,9 +431,9 @@ func test_pixel_get_grid{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : Ha
 
     IPixelDrawer.colorizePixels(drawer_contract_address, Uint256(1, 0), 1, colorizations)
 
-    # 24+ hour is enough to launch new round
+    # 26+ hour is enough to launch new round
 
-    let new_timestamp = 'start_timestamp' + (24 * 3600 + 136)
+    let new_timestamp = 'start_timestamp' + (26 * 3600 + 136)
     %{ warp(ids.new_timestamp, context.drawer_contract_address) %}
 
     # Launch new round
@@ -535,8 +535,8 @@ func test_pixel_not_everyone_can_launch_new_round{
     # Check that owner can launch new round
     %{ stop_prank_drawer = start_prank(context.account, target_contract_address=ids.drawer_contract_address) %}
 
-    # 24+ hour is enough to launch new round
-    let new_timestamp = 'start_timestamp' + (24 * 3600 + 136)
+    # 26+ hour is enough to launch new round
+    let new_timestamp = 'start_timestamp' + (26 * 3600 + 136)
     %{ warp(ids.new_timestamp, context.drawer_contract_address) %}
 
     let (theme : felt*) = alloc()
@@ -581,8 +581,8 @@ func test_pixel_everyone_can_launch_new_round{
 
     %{ stop_prank_drawer() %}
 
-    # 24+ hour is enough to launch new round
-    let new_timestamp = 'start_timestamp' + (24 * 3600 + 136)
+    # 26+ hour is enough to launch new round
+    let new_timestamp = 'start_timestamp' + (26 * 3600 + 136)
     %{ warp(ids.new_timestamp, context.drawer_contract_address) %}
 
     let (theme : felt*) = alloc()

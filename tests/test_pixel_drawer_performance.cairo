@@ -81,35 +81,35 @@ func __setup__{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
     return ()
 end
 
-# @view
-# func test_get_grid{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
-#     alloc_locals
+@view
+func test_get_grid{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
+    alloc_locals
 
-#     local drawer_contract_address
-#     %{ ids.drawer_contract_address = context.drawer_contract_address %}
-#     let (grid_len : felt, grid : felt*) = IPixelDrawer.getGrid(
-#         contract_address=drawer_contract_address, round=1
-#     )
-#     return ()
-# end
+    local drawer_contract_address
+    %{ ids.drawer_contract_address = context.drawer_contract_address %}
+    let (grid_len : felt, grid : felt*) = IPixelDrawer.getGrid(
+        contract_address=drawer_contract_address, round=1
+    )
+    return ()
+end
 
-# @view
-# func test_colorize{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
-#     alloc_locals
+@view
+func test_colorize{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
+    alloc_locals
 
-#     local drawer_contract_address
-#     %{ ids.drawer_contract_address = context.drawer_contract_address %}
+    local drawer_contract_address
+    %{ ids.drawer_contract_address = context.drawer_contract_address %}
 
-#     %{ stop_prank_drawer = start_prank(context.account, target_contract_address=context.drawer_contract_address) %}
-#     let (colorizations : Colorization*) = alloc()
-#     assert colorizations[0] = Colorization(pixel_index=12, color_index=92)
-#     assert colorizations[1] = Colorization(pixel_index=18, color_index=3)
-#     assert colorizations[2] = Colorization(pixel_index=1, color_index=12)
+    %{ stop_prank_drawer = start_prank(context.account, target_contract_address=context.drawer_contract_address) %}
+    let (colorizations : Colorization*) = alloc()
+    assert colorizations[0] = Colorization(pixel_index=12, color_index=92)
+    assert colorizations[1] = Colorization(pixel_index=18, color_index=3)
+    assert colorizations[2] = Colorization(pixel_index=1, color_index=12)
 
-#     IPixelDrawer.colorizePixels(drawer_contract_address, Uint256(1, 0), 3, colorizations)
-#     %{ stop_prank_drawer() %}
-#     return ()
-# end
+    IPixelDrawer.colorizePixels(drawer_contract_address, Uint256(1, 0), 3, colorizations)
+    %{ stop_prank_drawer() %}
+    return ()
+end
 
 @view
 func test_get_colorizers{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():

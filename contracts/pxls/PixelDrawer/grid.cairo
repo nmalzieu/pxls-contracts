@@ -2,21 +2,16 @@
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.alloc import alloc
 from starkware.cairo.common.bool import TRUE, FALSE
+from starkware.cairo.common.default_dict import default_dict_new, default_dict_finalize
+from starkware.cairo.common.dict_access import DictAccess
+from starkware.cairo.common.dict import dict_write, dict_read
 
-from pxls.utils.colors import Color, PixelColor, assert_valid_color
-from pxls.PixelDrawer.access import assert_pixel_owner
 from pxls.PixelDrawer.colorization import (
     Colorization,
     UserColorizations,
     get_all_drawing_user_colorizations,
 )
-from pxls.PixelDrawer.storage import current_drawing_round, pixel_erc721
-from pxls.PixelDrawer.round import get_drawing_timestamp
 from pxls.PixelDrawer.palette import get_palette_color
-from pxls.interfaces import IPixelERC721
-
-const COLOR_SET_BIT_SIZE = 1
-const COLOR_COMPONENT_BIT_SIZE = 8
 
 func get_grid{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     round : felt, max_supply : felt
@@ -29,98 +24,80 @@ func get_grid{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}
 
     let (grid : felt*) = alloc()
 
-    fill_grid(grid, max_supply, 0, user_colorizations_len, user_colorizations)
+    fill_grid(max_supply, grid, user_colorizations_len, user_colorizations)
 
     return (max_supply * 4, grid)
 end
 
-func fill_grid{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+func fill_grid{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}(
+    grid_len : felt,
     grid : felt*,
-    max_supply : felt,
-    current_pixel_index : felt,
     user_colorizations_len : felt,
     user_colorizations : UserColorizations*,
 ):
-    if current_pixel_index == max_supply:
+    alloc_locals
+    let (grid_dict : DictAccess*) = default_dict_new(default_value=-1)
+    default_dict_finalize(grid_dict, grid_dict, -1)
+    _fill_grid_dict{
+        dict_ptr=grid_dict,
+        syscall_ptr=syscall_ptr,
+        range_check_ptr=range_check_ptr,
+        pedersen_ptr=pedersen_ptr,
+    }(user_colorizations_len, user_colorizations)
+    _fill_grid_from_dict{
+        dict_ptr=grid_dict,
+        syscall_ptr=syscall_ptr,
+        range_check_ptr=range_check_ptr,
+        pedersen_ptr=pedersen_ptr,
+    }(grid_len, grid, 0)
+    return ()
+end
+
+func _fill_grid_dict{
+    dict_ptr : DictAccess*, syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
+}(user_colorizations_len : felt, user_colorizations : UserColorizations*):
+    if user_colorizations_len == 0:
         return ()
     end
-    let (pixel_color : PixelColor) = get_pixel_color_from_pixel_index(
-        current_pixel_index, user_colorizations_len, user_colorizations
-    )
-    assert grid[4 * current_pixel_index] = pixel_color.set
-    assert grid[4 * current_pixel_index + 1] = pixel_color.color.red
-    assert grid[4 * current_pixel_index + 2] = pixel_color.color.green
-    assert grid[4 * current_pixel_index + 3] = pixel_color.color.blue
-
-    return fill_grid(
-        grid, max_supply, current_pixel_index + 1, user_colorizations_len, user_colorizations
-    )
-end
-
-func get_pixel_color_from_pixel_index{
-    syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
-}(pixel_index : felt, user_colorizations_len : felt, user_colorizations : UserColorizations*) -> (
-    pixel_color : PixelColor
-):
-    let current_pixel_color = PixelColor(set=FALSE, color=Color(0, 0, 0))
-    _get_pixel_color_from_pixel_index(
-        pixel_index, current_pixel_color, user_colorizations_len, user_colorizations
-    )
-    return _get_pixel_color_from_pixel_index(
-        pixel_index, current_pixel_color, user_colorizations_len, user_colorizations
-    )
-end
-
-func _get_pixel_color_from_pixel_index{
-    syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
-}(
-    pixel_index : felt,
-    current_pixel_color : PixelColor,
-    user_colorizations_len : felt,
-    user_colorizations : UserColorizations*,
-) -> (pixel_color : PixelColor):
-    if user_colorizations_len == 0:
-        return (current_pixel_color)
-    end
     let user_colorization = user_colorizations[0]
-    let (new_pixel_color : PixelColor) = _get_pixel_color_from_colorization(
-        pixel_index,
-        current_pixel_color,
-        user_colorization.colorizations_len,
-        user_colorization.colorizations,
+    _fill_grid_dict_with_user_colorization(
+        user_colorization.colorizations_len, user_colorization.colorizations
     )
-    return _get_pixel_color_from_pixel_index(
-        pixel_index,
-        new_pixel_color,
-        user_colorizations_len - 1,
-        user_colorizations + UserColorizations.SIZE,
-    )
+    return _fill_grid_dict(user_colorizations_len - 1, user_colorizations + UserColorizations.SIZE)
 end
 
-func _get_pixel_color_from_colorization{
-    syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
-}(
-    pixel_index : felt,
-    current_pixel_color : PixelColor,
-    colorizations_len : felt,
-    colorizations : Colorization*,
-) -> (pixel_color : PixelColor):
+func _fill_grid_dict_with_user_colorization{
+    dict_ptr : DictAccess*, syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
+}(colorizations_len : felt, colorizations : Colorization*):
     if colorizations_len == 0:
-        return (current_pixel_color)
+        return ()
     end
     let colorization = colorizations[0]
-    if colorization.pixel_index == pixel_index:
-        let (color) = get_palette_color(colorization.color_index)
-        let new_pixel_color = PixelColor(set=TRUE, color=color)
-        return _get_pixel_color_from_colorization(
-            pixel_index, new_pixel_color, colorizations_len - 1, colorizations + Colorization.SIZE
-        )
+    dict_write(key=colorization.pixel_index, new_value=colorization.color_index)
+    return _fill_grid_dict_with_user_colorization(
+        colorizations_len - 1, colorizations + Colorization.SIZE
+    )
+end
+
+func _fill_grid_from_dict{
+    dict_ptr : DictAccess*, syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
+}(grid_len : felt, grid : felt*, pixel_index : felt):
+    if pixel_index == grid_len:
+        return ()
+    end
+    let (color_index) = dict_read(key=pixel_index)
+    if color_index == -1:
+        assert grid[4 * pixel_index] = FALSE
+        assert grid[4 * pixel_index + 1] = 0
+        assert grid[4 * pixel_index + 2] = 0
+        assert grid[4 * pixel_index + 3] = 0
+        return _fill_grid_from_dict(grid_len, grid, pixel_index + 1)
     else:
-        return _get_pixel_color_from_colorization(
-            pixel_index,
-            current_pixel_color,
-            colorizations_len - 1,
-            colorizations + Colorization.SIZE,
-        )
+        let (color) = get_palette_color(color_index)
+        assert grid[4 * pixel_index] = TRUE
+        assert grid[4 * pixel_index + 1] = color.red
+        assert grid[4 * pixel_index + 2] = color.green
+        assert grid[4 * pixel_index + 3] = color.blue
+        return _fill_grid_from_dict(grid_len, grid, pixel_index + 1)
     end
 end

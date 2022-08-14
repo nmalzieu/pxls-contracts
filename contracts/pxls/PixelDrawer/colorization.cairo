@@ -10,7 +10,11 @@ from starkware.cairo.common.dict_access import DictAccess
 from starkware.cairo.common.dict import dict_write, dict_read
 
 from pxls.utils.colors import Color
-from pxls.PixelDrawer.storage import drawing_user_colorizations, max_colorizations_per_token
+from pxls.PixelDrawer.storage import (
+    drawing_user_colorizations,
+    max_colorizations_per_token,
+    number_of_colorizations_per_token,
+)
 
 const MAX_PIXEL_VALUE = 399  # grid of 400 pixels from 0 to 399
 const MAX_COLOR_VALUE = 94  # palette of 95 colors from 0 to 94
@@ -140,6 +144,20 @@ func _get_all_drawing_user_colorizations{
     )
 end
 
+func count_stored_user_colorizations{
+    pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr
+}(drawing_round : felt, current_count : felt) -> (stored_user_colorizations_len : felt):
+    # Get total number of colorizations saved to know the available
+    # slot to save a new one
+    let (storage_user_colorizations_packed) = drawing_user_colorizations.read(
+        drawing_round, current_count
+    )
+    if storage_user_colorizations_packed == 0:
+        return (current_count)
+    end
+    return count_stored_user_colorizations(drawing_round, current_count + 1)
+end
+
 func save_drawing_user_colorizations{
     pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr
 }(
@@ -150,12 +168,12 @@ func save_drawing_user_colorizations{
 ):
     alloc_locals
     # First find # of already saved slots
-    let (
-        stored_user_colorizations_len : felt, stored_user_colorizations : UserColorizations*
-    ) = get_all_drawing_user_colorizations(drawing_round)
-    let (colorizations_from_this_token_id) = count_colorizations_from_token_id(
-        token_id, stored_user_colorizations_len, stored_user_colorizations, 0
+    let (stored_user_colorizations_len : felt) = count_stored_user_colorizations(drawing_round, 0)
+    # Then # of colorizations done by this token
+    let (colorizations_from_this_token_id) = number_of_colorizations_per_token.read(
+        drawing_round, token_id
     )
+    # Then max colorizations allowed per token
     let (max_colorizations) = max_colorizations_per_token.read()
     let colorizations_remaining = max_colorizations - colorizations_from_this_token_id
     with_attr error_message(
@@ -166,6 +184,9 @@ func save_drawing_user_colorizations{
     # We can pack up to 8 colorizations per felt so we need to split
     save_user_colorizations_per_batch(
         drawing_round, token_id, colorizations_len, colorizations, stored_user_colorizations_len
+    )
+    number_of_colorizations_per_token.write(
+        drawing_round, token_id, colorizations_from_this_token_id + colorizations_len
     )
 
     return ()
@@ -256,36 +277,6 @@ func _save_user_colorizations_per_batch{
             already_stored_len,
             current_batch_len + 1,
             current_batch,
-        )
-    end
-end
-
-func count_colorizations_from_token_id{
-    pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr
-}(
-    token_id : Uint256,
-    stored_user_colorizations_len : felt,
-    stored_user_colorizations : UserColorizations*,
-    current_count : felt,
-) -> (count : felt):
-    if stored_user_colorizations_len == 0:
-        return (current_count)
-    end
-    let user_colorization = stored_user_colorizations[0]
-    let (is_from_this_token_id) = uint256_eq(token_id, user_colorization.token_id)
-    if is_from_this_token_id == TRUE:
-        return count_colorizations_from_token_id(
-            token_id,
-            stored_user_colorizations_len - 1,
-            stored_user_colorizations + UserColorizations.SIZE,
-            current_count + user_colorization.colorizations_len,
-        )
-    else:
-        return count_colorizations_from_token_id(
-            token_id,
-            stored_user_colorizations_len - 1,
-            stored_user_colorizations + UserColorizations.SIZE,
-            current_count,
         )
     end
 end

@@ -15,6 +15,7 @@ from pxls.PixelDrawer.storage import (
     current_drawing_round,
     everyone_can_launch_round,
     max_colorizations_per_token,
+    number_of_colorizations_per_token,
 )
 from pxls.PixelDrawer.round import (
     assert_round_exists,
@@ -29,7 +30,6 @@ from pxls.PixelDrawer.colorization import (
     Colorization,
     save_drawing_user_colorizations,
     get_all_drawing_user_colorizations,
-    count_colorizations_from_token_id,
     get_number_of_colorizers,
 )
 from pxls.PixelDrawer.grid import get_grid
@@ -139,13 +139,8 @@ end
 func numberOfColorizations{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     round : felt, tokenId : Uint256
 ) -> (count : felt):
-    let (
-        stored_user_colorizations_len : felt, stored_user_colorizations : UserColorizations*
-    ) = get_all_drawing_user_colorizations(round)
-    let (colorization_count) = count_colorizations_from_token_id{
-        pedersen_ptr=pedersen_ptr, syscall_ptr=syscall_ptr, range_check_ptr=range_check_ptr
-    }(tokenId, stored_user_colorizations_len, stored_user_colorizations, 0)
-    return (colorization_count)
+    let (count : felt) = number_of_colorizations_per_token.read(round, tokenId)
+    return (count)
 end
 
 @view

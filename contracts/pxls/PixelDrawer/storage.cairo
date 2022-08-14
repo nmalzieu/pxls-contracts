@@ -1,4 +1,5 @@
 %lang starknet
+from starkware.cairo.common.uint256 import Uint256
 
 #
 # Storage
@@ -14,6 +15,11 @@ end
 func drawing_user_colorizations(drawing_round : felt, index : felt) -> (
     user_colorizations_packed : felt
 ):
+end
+
+# For each token id, we save count of colorizations
+@storage_var
+func number_of_colorizations_per_token(drawing_round : felt, token_id : Uint256) -> (count : felt):
 end
 
 # The max number of colorizations per token / rwtrk is a variable

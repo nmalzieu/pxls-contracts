@@ -76,6 +76,7 @@ func __setup__{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
                 color_packed = (pixel_index * 95 + color_index) * 400 + token_id
                 store(context.drawer_contract_address, "drawing_user_colorizations", [color_packed], key=[1,colorization_index])
                 colorization_index += 1
+            store(context.drawer_contract_address, "number_of_colorizations_per_token", [40], key=[1,token_id,0])
     %}
 
     return ()

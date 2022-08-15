@@ -140,3 +140,4 @@ node_modules
 cache
 artifacts
 starknet-artifacts
+devnet-state

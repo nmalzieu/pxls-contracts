@@ -133,3 +133,10 @@ dmypy.json
 
 # vscode project settings
 .vscode/
+
+node_modules
+
+#Hardhat files
+cache
+artifacts
+starknet-artifacts

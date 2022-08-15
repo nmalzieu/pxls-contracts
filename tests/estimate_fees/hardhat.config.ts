@@ -5,12 +5,15 @@ module.exports = {
   solidity: "0.8.9",
   starknet: {
     venv: "~/.cairo_venv", // venv to use for compiling
-    network: "integrated-devnet",
+    network: "testnet",
   },
   networks: {
     integratedDevnet: {
       url: "http://127.0.0.1:5050",
       venv: "~/.cairo_venv", // venv to use to launch integrated devnet when needed
+    },
+    testnet: {
+      url: "https://alpha4.starknet.io",
     },
   },
   paths: {

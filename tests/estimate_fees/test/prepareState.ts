@@ -1,12 +1,17 @@
 import { starknet } from "hardhat";
 import { Account } from "hardhat/types";
 
-import { deployStarknetContract, dumpState, loadState } from "./utils";
+import {
+  deployStarknetContract,
+  dumpAddresses,
+  dumpState,
+  loadState,
+} from "./utils";
 
 describe("Preparing devnet state", function () {
   this.timeout(0);
 
-  it("Dumping devnet state...", async function () {
+  it("Preparing state...", async function () {
     const accounts: Account[] = [];
     for (let index = 0; index < 400; index++) {
       console.log(`Deploying account ${index + 1}/400...`);
@@ -40,18 +45,18 @@ describe("Preparing devnet state", function () {
         max_colorizations: 40,
       }
     );
-    await dumpState(accounts, pixelERC721, pixelDrawer);
+    await dumpAddresses(accounts, pixelERC721, pixelDrawer);
 
     for (let index = 0; index < 400; index++) {
       console.log(`Minting pxl ${index + 1} / 400`);
       await accounts[index].invoke(pixelERC721, "mint", {
         to: accounts[index].address,
       });
-      if ((index + 1) % 50 === 0) {
-        await dumpState(accounts, pixelERC721, pixelDrawer);
-      }
+      // if ((index + 1) % 50 === 0) {
+      //   await dumpState(accounts, pixelERC721, pixelDrawer);
+      // }
     }
 
-    await dumpState(accounts, pixelERC721, pixelDrawer);
+    // await dumpState(accounts, pixelERC721, pixelDrawer);
   });
 });

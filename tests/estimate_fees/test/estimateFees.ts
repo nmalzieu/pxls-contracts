@@ -37,7 +37,19 @@ describe("Estimating fees", function () {
     });
 
     for (let index = 0; index < 400; index++) {
-      await colorizePixels(accounts[index], pixelDrawer, index + 1);
+      try {
+        await colorizePixels(accounts[index], pixelDrawer, index + 1);
+      } catch (e: any) {
+        if (
+          e.message.includes(
+            "You have reached the max number of allowed colorizations for this round"
+          )
+        ) {
+          console.log("Colorization already done!");
+        } else {
+          throw e;
+        }
+      }
       if ((index + 1) % 50) {
         await dumpState(accounts, pixelERC721, pixelDrawer);
       }

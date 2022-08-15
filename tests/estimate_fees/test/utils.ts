@@ -34,14 +34,11 @@ export const loadStarknetContract = async (
   return contract;
 };
 
-export const dumpState = async (
+export const dumpAddresses = (
   accounts: Account[],
   pixelERC721: StarknetContract,
   pixelDrawer: StarknetContract
 ) => {
-  console.log("Dumping state...");
-  await starknet.devnet.dump("./test/devnet-state");
-
   console.log("Dumping addresses...");
   writeFileSync(
     path.resolve("./test/addresses.json"),
@@ -54,6 +51,16 @@ export const dumpState = async (
       pixelERC721: pixelERC721.address,
     })
   );
+};
+
+export const dumpState = async (
+  accounts: Account[],
+  pixelERC721: StarknetContract,
+  pixelDrawer: StarknetContract
+) => {
+  console.log("Dumping state...");
+  await starknet.devnet.dump("./test/devnet-state");
+  dumpAddresses(accounts, pixelERC721, pixelDrawer);
   console.log("DONE");
 };
 

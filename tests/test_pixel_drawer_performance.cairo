@@ -74,11 +74,29 @@ func __setup__{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
             for i in range(20):
                 pixel_index = random.randrange(400)
                 color_index = random.randrange(95)
-                color_packed = (pixel_index * 95 + color_index) * 400 + token_id
-                store(context.drawer_contract_address, "drawing_user_colorizations", [color_packed], key=[1,colorization_index])
+                user_colorizations_packed = (pixel_index * 95 + color_index) * 400 + token_id
+                store(context.drawer_contract_address, "drawing_user_colorizations", [user_colorizations_packed], key=[1,colorization_index])
                 colorization_index += 1
             store(context.drawer_contract_address, "number_of_colorizations_per_token", [20], key=[1,token_id,0])
     %}
+
+    # 100 persons colorize 20 pixels in 1 transactions of 20 colorization
+
+    # %{
+    #     import random
+    #     colorization_index = 0
+    #     for token_id in range(2, 102):
+    #         colorizations_packed = 0
+    #         for i in range(20):
+    #             pixel_index = random.randrange(400)
+    #             color_index = random.randrange(95)
+    #             color_packed = (pixel_index * 95 + color_index) * 400 + token_id
+    #             colorizations_packed = colorizations_packed * 38000 + color_packed
+    #         user_colorizations_packed = colorizations_packed * 400 + token_id
+    #         store(context.drawer_contract_address, "drawing_user_colorizations", [user_colorizations_packed], key=[2,colorization_index])
+    #         colorization_index += 1
+    #         store(context.drawer_contract_address, "number_of_colorizations_per_token", [20], key=[2,token_id,0])
+    # %}
 
     return ()
 end

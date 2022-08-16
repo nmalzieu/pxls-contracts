@@ -31,6 +31,7 @@ from pxls.PixelDrawer.colorization import (
     save_drawing_user_colorizations,
     get_all_drawing_user_colorizations,
     get_number_of_colorizers,
+    count_total_colorizations,
 )
 from pxls.PixelDrawer.grid import get_grid
 
@@ -140,6 +141,14 @@ func numberOfColorizations{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, ran
     round : felt, tokenId : Uint256
 ) -> (count : felt):
     let (count : felt) = number_of_colorizations_per_token.read(round, tokenId)
+    return (count)
+end
+
+@view
+func totalNumberOfColorizations{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    round : felt
+) -> (count : felt):
+    let (count : felt) = count_total_colorizations(round, Uint256(1, 0), 0)
     return (count)
 end
 

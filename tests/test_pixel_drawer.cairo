@@ -97,6 +97,10 @@ func test_pixel_drawer_getters{syscall_ptr : felt*, range_check_ptr, pedersen_pt
     assert 1 = theme_len
     assert 'Super theme' = theme[0]
 
+    # Get total number of colorizations
+    let (total_colorizations) = IPixelDrawer.totalNumberOfColorizations(drawer_contract_address, 1)
+    assert 0 = total_colorizations
+
     return ()
 end
 
@@ -742,6 +746,71 @@ func test_pixel_drawer_number_colorizers{
 
     let (colorizers_count) = IPixelDrawer.numberOfColorizers(drawer_contract_address, 1)
     assert 2 = colorizers_count
+
+    %{ stop_prank_drawer() %}
+    return ()
+end
+
+@view
+func test_pixel_drawer_total_number_colorizations{
+    syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
+}():
+    alloc_locals
+    local pixel_contract_address
+    %{ ids.pixel_contract_address = context.pixel_contract_address %}
+
+    local drawer_contract_address
+    %{ ids.drawer_contract_address = context.drawer_contract_address %}
+
+    mint_two_pixels()
+
+    %{ stop_prank_drawer = start_prank(context.account, target_contract_address=ids.drawer_contract_address) %}
+
+    IPixelDrawer.setMaxColorizationsPerToken(drawer_contract_address, 10)
+
+    local account
+    %{ ids.account = context.account %}
+
+    # Getting current # of colorizations
+
+    let (count) = IPixelDrawer.numberOfColorizations(drawer_contract_address, 1, Uint256(1, 0))
+    let (count_total) = IPixelDrawer.totalNumberOfColorizations(drawer_contract_address, 1)
+    assert 0 = count
+    assert 0 = count_total
+
+    let (colorizations : Colorization*) = alloc()
+    assert colorizations[0] = Colorization(pixel_index=12, color_index=92)
+    assert colorizations[1] = Colorization(pixel_index=18, color_index=3)
+    assert colorizations[2] = Colorization(pixel_index=1, color_index=12)
+
+    IPixelDrawer.colorizePixels(drawer_contract_address, Uint256(1, 0), 3, colorizations)
+
+    let (count) = IPixelDrawer.numberOfColorizations(drawer_contract_address, 1, Uint256(1, 0))
+    let (count_total) = IPixelDrawer.totalNumberOfColorizations(drawer_contract_address, 1)
+    assert 3 = count
+    assert 3 = count_total
+
+    let (colorizations : Colorization*) = alloc()
+    assert colorizations[0] = Colorization(pixel_index=399, color_index=94)
+    assert colorizations[1] = Colorization(pixel_index=128, color_index=85)
+    assert colorizations[2] = Colorization(pixel_index=36, color_index=2)
+    assert colorizations[3] = Colorization(pixel_index=360, color_index=78)
+    assert colorizations[4] = Colorization(pixel_index=220, color_index=57)
+    assert colorizations[5] = Colorization(pixel_index=48, color_index=32)
+    assert colorizations[6] = Colorization(pixel_index=178, color_index=90)
+    assert colorizations[7] = Colorization(pixel_index=300, color_index=12)
+    assert colorizations[8] = Colorization(pixel_index=27, color_index=18)
+    assert colorizations[9] = Colorization(pixel_index=82, color_index=92)
+    IPixelDrawer.colorizePixels(drawer_contract_address, Uint256(2, 0), 10, colorizations)
+
+    # 10 colorizations that will be batched in 2 felts
+
+    let (count_1) = IPixelDrawer.numberOfColorizations(drawer_contract_address, 1, Uint256(1, 0))
+    let (count_2) = IPixelDrawer.numberOfColorizations(drawer_contract_address, 1, Uint256(2, 0))
+    let (count_total) = IPixelDrawer.totalNumberOfColorizations(drawer_contract_address, 1)
+    assert 3 = count
+    assert 10 = count_2
+    assert 13 = count_total
 
     %{ stop_prank_drawer() %}
     return ()

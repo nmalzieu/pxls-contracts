@@ -74,6 +74,8 @@ namespace IPixelDrawer:
     end
     func numberOfColorizations(round : felt, tokenId : Uint256) -> (count : felt):
     end
+    func totalNumberOfColorizations(round : felt) -> (count : felt):
+    end
     func maxColorizationsPerToken() -> (max : felt):
     end
     func setMaxColorizationsPerToken(new_max : felt):

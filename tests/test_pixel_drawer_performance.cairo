@@ -78,6 +78,8 @@ func __setup__{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
                 store(context.drawer_contract_address, "drawing_user_colorizations", [user_colorizations_packed], key=[1,colorization_index])
                 colorization_index += 1
             store(context.drawer_contract_address, "number_of_colorizations_per_token", [20], key=[1,token_id,0])
+        store(context.drawer_contract_address, "drawing_user_colorizations_index", [colorization_index], key=[1])
+        store(context.drawer_contract_address, "number_of_colorizations_total", [1980], key=[1])
     %}
 
     # 99 persons colorize 20 pixels in 1 transactions of 20 colorization = 1980 colorizations < MAX
@@ -102,6 +104,8 @@ func __setup__{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
                 user_colorizations_packed = colorizations_packed * 400 + token_id
                 store(context.drawer_contract_address, "drawing_user_colorizations", [user_colorizations_packed], key=[2,colorization_index])
             store(context.drawer_contract_address, "number_of_colorizations_per_token", [20], key=[2,token_id,0])
+        store(context.drawer_contract_address, "drawing_user_colorizations_index", [colorization_index], key=[2])
+        store(context.drawer_contract_address, "number_of_colorizations_total", [1980], key=[2])
     %}
 
     %{ stop_prank_drawer() %}

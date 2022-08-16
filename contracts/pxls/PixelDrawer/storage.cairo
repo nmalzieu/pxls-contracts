@@ -17,9 +17,19 @@ func drawing_user_colorizations(drawing_round : felt, index : felt) -> (
 ):
 end
 
+# For each rtwrk, we save the last colorization index
+@storage_var
+func drawing_user_colorizations_index(drawing_round : felt) -> (index : felt):
+end
+
 # For each token id, we save count of colorizations
 @storage_var
 func number_of_colorizations_per_token(drawing_round : felt, token_id : Uint256) -> (count : felt):
+end
+
+# We also save count of total # of colorizations cause we need to limit due to perf
+@storage_var
+func number_of_colorizations_total(drawing_round : felt) -> (count : felt):
 end
 
 # The max number of colorizations per token / rwtrk is a variable

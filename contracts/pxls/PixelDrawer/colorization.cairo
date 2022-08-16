@@ -14,6 +14,8 @@ from pxls.PixelDrawer.storage import (
     drawing_user_colorizations,
     max_colorizations_per_token,
     number_of_colorizations_per_token,
+    number_of_colorizations_total,
+    drawing_user_colorizations_index,
 )
 
 const MAX_PIXEL_VALUE = 399  # grid of 400 pixels from 0 to 399
@@ -21,7 +23,7 @@ const MAX_COLOR_VALUE = 94  # palette of 95 colors from 0 to 94
 const MAX_COLORIZATION_VALUE = MAX_PIXEL_VALUE * (MAX_COLOR_VALUE + 1) + MAX_COLOR_VALUE
 const MAX_COLORIZATIONS_PER_FELT = 8  # There is space to store more, but we can't unpack due to div_rem bounds
 const NUMBER_OF_PIXELS = 400
-const MAX_TOTAL_COLORIZATIONS = 2000 # For performance limit to reconstitute grid
+const MAX_TOTAL_COLORIZATIONS = 2000  # For performance limit to reconstitute grid
 
 struct Colorization:
     member pixel_index : felt
@@ -146,36 +148,6 @@ func _get_all_drawing_user_colorizations{
     )
 end
 
-func count_stored_user_colorizations{
-    pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr
-}(drawing_round : felt, current_count : felt) -> (stored_user_colorizations_len : felt):
-    # Get total number of colorizations saved to know the available
-    # slot to save a new one
-    let (storage_user_colorizations_packed) = drawing_user_colorizations.read(
-        drawing_round, current_count
-    )
-    if storage_user_colorizations_packed == 0:
-        return (current_count)
-    end
-    return count_stored_user_colorizations(drawing_round, current_count + 1)
-end
-
-func count_total_colorizations{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
-    drawing_round : felt, current_token_id : Uint256, current_total : felt
-) -> (total_colorizations : felt):
-    if current_token_id.low == NUMBER_OF_PIXELS + 1:
-        return (current_total)
-    end
-    let (colorizations_from_this_token_id) = number_of_colorizations_per_token.read(
-        drawing_round, current_token_id
-    )
-    return count_total_colorizations(
-        drawing_round,
-        Uint256(current_token_id.low + 1, 0),
-        current_total + colorizations_from_this_token_id,
-    )
-end
-
 func save_drawing_user_colorizations{
     pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr
 }(
@@ -186,13 +158,13 @@ func save_drawing_user_colorizations{
 ):
     alloc_locals
     # First find # of already saved slots
-    let (stored_user_colorizations_len : felt) = count_stored_user_colorizations(drawing_round, 0)
+    let (stored_user_colorizations_len : felt) = drawing_user_colorizations_index.read(drawing_round)
     # Then # of colorizations done by this token
     let (colorizations_from_this_token_id) = number_of_colorizations_per_token.read(
         drawing_round, token_id
     )
     # Then total # of colorizations for all tokens
-    let (total_colorizations_count) = count_total_colorizations(drawing_round, Uint256(1, 0), 0)
+    let (total_colorizations_count) = number_of_colorizations_total.read(drawing_round)
     # Then max colorizations allowed per token
     let (max_token_colorizations) = max_colorizations_per_token.read()
     let colorizations_remaining = max_token_colorizations - colorizations_from_this_token_id
@@ -214,6 +186,9 @@ func save_drawing_user_colorizations{
     )
     number_of_colorizations_per_token.write(
         drawing_round, token_id, colorizations_from_this_token_id + colorizations_len
+    )
+    number_of_colorizations_total.write(
+        drawing_round, total_colorizations_count + colorizations_len
     )
 
     return ()
@@ -266,6 +241,8 @@ func _save_user_colorizations_per_batch{
     current_batch : Colorization*,
 ):
     if remaining_colorizations_len == 0:
+        # Saving the new index!
+        drawing_user_colorizations_index.write(drawing_round, already_stored_len)
         return ()
     end
 

@@ -11,6 +11,7 @@ from pxls.PixelDrawer.colorization import (
 )
 
 from pxls.PixelDrawer.grid import get_grid
+from pxls.PixelDrawer.token_uri import get_rtwrk_token_uri
 from pxls.interfaces import IPixelERC721, IPixelDrawer
 
 @view
@@ -64,19 +65,19 @@ func __setup__{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
     %{ stop_prank_pixel() %}
     %{ stop_prank_drawer() %}
 
-    # each person colorizes 40 pixels in 40 transactions of 1 colorization
+    # 100 persons colorize 20 pixels in 20 transactions of 1 colorization
 
     %{
         import random
         colorization_index = 0
-        for token_id in range(2, 66):
-            for i in range(40):
+        for token_id in range(2, 102):
+            for i in range(20):
                 pixel_index = random.randrange(400)
                 color_index = random.randrange(95)
                 color_packed = (pixel_index * 95 + color_index) * 400 + token_id
                 store(context.drawer_contract_address, "drawing_user_colorizations", [color_packed], key=[1,colorization_index])
                 colorization_index += 1
-            store(context.drawer_contract_address, "number_of_colorizations_per_token", [40], key=[1,token_id,0])
+            store(context.drawer_contract_address, "number_of_colorizations_per_token", [20], key=[1,token_id,0])
     %}
 
     return ()
@@ -91,6 +92,23 @@ func test_get_grid{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuil
     let (grid_len : felt, grid : felt*) = IPixelDrawer.getGrid(
         contract_address=drawer_contract_address, round=1
     )
+    return ()
+end
+
+@view
+func test_get_grid_and_generate_token_uri{
+    syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
+}():
+    alloc_locals
+
+    local drawer_contract_address
+    %{ ids.drawer_contract_address = context.drawer_contract_address %}
+    let (grid_len : felt, grid : felt*) = IPixelDrawer.getGrid(
+        contract_address=drawer_contract_address, round=1
+    )
+
+    let (token_uri_len : felt, token_uri : felt*) = get_rtwrk_token_uri(20, 1, grid_len, grid)
+
     return ()
 end
 
@@ -121,7 +139,7 @@ func test_get_colorizers{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : Ha
     let (count : felt) = IPixelDrawer.numberOfColorizers(
         contract_address=drawer_contract_address, round=1
     )
-    assert 64 = count
+    assert 100 = count
     return ()
 end
 
@@ -134,6 +152,6 @@ func test_number_colorizations{syscall_ptr : felt*, range_check_ptr, pedersen_pt
     let (count : felt) = IPixelDrawer.numberOfColorizations(
         contract_address=drawer_contract_address, round=1, tokenId=Uint256(2, 0)
     )
-    assert 40 = count
+    assert 20 = count
     return ()
 end

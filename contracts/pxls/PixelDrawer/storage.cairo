@@ -1,60 +1,60 @@
 %lang starknet
 from starkware.cairo.common.uint256 import Uint256
 
-#
-# Storage
-#
+//
+// Storage
+//
 
-# This is the address of the PXL NFT contract (for token gating)
+// This is the address of the PXL NFT contract (for token gating)
 @storage_var
-func pixel_erc721() -> (address : felt):
-end
+func pixel_erc721() -> (address: felt) {
+}
 
-# For each rtwrk, we save each user colorization
+// For each rtwrk, we save each user colorization
 @storage_var
-func drawing_user_colorizations(drawing_round : felt, index : felt) -> (
-    user_colorizations_packed : felt
-):
-end
+func drawing_user_colorizations(drawing_round: felt, index: felt) -> (
+    user_colorizations_packed: felt
+) {
+}
 
-# For each rtwrk, we save the last colorization index
+// For each rtwrk, we save the last colorization index
 @storage_var
-func drawing_user_colorizations_index(drawing_round : felt) -> (index : felt):
-end
+func drawing_user_colorizations_index(drawing_round: felt) -> (index: felt) {
+}
 
-# For each token id, we save count of colorizations
+// For each token id, we save count of colorizations
 @storage_var
-func number_of_colorizations_per_token(drawing_round : felt, token_id : Uint256) -> (count : felt):
-end
+func number_of_colorizations_per_token(drawing_round: felt, token_id: Uint256) -> (count: felt) {
+}
 
-# We also save count of total # of colorizations cause we need to limit due to perf
+// We also save count of total # of colorizations cause we need to limit due to perf
 @storage_var
-func number_of_colorizations_total(drawing_round : felt) -> (count : felt):
-end
+func number_of_colorizations_total(drawing_round: felt) -> (count: felt) {
+}
 
-# The max number of colorizations per token / rwtrk is a variable
+// The max number of colorizations per token / rwtrk is a variable
 @storage_var
-func max_colorizations_per_token() -> (max : felt):
-end
+func max_colorizations_per_token() -> (max: felt) {
+}
 
-# This saves the start timestamp of an rtwrk
+// This saves the start timestamp of an rtwrk
 @storage_var
-func drawing_timestamp(drawing_round : felt) -> (timestamp : felt):
-end
+func drawing_timestamp(drawing_round: felt) -> (timestamp: felt) {
+}
 
-# This returns the current rtwrk round
+// This returns the current rtwrk round
 @storage_var
-func current_drawing_round() -> (round : felt):
-end
+func current_drawing_round() -> (round: felt) {
+}
 
-# A flag to tell if anyone can launch
-# an rtwrk or only the owner of the contract
+// A flag to tell if anyone can launch
+// an rtwrk or only the owner of the contract
 @storage_var
-func everyone_can_launch_round() -> (bool : felt):
-end
+func everyone_can_launch_round() -> (bool: felt) {
+}
 
-# Each round can have a theme that is an array
-# of short strings
+// Each round can have a theme that is an array
+// of short strings
 @storage_var
-func drawing_theme(drawing_round : felt, index : felt) -> (short_string : felt):
-end
+func drawing_theme(drawing_round: felt, index: felt) -> (short_string: felt) {
+}

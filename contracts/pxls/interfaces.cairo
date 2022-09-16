@@ -82,6 +82,8 @@ namespace IPixelDrawer {
     }
     func numberOfColorizers(round: felt, step: felt) -> (count: felt) {
     }
+    func getColorizers(round: felt, step: felt) -> (colorizers_len: felt, colorizers: felt*) {
+    }
     func drawingTheme(round: felt) -> (theme_len: felt, theme: felt*) {
     }
 }

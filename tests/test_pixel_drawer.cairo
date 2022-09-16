@@ -758,9 +758,8 @@ func mint_two_pixels{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuil
 }
 
 @view
-func test_pixel_drawer_number_colorizers{
-    syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
-}() {
+func test_pixel_drawer_colorizers{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}(
+    ) {
     alloc_locals;
 
     local drawer_contract_address;
@@ -793,6 +792,12 @@ func test_pixel_drawer_number_colorizers{
     let (colorizers_count) = IPixelDrawer.numberOfColorizers(drawer_contract_address, 1, 0);
     assert 1 = colorizers_count;
 
+    let (colorizers_len, colorizers: felt*) = IPixelDrawer.getColorizers(
+        drawer_contract_address, 1, 0
+    );
+    assert 1 = colorizers_len;
+    assert 1 = colorizers[0];
+
     // Colorize from second token and count colorizers (=2)
 
     let (colorizations: Colorization*) = alloc();
@@ -804,6 +809,13 @@ func test_pixel_drawer_number_colorizers{
 
     let (colorizers_count) = IPixelDrawer.numberOfColorizers(drawer_contract_address, 1, 0);
     assert 2 = colorizers_count;
+
+    let (colorizers_len, colorizers: felt*) = IPixelDrawer.getColorizers(
+        drawer_contract_address, 1, 0
+    );
+    assert 2 = colorizers_len;
+    assert 1 = colorizers[0];
+    assert 2 = colorizers[1];
 
     %{ stop_prank_drawer() %}
     return ();

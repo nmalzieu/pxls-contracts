@@ -31,7 +31,7 @@ from pxls.PixelDrawer.colorization import (
     Colorization,
     save_drawing_user_colorizations,
     get_all_drawing_user_colorizations,
-    get_number_of_colorizers,
+    get_colorizers,
 )
 from pxls.PixelDrawer.grid import get_grid
 
@@ -120,9 +120,9 @@ func pixelColor{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}
 }
 
 @view
-func getGrid{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(round: felt, step: felt) -> (
-    grid_len: felt, grid: felt*
-) {
+func getGrid{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(
+    round: felt, step: felt
+) -> (grid_len: felt, grid: felt*) {
     alloc_locals;
     let (contract_address: felt) = pixel_erc721.read();
     let (max_supply: Uint256) = IPixelERC721.maxSupply(contract_address=contract_address);
@@ -166,7 +166,16 @@ func numberOfColorizers{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_ch
     drawing_round: felt, step: felt
 ) -> (count: felt) {
     assert_round_exists(drawing_round);
-    return get_number_of_colorizers(drawing_round, step);
+    let (colorizers_len, colorizers: felt*) = get_colorizers(drawing_round, step);
+    return (count=colorizers_len);
+}
+
+@view
+func getColorizers{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    drawing_round: felt, step: felt
+) -> (colorizers_len: felt, colorizers: felt*) {
+    assert_round_exists(drawing_round);
+    return get_colorizers(drawing_round, step);
 }
 
 @view

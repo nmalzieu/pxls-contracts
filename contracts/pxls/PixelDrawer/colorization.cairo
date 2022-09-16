@@ -315,9 +315,9 @@ func _reverse_colorizations{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, rang
     );
 }
 
-func get_number_of_colorizers{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+func get_colorizers{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     drawing_round: felt, step: felt
-) -> (count: felt) {
+) -> (colorizers_len: felt, colorizers: felt*) {
     alloc_locals;
     // Returns the number of tokenId (= number of people)
     // that did at least one colorization during a given round
@@ -329,22 +329,24 @@ func get_number_of_colorizers{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, ra
 
     let (token_id_has_colorizations: DictAccess*) = default_dict_new(default_value=FALSE);
     default_dict_finalize(token_id_has_colorizations, token_id_has_colorizations, FALSE);
-    let (number_of_colorizers) = fill_colorizations_per_token_id(
-        0, token_id_has_colorizations, user_colorizations_len, user_colorizations
+    let (colorizers: felt*) = alloc();
+    let (colorizers_len, colorizers) = fill_colorizations_per_token_id(
+        0, colorizers, token_id_has_colorizations, user_colorizations_len, user_colorizations
     );
-    return (number_of_colorizers,);
+    return (colorizers_len, colorizers);
 }
 
 func fill_colorizations_per_token_id{
     syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
 }(
-    number_of_colorizers: felt,
+    colorizers_len: felt,
+    colorizers: felt*,
     token_id_has_colorizations: DictAccess*,
     user_colorizations_len: felt,
     user_colorizations: UserColorizations*,
-) -> (number_of_colorizers: felt) {
+) -> (colorizers_len: felt, colorizers: felt*) {
     if (user_colorizations_len == 0) {
-        return (number_of_colorizers,);
+        return (colorizers_len, colorizers);
     }
     let token_id = user_colorizations[0].token_id;
     let (token_has_already_colorized) = dict_read{dict_ptr=token_id_has_colorizations}(
@@ -352,15 +354,18 @@ func fill_colorizations_per_token_id{
     );
     if (token_has_already_colorized == TRUE) {
         return fill_colorizations_per_token_id(
-            number_of_colorizers,
+            colorizers_len,
+            colorizers,
             token_id_has_colorizations,
             user_colorizations_len - 1,
             user_colorizations + UserColorizations.SIZE,
         );
     } else {
         dict_write{dict_ptr=token_id_has_colorizations}(key=token_id.low, new_value=TRUE);
+        assert colorizers[colorizers_len] = token_id.low;
         return fill_colorizations_per_token_id(
-            number_of_colorizers + 1,
+            colorizers_len + 1,
+            colorizers,
             token_id_has_colorizations,
             user_colorizations_len - 1,
             user_colorizations + UserColorizations.SIZE,

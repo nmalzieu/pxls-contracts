@@ -208,7 +208,7 @@ func test_save_drawing_user_colorizations{
 
     let (
         user_colorizations_len: felt, user_colorizations: UserColorizations*
-    ) = get_all_drawing_user_colorizations(1);
+    ) = get_all_drawing_user_colorizations(1, 0);
 
     assert 2 = user_colorizations_len;
 
@@ -226,7 +226,7 @@ func test_save_drawing_user_colorizations{
     assert 46 = user_colorizations[1].colorizations[0].pixel_index;
     assert 23 = user_colorizations[1].colorizations[0].color_index;
 
-    let (grid_len: felt, grid: felt*) = get_grid(1, 400);
+    let (grid_len: felt, grid: felt*) = get_grid(1, 400, 0);
     assert 1600 = grid_len;
 
     // We know pixel_index 35 is not colorized
@@ -284,7 +284,7 @@ func test_save_drawing_user_colorizations_per_batch{
 
     let (
         user_colorizations_len: felt, user_colorizations: UserColorizations*
-    ) = get_all_drawing_user_colorizations(1);
+    ) = get_all_drawing_user_colorizations(1, 0);
 
     assert 2 = user_colorizations_len;
 

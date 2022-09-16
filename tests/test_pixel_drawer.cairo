@@ -458,13 +458,11 @@ func test_pixel_get_grid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: Hash
 
     IPixelDrawer.colorizePixels(drawer_contract_address, Uint256(1, 0), 1, colorizations);
 
-    %{ stop_prank_drawer() %}
-
     let (grid_1_len: felt, grid_1: felt*) = IPixelDrawer.getGrid(
-        contract_address=drawer_contract_address, round=1
+        contract_address=drawer_contract_address, round=1, step=0
     );
     let (grid_2_len: felt, grid_2: felt*) = IPixelDrawer.getGrid(
-        contract_address=drawer_contract_address, round=2
+        contract_address=drawer_contract_address, round=2, step=0
     );
 
     // Length is # of pixel * 4 (see PixelColor struct)
@@ -478,12 +476,72 @@ func test_pixel_get_grid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: Hash
     assert 115 = grid_1[12 * 4 + 2];
     assert 115 = grid_1[12 * 4 + 3];
 
-    // Pixel 18 of round 2 set to color 64 = 255	241	118
+    // Pixel 18 of round 2 set to color 63 = 255,241,118
 
     assert TRUE = grid_2[18 * 4];
     assert 255 = grid_2[18 * 4 + 1];
     assert 241 = grid_2[18 * 4 + 2];
     assert 118 = grid_2[18 * 4 + 3];
+
+    // If we send anothre colorization, we can get grid at different steps
+    let (colorizations: Colorization*) = alloc();
+    assert colorizations[0] = Colorization(pixel_index=18, color_index=12);
+
+    IPixelDrawer.colorizePixels(drawer_contract_address, Uint256(1, 0), 1, colorizations);
+
+    %{ stop_prank_drawer() %}
+
+    // Get final grid (step=0)
+
+    let (grid_2_len: felt, grid_2: felt*) = IPixelDrawer.getGrid(
+        contract_address=drawer_contract_address, round=2, step=0
+    );
+
+    // Pixel 18 of round 2 set to color 13 = 156,39,176
+
+    assert TRUE = grid_2[18 * 4];
+    assert 156 = grid_2[18 * 4 + 1];
+    assert 39 = grid_2[18 * 4 + 2];
+    assert 176 = grid_2[18 * 4 + 3];
+
+    // Get intermediary grid (step=1)
+
+    let (grid_2_len: felt, grid_2: felt*) = IPixelDrawer.getGrid(
+        contract_address=drawer_contract_address, round=2, step=1
+    );
+
+    // Pixel 18 of round 2 at step 1 is set to color 63 = 255,241,118
+
+    assert TRUE = grid_2[18 * 4];
+    assert 255 = grid_2[18 * 4 + 1];
+    assert 241 = grid_2[18 * 4 + 2];
+    assert 118 = grid_2[18 * 4 + 3];
+
+    // Get final grid (step=2)
+
+    let (grid_2_len: felt, grid_2: felt*) = IPixelDrawer.getGrid(
+        contract_address=drawer_contract_address, round=2, step=2
+    );
+
+    // Final pixel 18 of round 2 set to color 13 = 156,39,176
+
+    assert TRUE = grid_2[18 * 4];
+    assert 156 = grid_2[18 * 4 + 1];
+    assert 39 = grid_2[18 * 4 + 2];
+    assert 176 = grid_2[18 * 4 + 3];
+
+    // Get final grid (step=10, we can query over last step)
+
+    let (grid_2_len: felt, grid_2: felt*) = IPixelDrawer.getGrid(
+        contract_address=drawer_contract_address, round=2, step=10
+    );
+
+    // Final pixel 18 of round 2 set to color 13 = 156,39,176
+
+    assert TRUE = grid_2[18 * 4];
+    assert 156 = grid_2[18 * 4 + 1];
+    assert 39 = grid_2[18 * 4 + 2];
+    assert 176 = grid_2[18 * 4 + 3];
 
     return ();
 }
@@ -721,7 +779,7 @@ func test_pixel_drawer_number_colorizers{
 
     IPixelDrawer.colorizePixels(drawer_contract_address, Uint256(1, 0), 3, colorizations);
 
-    let (colorizers_count) = IPixelDrawer.numberOfColorizers(drawer_contract_address, 1);
+    let (colorizers_count) = IPixelDrawer.numberOfColorizers(drawer_contract_address, 1, 0);
     assert 1 = colorizers_count;
 
     // Recolorize from same token and count colorizers (=1)
@@ -732,7 +790,7 @@ func test_pixel_drawer_number_colorizers{
 
     IPixelDrawer.colorizePixels(drawer_contract_address, Uint256(1, 0), 2, colorizations);
 
-    let (colorizers_count) = IPixelDrawer.numberOfColorizers(drawer_contract_address, 1);
+    let (colorizers_count) = IPixelDrawer.numberOfColorizers(drawer_contract_address, 1, 0);
     assert 1 = colorizers_count;
 
     // Colorize from second token and count colorizers (=2)
@@ -744,7 +802,7 @@ func test_pixel_drawer_number_colorizers{
 
     IPixelDrawer.colorizePixels(drawer_contract_address, Uint256(2, 0), 3, colorizations);
 
-    let (colorizers_count) = IPixelDrawer.numberOfColorizers(drawer_contract_address, 1);
+    let (colorizers_count) = IPixelDrawer.numberOfColorizers(drawer_contract_address, 1, 0);
     assert 2 = colorizers_count;
 
     %{ stop_prank_drawer() %}

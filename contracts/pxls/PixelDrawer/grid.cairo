@@ -5,6 +5,7 @@ from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.cairo.common.default_dict import default_dict_new, default_dict_finalize
 from starkware.cairo.common.dict_access import DictAccess
 from starkware.cairo.common.dict import dict_write, dict_read
+from starkware.cairo.common.math_cmp import is_le
 
 from pxls.PixelDrawer.colorization import (
     Colorization,
@@ -14,15 +15,15 @@ from pxls.PixelDrawer.colorization import (
 from pxls.PixelDrawer.palette import get_palette_color
 
 func get_grid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    round: felt, max_supply: felt
+    round: felt, max_supply: felt, step: felt
 ) -> (grid_len: felt, grid: felt*) {
     alloc_locals;
-    // Let's get all colorizations for this round
-    let (
-        user_colorizations_len: felt, user_colorizations: UserColorizations*
-    ) = get_all_drawing_user_colorizations(round);
 
     let (grid: felt*) = alloc();
+
+    let (
+        user_colorizations_len: felt, user_colorizations: UserColorizations*
+    ) = get_all_drawing_user_colorizations(round, step);
 
     fill_grid(max_supply, grid, user_colorizations_len, user_colorizations);
 

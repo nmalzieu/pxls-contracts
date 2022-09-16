@@ -120,7 +120,7 @@ func test_get_grid_1_by_1{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: Has
     local drawer_contract_address;
     %{ ids.drawer_contract_address = context.drawer_contract_address %}
     let (grid_len: felt, grid: felt*) = IPixelDrawer.getGrid(
-        contract_address=drawer_contract_address, round=1
+        contract_address=drawer_contract_address, round=1, step=0
     );
     return ();
 }
@@ -142,7 +142,7 @@ func test_get_grid_20_by_20{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: H
     local drawer_contract_address;
     %{ ids.drawer_contract_address = context.drawer_contract_address %}
     let (grid_len: felt, grid: felt*) = IPixelDrawer.getGrid(
-        contract_address=drawer_contract_address, round=2
+        contract_address=drawer_contract_address, round=2, step=0
     );
     return ();
 }
@@ -156,7 +156,7 @@ func test_get_grid_and_generate_token_uri{
     local drawer_contract_address;
     %{ ids.drawer_contract_address = context.drawer_contract_address %}
     let (grid_len: felt, grid: felt*) = IPixelDrawer.getGrid(
-        contract_address=drawer_contract_address, round=1
+        contract_address=drawer_contract_address, round=1, step=0
     );
 
     let (token_uri_len: felt, token_uri: felt*) = get_rtwrk_token_uri(20, 1, grid_len, grid);
@@ -317,7 +317,7 @@ func test_get_colorizers_1_by_1{syscall_ptr: felt*, range_check_ptr, pedersen_pt
     local drawer_contract_address;
     %{ ids.drawer_contract_address = context.drawer_contract_address %}
     let (count: felt) = IPixelDrawer.numberOfColorizers(
-        contract_address=drawer_contract_address, round=1
+        contract_address=drawer_contract_address, round=1, step=0
     );
     assert 99 = count;
     return ();
@@ -341,7 +341,7 @@ func test_get_colorizers_20_by_20{syscall_ptr: felt*, range_check_ptr, pedersen_
     local drawer_contract_address;
     %{ ids.drawer_contract_address = context.drawer_contract_address %}
     let (count: felt) = IPixelDrawer.numberOfColorizers(
-        contract_address=drawer_contract_address, round=2
+        contract_address=drawer_contract_address, round=2, step=0
     );
     assert 99 = count;
     return ();

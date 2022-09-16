@@ -50,7 +50,7 @@ namespace IPixelDrawer {
     }
     func colorizePixels(tokenId: Uint256, colorizations_len: felt, colorizations: Colorization*) {
     }
-    func pixelColor(round: felt, pixelIndex: felt) -> (color: PixelColor) {
+    func pixelColor(round: felt, pixelIndex: felt, step: felt) -> (color: PixelColor) {
     }
     func currentDrawingPixelColor(pixelIndex: felt) -> (color: PixelColor) {
     }
@@ -62,7 +62,7 @@ namespace IPixelDrawer {
     }
     func launchNewRoundIfNecessary(theme_len: felt, theme: felt*) -> (launched: felt) {
     }
-    func getGrid(round: felt) -> (grid_len: felt, grid: felt*) {
+    func getGrid(round: felt, step: felt) -> (grid_len: felt, grid: felt*) {
     }
     func owner() -> (owner: felt) {
     }
@@ -80,7 +80,7 @@ namespace IPixelDrawer {
     }
     func setMaxColorizationsPerToken(new_max: felt) {
     }
-    func numberOfColorizers(round: felt) -> (count: felt) {
+    func numberOfColorizers(round: felt, step: felt) -> (count: felt) {
     }
     func drawingTheme(round: felt) -> (theme_len: felt, theme: felt*) {
     }

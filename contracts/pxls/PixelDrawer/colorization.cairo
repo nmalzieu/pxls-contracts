@@ -121,28 +121,41 @@ func unpack_user_colorizations{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, r
 
 func get_all_drawing_user_colorizations{
     pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr
-}(drawing_round: felt) -> (user_colorizations_len: felt, user_colorizations: UserColorizations*) {
+}(drawing_round: felt, step: felt) -> (
+    user_colorizations_len: felt, user_colorizations: UserColorizations*
+) {
     let (user_colorizations: UserColorizations*) = alloc();
-    return _get_all_drawing_user_colorizations(drawing_round, 0, user_colorizations);
+    return _get_all_drawing_user_colorizations(drawing_round, 0, user_colorizations, step);
 }
 
 func _get_all_drawing_user_colorizations{
     pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr
-}(drawing_round: felt, user_colorizations_len: felt, user_colorizations: UserColorizations*) -> (
-    user_colorizations_len: felt, user_colorizations: UserColorizations*
-) {
+}(
+    drawing_round: felt,
+    user_colorizations_len: felt,
+    user_colorizations: UserColorizations*,
+    step: felt,
+) -> (user_colorizations_len: felt, user_colorizations: UserColorizations*) {
+    alloc_locals;
     let (storage_user_colorizations_packed) = drawing_user_colorizations.read(
         drawing_round, user_colorizations_len
     );
+    // We reached the end of the colorizations array
     if (storage_user_colorizations_packed == 0) {
         return (user_colorizations_len, user_colorizations);
+    }
+    // If we provided a step, let's stop at this step
+    if (user_colorizations_len != 0) {
+        if (user_colorizations_len == step) {
+            return (user_colorizations_len, user_colorizations);
+        }
     }
     let (unpacked_user_colorizations: UserColorizations) = unpack_user_colorizations(
         storage_user_colorizations_packed
     );
     assert user_colorizations[user_colorizations_len] = unpacked_user_colorizations;
     return _get_all_drawing_user_colorizations(
-        drawing_round, user_colorizations_len + 1, user_colorizations
+        drawing_round, user_colorizations_len + 1, user_colorizations, step
     );
 }
 
@@ -303,7 +316,7 @@ func _reverse_colorizations{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, rang
 }
 
 func get_number_of_colorizers{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    drawing_round: felt
+    drawing_round: felt, step: felt
 ) -> (count: felt) {
     alloc_locals;
     // Returns the number of tokenId (= number of people)
@@ -312,7 +325,7 @@ func get_number_of_colorizers{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, ra
     // First get all colorizations for this round
     let (
         user_colorizations_len: felt, user_colorizations: UserColorizations*
-    ) = get_all_drawing_user_colorizations(drawing_round);
+    ) = get_all_drawing_user_colorizations(drawing_round, step);
 
     let (token_id_has_colorizations: DictAccess*) = default_dict_new(default_value=FALSE);
     default_dict_finalize(token_id_has_colorizations, token_id_has_colorizations, FALSE);

@@ -98,12 +98,12 @@ func currentDrawingPixelColor{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, ra
 ) -> (color: PixelColor) {
     alloc_locals;
     let (round) = current_drawing_round.read();
-    return pixelColor(round, pixelIndex);
+    return pixelColor(round, pixelIndex, 0);
 }
 
 @view
 func pixelColor{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(
-    round: felt, pixelIndex: felt
+    round: felt, pixelIndex: felt, step: felt
 ) -> (color: PixelColor) {
     alloc_locals;
     let (contract_address: felt) = pixel_erc721.read();
@@ -111,7 +111,7 @@ func pixelColor{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}
     with_attr error_message("Max pixel index value is {max_supply}") {
         assert_le(pixelIndex, max_supply.low);
     }
-    let (grid_len: felt, grid: felt*) = get_grid(round=round, max_supply=max_supply.low);
+    let (grid_len: felt, grid: felt*) = get_grid(round=round, max_supply=max_supply.low, step=step);
     let color = PixelColor(
         set=grid[4 * pixelIndex],
         color=Color(grid[4 * pixelIndex + 1], grid[4 * pixelIndex + 2], grid[4 * pixelIndex + 3]),
@@ -120,13 +120,13 @@ func pixelColor{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}
 }
 
 @view
-func getGrid{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(round: felt) -> (
+func getGrid{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(round: felt, step: felt) -> (
     grid_len: felt, grid: felt*
 ) {
     alloc_locals;
     let (contract_address: felt) = pixel_erc721.read();
     let (max_supply: Uint256) = IPixelERC721.maxSupply(contract_address=contract_address);
-    let (grid_len: felt, grid: felt*) = get_grid(round=round, max_supply=max_supply.low);
+    let (grid_len: felt, grid: felt*) = get_grid(round=round, max_supply=max_supply.low, step=step);
     return (grid_len=grid_len, grid=grid);
 }
 
@@ -163,10 +163,10 @@ func maxColorizationsPerToken{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, ra
 
 @view
 func numberOfColorizers{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    drawing_round: felt
+    drawing_round: felt, step: felt
 ) -> (count: felt) {
     assert_round_exists(drawing_round);
-    return get_number_of_colorizers(drawing_round);
+    return get_number_of_colorizers(drawing_round, step);
 }
 
 @view

@@ -26,6 +26,7 @@ pxls_301_400 = [
 
 [profile.devnet.protostar.deploy]
 gateway_url="http://127.0.0.1:5050/"
+chain_id=1
 
 [profile.testnet.protostar.deploy]
 network="alpha-goerli"

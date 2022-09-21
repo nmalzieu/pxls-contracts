@@ -10,10 +10,10 @@ from caistring.str import literal_concat_known_length_dangerous
 // TODO => replace with "real" method not limited
 from pxls.utils.numbers_literals import number_to_literal_dangerous
 from pxls.utils.colors import Color
-from pxls.PixelDrawer.svg import append_svg_from_pixel_grid
+from pxls.RtwrkDrawer.svg import append_svg_from_pixel_grid
 
 func get_rtwrk_token_uri{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    grid_size: felt, rtwrk_index: felt, grid_len: felt, grid: felt*
+    grid_size: felt, rtwrk_id: felt, grid_len: felt, grid: felt*
 ) -> (token_uri_len: felt, token_uri: felt*) {
     alloc_locals;
 
@@ -21,7 +21,7 @@ func get_rtwrk_token_uri{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_c
     assert token_uri[0] = 'data:application/json;';
     assert token_uri[1] = 'charset=utf-8,{"name":"%23';  // json start
     // TODO => replace with "real" method not limited
-    let (pixel_index_literal) = number_to_literal_dangerous(rtwrk_index);
+    let (pixel_index_literal) = number_to_literal_dangerous(rtwrk_id);
     assert token_uri[2] = pixel_index_literal;
     assert token_uri[3] = '","attributes":[]';  // no attributes for now
     assert token_uri[4] = ',"image":"data:';

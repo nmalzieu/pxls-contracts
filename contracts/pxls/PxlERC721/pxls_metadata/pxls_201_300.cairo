@@ -4,24 +4,24 @@ from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.registers import get_label_location
 
 @view
-func get_pixel_metadata{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    pixel_index: felt
-) -> (pixel_metadata_len: felt, pixel_metadata: felt*) {
-    let (pixels_location) = get_label_location(pixels_label);
-    let pixels = cast(pixels_location, felt*);
-    let pixel_metadata = pixels + 406 * pixel_index;
-    return (pixel_metadata_len=406, pixel_metadata=pixel_metadata);
+func get_pxl_metadata{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    pxl_id: felt
+) -> (pxl_metadata_len: felt, pxl_metadata: felt*) {
+    let (pxls_location) = get_label_location(pxls_label);
+    let pxls = cast(pxls_location, felt*);
+    let pxl_metadata = pxls + 406 * pxl_id;
+    return (pxl_metadata_len=406, pxl_metadata=pxl_metadata);
 
     // All pxl metadata has been generated in advance
     // Each pxl consists of a list of palettes that compose
     // the pxl and a list of 400 colors that compose the 20x20
-    // pxl grid. The pixels array is a list of felt.
+    // pxl grid. The pxls array is a list of felt.
     // Each pxl grid consists of a list of 406 felts :
-    // pixel[i] where 0 <= i < 6 are 0 or 1, depending on if the palette
+    // pxls[i] where 0 <= i < 6 are 0 or 1, depending on if the palette
     // with index i composes this pixel. The 400 other felts
     // are the colors indexes of each 400 pixels in RGB
 
-    pixels_label:
+    pxls_label:
     dw 0;
     dw 0;
     dw 1;

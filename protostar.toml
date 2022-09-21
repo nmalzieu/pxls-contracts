@@ -5,23 +5,23 @@ protostar_version = "0.4.2"
 libs_path = "contracts"
 
 ["protostar.contracts"]
-pixel_erc721 = [
-    "./contracts/pxls/PixelERC721/PixelERC721.cairo",
+pxl_erc721 = [
+    "./contracts/pxls/PxlERC721/PxlERC721.cairo",
 ]
-pixel_drawer = [
-    "./contracts/pxls/PixelDrawer/PixelDrawer.cairo"
+rtwrk_drawer = [
+    "./contracts/pxls/RtwrkDrawer/RtwrkDrawer.cairo"
 ]
 pxls_1_100 = [
-    "./contracts/pxls/PixelERC721/pxls_metadata/pxls_1_100.cairo"
+    "./contracts/pxls/PxlERC721/pxls_metadata/pxls_1_100.cairo"
 ]
 pxls_101_200 = [
-    "./contracts/pxls/PixelERC721/pxls_metadata/pxls_101_200.cairo"
+    "./contracts/pxls/PxlERC721/pxls_metadata/pxls_101_200.cairo"
 ]
 pxls_201_300 = [
-    "./contracts/pxls/PixelERC721/pxls_metadata/pxls_201_300.cairo"
+    "./contracts/pxls/PxlERC721/pxls_metadata/pxls_201_300.cairo"
 ]
 pxls_301_400 = [
-    "./contracts/pxls/PixelERC721/pxls_metadata/pxls_301_400.cairo"
+    "./contracts/pxls/PxlERC721/pxls_metadata/pxls_301_400.cairo"
 ]
 
 [profile.devnet.protostar.deploy]

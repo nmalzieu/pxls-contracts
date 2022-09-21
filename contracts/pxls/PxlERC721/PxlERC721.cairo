@@ -13,8 +13,8 @@ from openzeppelin.token.erc721.enumerable.library import ERC721Enumerable
 from openzeppelin.introspection.erc165.library import ERC165
 from openzeppelin.security.safemath.library import SafeUint256
 
-from pxls.interfaces import IPXLMetadata
-from pxls.PixelERC721.pxls_metadata.pxls_metadata import get_pxl_json_metadata
+from pxls.interfaces import IPxlMetadata
+from pxls.PxlERC721.pxls_metadata.pxls_metadata import get_pxl_json_metadata
 
 //
 // Storage
@@ -195,8 +195,8 @@ func tokenURI{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     // between 0 & 99 for each contract_address
     let shifted_pixel_index = pixel_index - (contract_index * 100);
 
-    let (metadata_len: felt, metadata: felt*) = IPXLMetadata.get_pixel_metadata(
-        contract_address=contract_address, pixel_index=shifted_pixel_index
+    let (metadata_len: felt, metadata: felt*) = IPxlMetadata.get_pxl_metadata(
+        contract_address=contract_address, pxl_id=shifted_pixel_index
     );
     let (size: Uint256) = matrix_size.read();
     let (pxl_json_metadata_len: felt, pxl_json_metadata: felt*) = get_pxl_json_metadata(
@@ -234,14 +234,14 @@ func maxSupply{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
 }
 
 @view
-func pixelsOfOwner{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+func pxlsOwned{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     owner: felt
-) -> (pixels_len: felt, pixels: felt*) {
+) -> (pxls_len: felt, pxls: felt*) {
     alloc_locals;
-    let (pixels: felt*) = alloc();
+    let (pxls: felt*) = alloc();
     let (balance: Uint256) = ERC721.balance_of(owner);
-    get_all_pixels_of_owner(owner, 0, balance.low, pixels);
-    return (pixels_len=balance.low, pixels=pixels);
+    get_all_pxls_owned(owner, 0, balance.low, pxls);
+    return (pxls_len=balance.low, pxls=pxls);
 }
 
 @view
@@ -294,16 +294,15 @@ func mint{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(to: f
     let (local balance: Uint256) = balanceOf(to);
     let (local owns_0) = uint256_eq(balance, Uint256(0, 0));
 
-    with_attr error_message("{to} already owns a pixel") {
+    with_attr error_message("{to} already owns a pxl") {
         assert owns_0 = TRUE;
     }
 
-    // Ensures no more than PIXEL_COUNT pixels can be minted
     let (local lastTokenId: Uint256) = totalSupply();
     let (local max: Uint256) = maxSupply();
 
     let (is_lt) = uint256_lt(lastTokenId, max);
-    with_attr error_message("Total pixel supply has already been minted") {
+    with_attr error_message("Total pxl supply has already been minted") {
         assert is_lt = TRUE;
     }
 
@@ -340,7 +339,7 @@ func renounceOwnership{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_che
     return ();
 }
 
-func get_all_pixels_of_owner{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+func get_all_pxls_owned{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     owner: felt, index: felt, balance: felt, pixels: felt*
 ) -> () {
     if (index == balance) {
@@ -350,5 +349,5 @@ func get_all_pixels_of_owner{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, ran
         owner=owner, index=Uint256(low=index, high=0)
     );
     assert pixels[index] = tokenId.low;
-    return get_all_pixels_of_owner(owner, index + 1, balance, pixels);
+    return get_all_pxls_owned(owner, index + 1, balance, pixels);
 }

@@ -5,7 +5,7 @@ from starkware.cairo.common.alloc import alloc
 from starkware.cairo.common.math import assert_nn_le, unsigned_div_rem
 
 from caistring.str import literal_concat_known_length_dangerous
-from pxls.PixelERC721.pxls_metadata.pxls_colors import get_color
+from pxls.PxlERC721.pxls_metadata.pxls_colors import get_color
 from pxls.utils.colors import Color
 from pxls.utils.numbers_literals import number_to_literal_dangerous, number_literal_length
 

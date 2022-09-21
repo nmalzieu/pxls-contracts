@@ -9,8 +9,8 @@ from caistring.str import literal_concat_known_length_dangerous
 
 from pxls.utils.numbers_literals import number_to_literal_dangerous
 from pxls.utils.colors import Color
-from pxls.PixelERC721.pxls_metadata.pxls_svg import append_svg_from_pixel_grid
-from pxls.PixelERC721.pxls_metadata.pxls_colors import get_color_palette_name
+from pxls.PxlERC721.pxls_metadata.pxls_svg import append_svg_from_pixel_grid
+from pxls.PxlERC721.pxls_metadata.pxls_colors import get_color_palette_name
 
 func get_yes_no_str{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     boolean: felt

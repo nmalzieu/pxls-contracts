@@ -1,7 +1,7 @@
 %lang starknet
 
 from starkware.cairo.common.cairo_builtins import HashBuiltin
-from pxls.PixelDrawer.palette import get_palette_color
+from pxls.RtwrkDrawer.palette import get_palette_color
 from pxls.utils.colors import Color
 
 @view

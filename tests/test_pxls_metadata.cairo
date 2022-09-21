@@ -5,7 +5,7 @@ from starkware.cairo.common.registers import get_label_location
 from starkware.cairo.common.alloc import alloc
 
 from caistring.str import Str
-from pxls.PixelERC721.pxls_metadata.pxls_metadata import append_palette_trait, get_pxl_json_metadata
+from pxls.PxlERC721.pxls_metadata.pxls_metadata import append_palette_trait, get_pxl_json_metadata
 
 @view
 func test_append_palette_trait{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
@@ -32,33 +32,33 @@ func test_append_palette_trait{syscall_ptr: felt*, range_check_ptr, pedersen_ptr
 }
 
 @view
-func test_get_pixel_metadata{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
-    let (pixel_metadata_len: felt, pixel_metadata: felt*) = sample_pixel_metadata(0);
+func test_get_pxl_metadata{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
+    let (pxl_metadata_len: felt, pxl_metadata: felt*) = sample_pxl_metadata(0);
 
     // First pxl has 4 palettes : "cyan","yellow","magenta","blue" = 0,4,2,1
-    assert 1 = pixel_metadata[0];
-    assert 1 = pixel_metadata[1];
-    assert 1 = pixel_metadata[2];
-    assert 0 = pixel_metadata[3];
-    assert 1 = pixel_metadata[4];
-    assert 0 = pixel_metadata[5];
+    assert 1 = pxl_metadata[0];
+    assert 1 = pxl_metadata[1];
+    assert 1 = pxl_metadata[2];
+    assert 0 = pxl_metadata[3];
+    assert 1 = pxl_metadata[4];
+    assert 0 = pxl_metadata[5];
 
-    // First pxl has 400 colors: pixel_metadata[6] => pixel_metadata[405]
-    // Its 23rd color is #33FFFF . It is supposed to be stored at pixel_metadata[28]
+    // First pxl has 400 colors: pxl_metadata[6] => pxl_metadata[405]
+    // Its 23rd color is #33FFFF . It is supposed to be stored at pxl_metadata[28]
     // and its value is supposed to be the color index of 33FFFF which is 3 in our list
-    assert 3 = pixel_metadata[28];
+    assert 3 = pxl_metadata[28];
 
-    // Its last color is #FFCCFF . It is supposed to be stored at pixel_metadata[405]
+    // Its last color is #FFCCFF . It is supposed to be stored at pxl_metadata[405]
     // and its value is supposed to be the color index of FFCCFF which is 10 in our list
-    assert 10 = pixel_metadata[405];
+    assert 10 = pxl_metadata[405];
     return ();
 }
 
 @view
 func test_get_pxl_json_metadata{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
-    let (pixel_metadata_len: felt, pixel_metadata: felt*) = sample_pixel_metadata(0);
+    let (pxl_metadata_len: felt, pxl_metadata: felt*) = sample_pxl_metadata(0);
     let (pxl_json_metadata_len: felt, pxl_json_metadata: felt*) = get_pxl_json_metadata(
-        grid_size=4, pixel_index=0, pixel_data_len=pixel_metadata_len, pixel_data=pixel_metadata
+        grid_size=4, pixel_index=0, pixel_data_len=pxl_metadata_len, pixel_data=pxl_metadata
     );
     // length = 4 (beginning) + 3 * 6 (attributes) + 3 (image tag) + 1604 (svg with one rect) + 1 (json end) = 1630
     assert 1630 = pxl_json_metadata_len;
@@ -72,27 +72,25 @@ func test_get_pxl_json_metadata{syscall_ptr: felt*, range_check_ptr, pedersen_pt
     return ();
 }
 
-func sample_pixel_metadata{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    pixel_index: felt
-) -> (pixel_metadata_len: felt, pixel_metadata: felt*) {
-    let (pixels_location) = get_label_location(pixels_label);
-    let pixels = cast(pixels_location, felt*);
-    let pixel_metadata = pixels + 406 * pixel_index;
-    return (pixel_metadata_len=406, pixel_metadata=pixel_metadata);
+@view
+func sample_pxl_metadata{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    pxl_id: felt
+) -> (pxl_metadata_len: felt, pxl_metadata: felt*) {
+    let (pxls_location) = get_label_location(pxls_label);
+    let pxls = cast(pxls_location, felt*);
+    let pxl_metadata = pxls + 406 * pxl_id;
+    return (pxl_metadata_len=406, pxl_metadata=pxl_metadata);
 
     // All pxl metadata has been generated in advance
     // Each pxl consists of a list of palettes that compose
     // the pxl and a list of 400 colors that compose the 20x20
-    // pxl grid. The pixels array is a list of felt.
+    // pxl grid. The pxls array is a list of felt.
     // Each pxl grid consists of a list of 406 felts :
-    // pixel[i] where 0 <= i < 6 are 0 or 1, depending on if the palette
+    // pxls[i] where 0 <= i < 6 are 0 or 1, depending on if the palette
     // with index i composes this pixel. The 400 other felts
     // are the colors indexes of each 400 pixels in RGB
 
-    // This is a method with just the first pxl, to some testing,
-    // as big contracts break protostar
-
-    pixels_label:
+    pxls_label:
     dw 1;
     dw 1;
     dw 1;

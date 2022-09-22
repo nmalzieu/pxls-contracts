@@ -22,12 +22,12 @@ func rtwrk_colorization_index(rtwrk_id: felt) -> (index: felt) {
 
 // For each token id, we save count of colorizations
 @storage_var
-func number_of_colorizations_per_colorizer(rtwrk_id: felt, pxl_id: Uint256) -> (count: felt) {
+func number_of_pixel_colorizations_per_colorizer(rtwrk_id: felt, pxl_id: Uint256) -> (count: felt) {
 }
 
 // We also save count of total # of colorizations cause we need to limit due to perf
 @storage_var
-func number_of_colorizations_total(rtwrk_id: felt) -> (count: felt) {
+func number_of_pixel_colorizations_total(rtwrk_id: felt) -> (count: felt) {
 }
 
 // The max number of colorizations per token / rwtrk is a variable

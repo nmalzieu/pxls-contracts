@@ -70,9 +70,9 @@ namespace IRtwrkDrawer {
     }
     func setEveryoneCanLaunchRtwrk(bool: felt) {
     }
-    func numberOfColorizations(rtwrkId: felt, pxlId: Uint256) -> (count: felt) {
+    func numberOfPixelColorizations(rtwrkId: felt, pxlId: Uint256) -> (count: felt) {
     }
-    func totalNumberOfColorizations(rtwrkId: felt) -> (count: felt) {
+    func totalNumberOfPixelColorizations(rtwrkId: felt) -> (count: felt) {
     }
     func maxColorizationsPerColorizer() -> (max: felt) {
     }

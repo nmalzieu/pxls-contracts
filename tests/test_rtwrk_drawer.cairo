@@ -98,7 +98,7 @@ func test_rtwrk_drawer_getters{syscall_ptr: felt*, range_check_ptr, pedersen_ptr
     assert 'Super theme' = theme[0];
 
     // Get total number of colorizations
-    let (total_colorizations) = IRtwrkDrawer.totalNumberOfColorizations(
+    let (total_colorizations) = IRtwrkDrawer.totalNumberOfPixelColorizations(
         rtwrk_drawer_contract_address, 1
     );
     assert 0 = total_colorizations;
@@ -719,7 +719,7 @@ func test_rtwrk_drawer_number_colorizations{
 
     // Getting current # of colorizations
 
-    let (count) = IRtwrkDrawer.numberOfColorizations(
+    let (count) = IRtwrkDrawer.numberOfPixelColorizations(
         rtwrk_drawer_contract_address, 1, Uint256(1, 0)
     );
     assert 0 = count;
@@ -733,7 +733,7 @@ func test_rtwrk_drawer_number_colorizations{
         rtwrk_drawer_contract_address, Uint256(1, 0), 3, pixel_colorizations
     );
 
-    let (count) = IRtwrkDrawer.numberOfColorizations(
+    let (count) = IRtwrkDrawer.numberOfPixelColorizations(
         rtwrk_drawer_contract_address, 1, Uint256(1, 0)
     );
     assert 3 = count;
@@ -755,7 +755,7 @@ func test_rtwrk_drawer_number_colorizations{
 
     // 10 colorizations that will be batched in 2 felts
 
-    let (count) = IRtwrkDrawer.numberOfColorizations(
+    let (count) = IRtwrkDrawer.numberOfPixelColorizations(
         rtwrk_drawer_contract_address, 1, Uint256(1, 0)
     );
     assert 13 = count;
@@ -889,10 +889,10 @@ func test_rtwrk_drawer_total_number_colorizations{
 
     // Getting current # of colorizations
 
-    let (count) = IRtwrkDrawer.numberOfColorizations(
+    let (count) = IRtwrkDrawer.numberOfPixelColorizations(
         rtwrk_drawer_contract_address, 1, Uint256(1, 0)
     );
-    let (count_total) = IRtwrkDrawer.totalNumberOfColorizations(rtwrk_drawer_contract_address, 1);
+    let (count_total) = IRtwrkDrawer.totalNumberOfPixelColorizations(rtwrk_drawer_contract_address, 1);
     assert 0 = count;
     assert 0 = count_total;
 
@@ -905,10 +905,10 @@ func test_rtwrk_drawer_total_number_colorizations{
         rtwrk_drawer_contract_address, Uint256(1, 0), 3, pixel_colorizations
     );
 
-    let (count) = IRtwrkDrawer.numberOfColorizations(
+    let (count) = IRtwrkDrawer.numberOfPixelColorizations(
         rtwrk_drawer_contract_address, 1, Uint256(1, 0)
     );
-    let (count_total) = IRtwrkDrawer.totalNumberOfColorizations(rtwrk_drawer_contract_address, 1);
+    let (count_total) = IRtwrkDrawer.totalNumberOfPixelColorizations(rtwrk_drawer_contract_address, 1);
     assert 3 = count;
     assert 3 = count_total;
 
@@ -929,13 +929,13 @@ func test_rtwrk_drawer_total_number_colorizations{
 
     // 10 colorizations that will be batched in 2 felts
 
-    let (count_1) = IRtwrkDrawer.numberOfColorizations(
+    let (count_1) = IRtwrkDrawer.numberOfPixelColorizations(
         rtwrk_drawer_contract_address, 1, Uint256(1, 0)
     );
-    let (count_2) = IRtwrkDrawer.numberOfColorizations(
+    let (count_2) = IRtwrkDrawer.numberOfPixelColorizations(
         rtwrk_drawer_contract_address, 1, Uint256(2, 0)
     );
-    let (count_total) = IRtwrkDrawer.totalNumberOfColorizations(rtwrk_drawer_contract_address, 1);
+    let (count_total) = IRtwrkDrawer.totalNumberOfPixelColorizations(rtwrk_drawer_contract_address, 1);
     assert 3 = count;
     assert 10 = count_2;
     assert 13 = count_total;

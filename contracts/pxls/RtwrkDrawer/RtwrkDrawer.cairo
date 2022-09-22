@@ -15,8 +15,8 @@ from pxls.RtwrkDrawer.storage import (
     current_rtwrk_id,
     everyone_can_launch_rtwrk,
     max_colorizations_per_colorizer,
-    number_of_colorizations_per_colorizer,
-    number_of_colorizations_total,
+    number_of_pixel_colorizations_per_colorizer,
+    number_of_pixel_colorizations_total,
 )
 from pxls.RtwrkDrawer.rtwrk import (
     assert_rtwrk_id_exists,
@@ -150,18 +150,18 @@ func everyoneCanLaunchRtwrk{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, rang
 }
 
 @view
-func numberOfColorizations{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+func numberOfPixelColorizations{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     rtwrkId: felt, pxlId: Uint256
 ) -> (count: felt) {
-    let (count: felt) = number_of_colorizations_per_colorizer.read(rtwrkId, pxlId);
+    let (count: felt) = number_of_pixel_colorizations_per_colorizer.read(rtwrkId, pxlId);
     return (count,);
 }
 
 @view
-func totalNumberOfColorizations{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+func totalNumberOfPixelColorizations{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     rtwrkId: felt
 ) -> (count: felt) {
-    let (count: felt) = number_of_colorizations_total.read(rtwrkId);
+    let (count: felt) = number_of_pixel_colorizations_total.read(rtwrkId);
     return (count,);
 }
 

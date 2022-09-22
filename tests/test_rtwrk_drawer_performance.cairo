@@ -73,9 +73,9 @@ func __setup__{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}(
                 colorization_packed = (pixel_index * 95 + color_index) * 400 + token_id
                 store(context.rtwrk_drawer_contract_address, "rtwrk_colorizations", [colorization_packed], key=[1,colorization_index])
                 colorization_index += 1
-            store(context.rtwrk_drawer_contract_address, "number_of_colorizations_per_colorizer", [20], key=[1,token_id,0])
+            store(context.rtwrk_drawer_contract_address, "number_of_pixel_colorizations_per_colorizer", [20], key=[1,token_id,0])
         store(context.rtwrk_drawer_contract_address, "rtwrk_colorization_index", [colorization_index], key=[1])
-        store(context.rtwrk_drawer_contract_address, "number_of_colorizations_total", [1980], key=[1])
+        store(context.rtwrk_drawer_contract_address, "number_of_pixel_colorizations_total", [1980], key=[1])
     %}
 
     // 99 persons colorize 20 pixels in 1 transactions of 20 colorization = 1980 colorizations < MAX
@@ -99,9 +99,9 @@ func __setup__{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}(
             if pixel_colorizations_packed != 0:
                 colorization_packed = pixel_colorizations_packed * 400 + token_id
                 store(context.rtwrk_drawer_contract_address, "rtwrk_colorizations", [colorization_packed], key=[2,colorization_index])
-            store(context.rtwrk_drawer_contract_address, "number_of_colorizations_per_colorizer", [20], key=[2,token_id,0])
+            store(context.rtwrk_drawer_contract_address, "number_of_pixel_colorizations_per_colorizer", [20], key=[2,token_id,0])
         store(context.rtwrk_drawer_contract_address, "rtwrk_colorization_index", [colorization_index], key=[2])
-        store(context.rtwrk_drawer_contract_address, "number_of_colorizations_total", [1980], key=[2])
+        store(context.rtwrk_drawer_contract_address, "number_of_pixel_colorizations_total", [1980], key=[2])
     %}
 
     %{ stop_prank_drawer() %}
@@ -363,7 +363,7 @@ func test_number_colorizations_1_by_1{
 
     local rtwrk_drawer_contract_address;
     %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
-    let (count: felt) = IRtwrkDrawer.numberOfColorizations(
+    let (count: felt) = IRtwrkDrawer.numberOfPixelColorizations(
         contract_address=rtwrk_drawer_contract_address, rtwrkId=1, pxlId=Uint256(2, 0)
     );
     assert 20 = count;
@@ -388,7 +388,7 @@ func test_number_colorizations_20_by_20{
 
     local rtwrk_drawer_contract_address;
     %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
-    let (count: felt) = IRtwrkDrawer.numberOfColorizations(
+    let (count: felt) = IRtwrkDrawer.numberOfPixelColorizations(
         contract_address=rtwrk_drawer_contract_address, rtwrkId=2, pxlId=Uint256(2, 0)
     );
     assert 20 = count;

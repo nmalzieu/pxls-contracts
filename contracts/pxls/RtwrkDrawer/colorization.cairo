@@ -13,8 +13,8 @@ from pxls.utils.colors import Color
 from pxls.RtwrkDrawer.storage import (
     rtwrk_colorizations,
     max_colorizations_per_colorizer,
-    number_of_colorizations_per_colorizer,
-    number_of_colorizations_total,
+    number_of_pixel_colorizations_per_colorizer,
+    number_of_pixel_colorizations_total,
     rtwrk_colorization_index,
 )
 
@@ -165,11 +165,11 @@ func save_rtwrk_colorization{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, ran
     // First find # of already saved slots
     let (stored_colorization_len: felt) = rtwrk_colorization_index.read(rtwrk_id);
     // Then # of colorizations done by this token
-    let (colorizations_from_this_pxl_id) = number_of_colorizations_per_colorizer.read(
+    let (colorizations_from_this_pxl_id) = number_of_pixel_colorizations_per_colorizer.read(
         rtwrk_id, pxl_id
     );
     // Then total # of colorizations for all tokens
-    let (total_colorizations_count) = number_of_colorizations_total.read(rtwrk_id);
+    let (total_colorizations_count) = number_of_pixel_colorizations_total.read(rtwrk_id);
     // Then max colorizations allowed per token
     let (max_token_colorizations) = max_colorizations_per_colorizer.read();
     let colorizations_remaining = max_token_colorizations - colorizations_from_this_pxl_id;
@@ -189,10 +189,10 @@ func save_rtwrk_colorization{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, ran
     save_pixel_colorizations_per_batch(
         rtwrk_id, pxl_id, pixel_colorizations_len, pixel_colorizations, stored_colorization_len
     );
-    number_of_colorizations_per_colorizer.write(
+    number_of_pixel_colorizations_per_colorizer.write(
         rtwrk_id, pxl_id, colorizations_from_this_pxl_id + pixel_colorizations_len
     );
-    number_of_colorizations_total.write(
+    number_of_pixel_colorizations_total.write(
         rtwrk_id, total_colorizations_count + pixel_colorizations_len
     );
 

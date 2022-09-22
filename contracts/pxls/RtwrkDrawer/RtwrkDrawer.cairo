@@ -14,7 +14,7 @@ from pxls.RtwrkDrawer.storage import (
     pxl_erc721_address,
     current_rtwrk_id,
     everyone_can_launch_rtwrk,
-    max_colorizations_per_colorizer,
+    max_pixel_colorizations_per_colorizer,
     number_of_pixel_colorizations_per_colorizer,
     number_of_pixel_colorizations_total,
 )
@@ -42,12 +42,12 @@ from pxls.RtwrkDrawer.grid import get_grid
 
 @constructor
 func constructor{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    owner: felt, pxl_erc721: felt, max_colorizations_per_colorizer_value: felt
+    owner: felt, pxl_erc721: felt, max_pixel_colorizations_per_colorizer_value: felt
 ) {
     Ownable.initializer(owner);
     pxl_erc721_address.write(pxl_erc721);
     // Written during deploy but could be changed later
-    max_colorizations_per_colorizer.write(max_colorizations_per_colorizer_value);
+    max_pixel_colorizations_per_colorizer.write(max_pixel_colorizations_per_colorizer_value);
     return ();
 }
 
@@ -75,6 +75,9 @@ func owner{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() ->
     return (owner,);
 }
 
+// @notice Get the timestamp of the start of the current rtwrk
+// @return timestamp: The timestamp of the start of the current rtwrk
+
 @view
 func currentRtwrkTimestamp{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}() -> (
     timestamp: felt
@@ -83,6 +86,10 @@ func currentRtwrkTimestamp{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range
     return get_rtwrk_timestamp(rtwrk_id);
 }
 
+// @notice Get the timestamp of the start of any rtwrk
+// @param rtwrk_id: Id of the rtwrk we want to get the timestamp of
+// @return return_name: The timestamp of the start of the chosen rtwrk
+
 @view
 func rtwrkTimestamp{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(
     rtwrk_id: felt
@@ -90,6 +97,9 @@ func rtwrkTimestamp{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_
     assert_rtwrk_id_exists(rtwrk_id);
     return get_rtwrk_timestamp(rtwrk_id);
 }
+
+// @notice Get the id of the current rtwrk
+// @return rtwrk_id: The id of the current rtwrk
 
 @view
 func currentRtwrkId{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}() -> (
@@ -158,17 +168,18 @@ func numberOfPixelColorizations{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, 
 }
 
 @view
-func totalNumberOfPixelColorizations{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    rtwrkId: felt
-) -> (count: felt) {
+func totalNumberOfPixelColorizations{
+    syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
+}(rtwrkId: felt) -> (count: felt) {
     let (count: felt) = number_of_pixel_colorizations_total.read(rtwrkId);
     return (count,);
 }
 
 @view
-func maxColorizationsPerColorizer{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    ) -> (max: felt) {
-    let (max) = max_colorizations_per_colorizer.read();
+func maxPixelColorizationsPerColorizer{
+    syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
+}() -> (max: felt) {
+    let (max) = max_pixel_colorizations_per_colorizer.read();
     return (max,);
 }
 
@@ -263,6 +274,6 @@ func setMaxColorizationsPerColorizer{
     syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
 }(new_max: felt) {
     Ownable.assert_only_owner();
-    max_colorizations_per_colorizer.write(new_max);
+    max_pixel_colorizations_per_colorizer.write(new_max);
     return ();
 }

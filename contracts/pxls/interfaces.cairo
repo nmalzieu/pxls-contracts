@@ -74,7 +74,7 @@ namespace IRtwrkDrawer {
     }
     func totalNumberOfPixelColorizations(rtwrkId: felt) -> (count: felt) {
     }
-    func maxColorizationsPerColorizer() -> (max: felt) {
+    func maxPixelColorizationsPerColorizer() -> (max: felt) {
     }
     func setMaxColorizationsPerColorizer(new_max: felt) {
     }

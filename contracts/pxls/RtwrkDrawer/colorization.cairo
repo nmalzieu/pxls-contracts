@@ -12,7 +12,7 @@ from starkware.cairo.common.dict import dict_write, dict_read
 from pxls.utils.colors import Color
 from pxls.RtwrkDrawer.storage import (
     rtwrk_colorizations,
-    max_colorizations_per_colorizer,
+    max_pixel_colorizations_per_colorizer,
     number_of_pixel_colorizations_per_colorizer,
     number_of_pixel_colorizations_total,
     rtwrk_colorization_index,
@@ -171,7 +171,7 @@ func save_rtwrk_colorization{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, ran
     // Then total # of colorizations for all tokens
     let (total_colorizations_count) = number_of_pixel_colorizations_total.read(rtwrk_id);
     // Then max colorizations allowed per token
-    let (max_token_colorizations) = max_colorizations_per_colorizer.read();
+    let (max_token_colorizations) = max_pixel_colorizations_per_colorizer.read();
     let colorizations_remaining = max_token_colorizations - colorizations_from_this_pxl_id;
     with_attr error_message(
             "You have reached the max number of allowed colorizations for this rtwrk") {

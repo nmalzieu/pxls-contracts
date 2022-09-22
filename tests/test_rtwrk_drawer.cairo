@@ -89,7 +89,7 @@ func test_rtwrk_drawer_getters{syscall_ptr: felt*, range_check_ptr, pedersen_ptr
     assert returned_timestamp = 'start_timestamp';
 
     // Max has been set during deploy also
-    let (max) = IRtwrkDrawer.maxColorizationsPerColorizer(rtwrk_drawer_contract_address);
+    let (max) = IRtwrkDrawer.maxPixelColorizationsPerColorizer(rtwrk_drawer_contract_address);
     assert 5 = max;
 
     // Getting theme
@@ -118,7 +118,7 @@ func test_rtwrk_drawer_max_colorizations_update{
     IRtwrkDrawer.setMaxColorizationsPerColorizer(rtwrk_drawer_contract_address, 10);
 
     // Max has been set during deploy also
-    let (new_max) = IRtwrkDrawer.maxColorizationsPerColorizer(rtwrk_drawer_contract_address);
+    let (new_max) = IRtwrkDrawer.maxPixelColorizationsPerColorizer(rtwrk_drawer_contract_address);
     assert 10 = new_max;
 
     %{ stop_prank() %}

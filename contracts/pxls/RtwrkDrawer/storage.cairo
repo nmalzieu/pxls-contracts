@@ -32,7 +32,7 @@ func number_of_pixel_colorizations_total(rtwrk_id: felt) -> (count: felt) {
 
 // The max number of colorizations per token / rwtrk is a variable
 @storage_var
-func max_colorizations_per_colorizer() -> (max: felt) {
+func max_pixel_colorizations_per_colorizer() -> (max: felt) {
 }
 
 // This saves the start timestamp of an rtwrk

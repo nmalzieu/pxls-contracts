@@ -110,36 +110,7 @@ func currentRtwrkId{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_
 }
 
 @view
-func currentRtwrkPixelColor{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(
-    pixelIndex: felt
-) -> (color: PixelColor) {
-    alloc_locals;
-    let (rtwrk_id) = current_rtwrk_id.read();
-    return pixelColor(rtwrk_id, pixelIndex, 0);
-}
-
-@view
-func pixelColor{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(
-    rtwrkId: felt, pixelIndex: felt, rtwrkStep: felt
-) -> (color: PixelColor) {
-    alloc_locals;
-    let (contract_address: felt) = pxl_erc721_address.read();
-    let (max_supply: Uint256) = IPxlERC721.maxSupply(contract_address=contract_address);
-    with_attr error_message("Max pixel index value is {max_supply}") {
-        assert_le(pixelIndex, max_supply.low);
-    }
-    let (grid_len: felt, grid: felt*) = get_grid(
-        rtwrk_id=rtwrkId, grid_size=max_supply.low, rtwrk_step=rtwrkStep
-    );
-    let color = PixelColor(
-        set=grid[4 * pixelIndex],
-        color=Color(grid[4 * pixelIndex + 1], grid[4 * pixelIndex + 2], grid[4 * pixelIndex + 3]),
-    );
-    return (color=color);
-}
-
-@view
-func getGrid{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(
+func getRtwrkGrid{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(
     rtwrkId: felt, rtwrkStep: felt
 ) -> (grid_len: felt, grid: felt*) {
     alloc_locals;

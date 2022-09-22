@@ -60,7 +60,7 @@ namespace IRtwrkDrawer {
     }
     func launchNewRtwrkIfNecessary(theme_len: felt, theme: felt*) -> (launched: felt) {
     }
-    func getGrid(rtwrkId: felt, rtwrkStep: felt) -> (grid_len: felt, grid: felt*) {
+    func getRtwrkGrid(rtwrkId: felt, rtwrkStep: felt) -> (grid_len: felt, grid: felt*) {
     }
     func owner() -> (owner: felt) {
     }

@@ -478,10 +478,10 @@ func test_pixel_get_grid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: Hash
         rtwrk_drawer_contract_address, Uint256(1, 0), 1, pixel_colorizations
     );
 
-    let (grid_1_len: felt, grid_1: felt*) = IRtwrkDrawer.getGrid(
+    let (grid_1_len: felt, grid_1: felt*) = IRtwrkDrawer.getRtwrkGrid(
         contract_address=rtwrk_drawer_contract_address, rtwrkId=1, rtwrkStep=0
     );
-    let (grid_2_len: felt, grid_2: felt*) = IRtwrkDrawer.getGrid(
+    let (grid_2_len: felt, grid_2: felt*) = IRtwrkDrawer.getRtwrkGrid(
         contract_address=rtwrk_drawer_contract_address, rtwrkId=2, rtwrkStep=0
     );
 
@@ -515,7 +515,7 @@ func test_pixel_get_grid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: Hash
 
     // Get final grid (step=0)
 
-    let (grid_2_len: felt, grid_2: felt*) = IRtwrkDrawer.getGrid(
+    let (grid_2_len: felt, grid_2: felt*) = IRtwrkDrawer.getRtwrkGrid(
         contract_address=rtwrk_drawer_contract_address, rtwrkId=2, rtwrkStep=0
     );
 
@@ -528,7 +528,7 @@ func test_pixel_get_grid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: Hash
 
     // Get intermediary grid (step=1)
 
-    let (grid_2_len: felt, grid_2: felt*) = IRtwrkDrawer.getGrid(
+    let (grid_2_len: felt, grid_2: felt*) = IRtwrkDrawer.getRtwrkGrid(
         contract_address=rtwrk_drawer_contract_address, rtwrkId=2, rtwrkStep=1
     );
 
@@ -541,7 +541,7 @@ func test_pixel_get_grid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: Hash
 
     // Get final grid (step=2)
 
-    let (grid_2_len: felt, grid_2: felt*) = IRtwrkDrawer.getGrid(
+    let (grid_2_len: felt, grid_2: felt*) = IRtwrkDrawer.getRtwrkGrid(
         contract_address=rtwrk_drawer_contract_address, rtwrkId=2, rtwrkStep=2
     );
 
@@ -554,7 +554,7 @@ func test_pixel_get_grid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: Hash
 
     // Get final grid (step=10, we can query over last step)
 
-    let (grid_2_len: felt, grid_2: felt*) = IRtwrkDrawer.getGrid(
+    let (grid_2_len: felt, grid_2: felt*) = IRtwrkDrawer.getRtwrkGrid(
         contract_address=rtwrk_drawer_contract_address, rtwrkId=2, rtwrkStep=10
     );
 

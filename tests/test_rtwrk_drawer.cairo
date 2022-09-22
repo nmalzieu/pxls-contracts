@@ -209,9 +209,8 @@ func test_rtwrk_drawer_pixel_wrong_color{
     %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
 
     // Get current color
-    let (pixel_color: PixelColor) = IRtwrkDrawer.currentRtwrkPixelColor(
-        rtwrk_drawer_contract_address, 12
-    );
+    let (grid_len, grid: PixelColor*) = IRtwrkDrawer.getRtwrkGrid(rtwrk_drawer_contract_address, 1, 0);
+    let pixel_color = grid[12];
     assert pixel_color.set = 0;  // Unset
     assert pixel_color.color = Color(0, 0, 0);
 
@@ -248,15 +247,13 @@ func test_rtwrk_drawer_colorize_pixels{
     %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
 
     // Get current colors
-    let (pixel_1_color: PixelColor) = IRtwrkDrawer.currentRtwrkPixelColor(
-        rtwrk_drawer_contract_address, 12
-    );
+    let (grid_len, grid: PixelColor*) = IRtwrkDrawer.getRtwrkGrid(rtwrk_drawer_contract_address, 1, 0);
+    let pixel_1_color = grid[12];
     assert 0 = pixel_1_color.set;  // Unset
     assert Color(0, 0, 0) = pixel_1_color.color;
 
-    let (pixel_2_color: PixelColor) = IRtwrkDrawer.currentRtwrkPixelColor(
-        rtwrk_drawer_contract_address, 300
-    );
+    let (grid_len, grid: PixelColor*) = IRtwrkDrawer.getRtwrkGrid(rtwrk_drawer_contract_address, 1, 0);
+    let pixel_2_color = grid[300];
     assert 0 = pixel_2_color.set;  // Unset
     assert Color(0, 0, 0) = pixel_2_color.color;
 
@@ -279,14 +276,12 @@ func test_rtwrk_drawer_colorize_pixels{
     );
 
     // Check pixel colors have been set
-    let (pixel_1_color: PixelColor) = IRtwrkDrawer.currentRtwrkPixelColor(
-        rtwrk_drawer_contract_address, 12
-    );
+    let (grid_len, grid: PixelColor*) = IRtwrkDrawer.getRtwrkGrid(rtwrk_drawer_contract_address, 1, 0);
+    let pixel_1_color = grid[12];
     assert TRUE = pixel_1_color.set;  // Set
     assert Color(242, 242, 242) = pixel_1_color.color;
-    let (pixel_2_color: PixelColor) = IRtwrkDrawer.currentRtwrkPixelColor(
-        rtwrk_drawer_contract_address, 300
-    );
+    let (grid_len, grid: PixelColor*) = IRtwrkDrawer.getRtwrkGrid(rtwrk_drawer_contract_address, 1, 0);
+    let pixel_2_color = grid[300];
     assert TRUE = pixel_2_color.set;  // Set
     assert Color(244, 67, 54) = pixel_2_color.color;
 
@@ -701,9 +696,8 @@ func test_rtwrk_drawer_number_colorizations{
     %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
 
     // Get current color
-    let (pixel_color: PixelColor) = IRtwrkDrawer.currentRtwrkPixelColor(
-        rtwrk_drawer_contract_address, 12
-    );
+    let (grid_len, grid: PixelColor*) = IRtwrkDrawer.getRtwrkGrid(rtwrk_drawer_contract_address, 1, 0);
+    let pixel_color = grid[12];
     assert pixel_color.set = 0;  // Unset
     assert pixel_color.color = Color(0, 0, 0);
 

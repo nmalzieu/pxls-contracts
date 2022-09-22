@@ -48,10 +48,6 @@ namespace IRtwrkDrawer {
         pxlId: Uint256, pixel_colorizations_len: felt, pixel_colorizations: PixelColorization*
     ) {
     }
-    func pixelColor(rtwrkId: felt, pixelIndex: felt, rtwrkStep: felt) -> (color: PixelColor) {
-    }
-    func currentRtwrkPixelColor(pixelIndex: felt) -> (color: PixelColor) {
-    }
     func currentRtwrkTimestamp() -> (timestamp: felt) {
     }
     func rtwrkTimestamp(rtwrkId: felt) -> (timestamp: felt) {

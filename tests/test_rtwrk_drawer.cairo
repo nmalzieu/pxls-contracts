@@ -993,7 +993,9 @@ func test_rtwrk_drawer_original_rtwrks{
 
     // Verify that we're able to get original rtwrks from dw data
 
-    // TODO => add grid 1 when we have the mapping
+    let (grid_1_len: felt, grid_1: felt*) = IRtwrkDrawer.getRtwrkGrid(
+        contract_address=rtwrk_drawer_contract_address, rtwrkId=1, rtwrkStep=0
+    );
 
     let (grid_2_len: felt, grid_2: felt*) = IRtwrkDrawer.getRtwrkGrid(
         contract_address=rtwrk_drawer_contract_address, rtwrkId=2, rtwrkStep=0
@@ -1011,12 +1013,31 @@ func test_rtwrk_drawer_original_rtwrks{
     );
 
     // Length is # of pixel * 4 (see PixelColor struct)
+    assert 20 * 20 * 4 = grid_1_len;
     assert 20 * 20 * 4 = grid_2_len;
     assert 20 * 20 * 4 = grid_7_final_len;
     assert 20 * 20 * 4 = grid_7_intermediate_109_len;
     assert 20 * 20 * 4 = grid_7_intermediate_4_len;
 
-    // TODO => add grid 1 when we have the mapping
+    assert TRUE = grid_1[0];
+    assert 211 = grid_1[1];
+    assert 47 = grid_1[2];
+    assert 47 = grid_1[3];
+
+    assert TRUE = grid_1[399 * 4];
+    assert 255 = grid_1[399 * 4 + 1];
+    assert 255 = grid_1[399 * 4 + 2];
+    assert 255 = grid_1[399 * 4 + 3];
+
+    assert FALSE = grid_1[1 * 4];
+    assert 0 = grid_1[1 * 4 + 1];
+    assert 0 = grid_1[1 * 4 + 2];
+    assert 0 = grid_1[1 * 4 + 3];
+
+    assert TRUE = grid_1[3 * 4];
+    assert 233 = grid_1[3 * 4 + 1];
+    assert 30 = grid_1[3 * 4 + 2];
+    assert 99 = grid_1[3 * 4 + 3];
 
     assert TRUE = grid_2[0];
     assert 242 = grid_2[1];

@@ -17,6 +17,7 @@ from pxls.RtwrkDrawer.storage import (
     number_of_pixel_colorizations_total,
     rtwrk_colorization_index,
 )
+from pxls.RtwrkDrawer.original_rtwrks import ORIGINAL_RTWRKS_COUNT, original_rtwrk_colorizations
 
 const MAX_PIXEL_VALUE = 399;  // grid of 400 pixels from 0 to 399
 const MAX_COLOR_VALUE = 94;  // palette of 95 colors from 0 to 94
@@ -135,11 +136,29 @@ func get_all_rtwrk_colorizations{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*,
     return _get_all_rtwrk_colorizations(rtwrk_id, 0, colorizations, rtwrk_step);
 }
 
+func get_rtwrk_colorization_from_storage_or_dw{
+    pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr
+}(rtwrk_id, index) -> (storage_colorization_packed: felt) {
+    let is_original_colorization = is_le(rtwrk_id, ORIGINAL_RTWRKS_COUNT);
+    if (is_original_colorization == TRUE) {
+        let (colorization_packed) = original_rtwrk_colorizations(rtwrk_id, index);
+        return (storage_colorization_packed=colorization_packed);
+    } else {
+        let (colorization_packed) = rtwrk_colorizations.read(rtwrk_id, index);
+        return (storage_colorization_packed=colorization_packed);
+    }
+}
+
 func _get_all_rtwrk_colorizations{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(
     rtwrk_id: felt, colorizations_len: felt, colorizations: Colorization*, rtwrk_step: felt
 ) -> (colorizations_len: felt, colorizations: Colorization*) {
     alloc_locals;
-    let (storage_colorization_packed) = rtwrk_colorizations.read(rtwrk_id, colorizations_len);
+
+    // Depending on if it's an "original rtwrk" (before regenesis and upgradable smart contract)
+    // or a classic one, we get in in storage or from a define word from original_rtwrks.cairo
+    let (storage_colorization_packed) = get_rtwrk_colorization_from_storage_or_dw(
+        rtwrk_id, colorizations_len
+    );
     // We reached the end of the colorizations array
     if (storage_colorization_packed == 0) {
         return (colorizations_len, colorizations);

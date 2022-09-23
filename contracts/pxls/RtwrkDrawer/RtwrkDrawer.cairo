@@ -34,6 +34,7 @@ from pxls.RtwrkDrawer.colorization import (
     get_colorizers,
 )
 from pxls.RtwrkDrawer.grid import get_grid
+from pxls.RtwrkDrawer.original_rtwrks import initialize_original_rtwrks
 
 // @dev The constructor initializing the drawer with important data
 // @param owner: The owner of this contract
@@ -48,6 +49,8 @@ func constructor{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
     pxl_erc721_address.write(pxl_erc721);
     // Written during deploy but could be changed later
     max_pixel_colorizations_per_colorizer.write(max_pixel_colorizations_per_colorizer_value);
+    // Writing the "original rtwrks" that happened before regenesis
+    initialize_original_rtwrks();
     return ();
 }
 

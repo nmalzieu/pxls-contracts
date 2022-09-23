@@ -7,6 +7,7 @@ from starkware.cairo.common.alloc import alloc
 
 from pxls.utils.colors import Color, PixelColor
 from pxls.RtwrkDrawer.colorization import PixelColorization
+from pxls.RtwrkDrawer.original_rtwrks import ORIGINAL_RTWRKS_COUNT
 from pxls.interfaces import IPxlERC721, IRtwrkDrawer
 
 @view
@@ -71,7 +72,7 @@ func test_rtwrk_drawer_getters{syscall_ptr: felt*, range_check_ptr, pedersen_ptr
     assert p_address = pxl_erc721_contract_address;
 
     let (rtwrk_id) = IRtwrkDrawer.currentRtwrkId(contract_address=rtwrk_drawer_contract_address);
-    assert rtwrk_id = 1;
+    assert ORIGINAL_RTWRKS_COUNT + 1 = rtwrk_id;
 
     let (owner: felt) = IRtwrkDrawer.owner(contract_address=rtwrk_drawer_contract_address);
     assert 123456 = owner;
@@ -93,7 +94,9 @@ func test_rtwrk_drawer_getters{syscall_ptr: felt*, range_check_ptr, pedersen_ptr
     assert 5 = max;
 
     // Getting theme
-    let (theme_len: felt, theme: felt*) = IRtwrkDrawer.rtwrkTheme(rtwrk_drawer_contract_address, 1);
+    let (theme_len: felt, theme: felt*) = IRtwrkDrawer.rtwrkTheme(
+        rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 1
+    );
     assert 1 = theme_len;
     assert 'Super theme' = theme[0];
 
@@ -209,7 +212,9 @@ func test_rtwrk_drawer_pixel_wrong_color{
     %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
 
     // Get current color
-    let (grid_len, grid: PixelColor*) = IRtwrkDrawer.getRtwrkGrid(rtwrk_drawer_contract_address, 1, 0);
+    let (grid_len, grid: PixelColor*) = IRtwrkDrawer.getRtwrkGrid(
+        rtwrk_drawer_contract_address, 1, 0
+    );
     let pixel_color = grid[12];
     assert pixel_color.set = 0;  // Unset
     assert pixel_color.color = Color(0, 0, 0);
@@ -247,12 +252,16 @@ func test_rtwrk_drawer_colorize_pixels{
     %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
 
     // Get current colors
-    let (grid_len, grid: PixelColor*) = IRtwrkDrawer.getRtwrkGrid(rtwrk_drawer_contract_address, 1, 0);
+    let (grid_len, grid: PixelColor*) = IRtwrkDrawer.getRtwrkGrid(
+        rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 1, 0
+    );
     let pixel_1_color = grid[12];
     assert 0 = pixel_1_color.set;  // Unset
     assert Color(0, 0, 0) = pixel_1_color.color;
 
-    let (grid_len, grid: PixelColor*) = IRtwrkDrawer.getRtwrkGrid(rtwrk_drawer_contract_address, 1, 0);
+    let (grid_len, grid: PixelColor*) = IRtwrkDrawer.getRtwrkGrid(
+        rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 1, 0
+    );
     let pixel_2_color = grid[300];
     assert 0 = pixel_2_color.set;  // Unset
     assert Color(0, 0, 0) = pixel_2_color.color;
@@ -276,11 +285,15 @@ func test_rtwrk_drawer_colorize_pixels{
     );
 
     // Check pixel colors have been set
-    let (grid_len, grid: PixelColor*) = IRtwrkDrawer.getRtwrkGrid(rtwrk_drawer_contract_address, 1, 0);
+    let (grid_len, grid: PixelColor*) = IRtwrkDrawer.getRtwrkGrid(
+        rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 1, 0
+    );
     let pixel_1_color = grid[12];
     assert TRUE = pixel_1_color.set;  // Set
     assert Color(242, 242, 242) = pixel_1_color.color;
-    let (grid_len, grid: PixelColor*) = IRtwrkDrawer.getRtwrkGrid(rtwrk_drawer_contract_address, 1, 0);
+    let (grid_len, grid: PixelColor*) = IRtwrkDrawer.getRtwrkGrid(
+        rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 1, 0
+    );
     let pixel_2_color = grid[300];
     assert TRUE = pixel_2_color.set;  // Set
     assert Color(244, 67, 54) = pixel_2_color.color;
@@ -290,7 +303,7 @@ func test_rtwrk_drawer_colorize_pixels{
 }
 
 @view
-func test_pixel_launch_new_rtwrk_if_necessary{
+func test_rtwrk_drawer_launch_new_rtwrk_if_necessary{
     syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
 }() {
     alloc_locals;
@@ -302,7 +315,7 @@ func test_pixel_launch_new_rtwrk_if_necessary{
     // after calling start() in setup, we're at rtwrk 1
 
     let (rtwrk_id) = IRtwrkDrawer.currentRtwrkId(contract_address=rtwrk_drawer_contract_address);
-    assert rtwrk_id = 1;
+    assert ORIGINAL_RTWRKS_COUNT + 1 = rtwrk_id;
 
     // 25 hour is not enough to launch new rtwrk
 
@@ -319,7 +332,7 @@ func test_pixel_launch_new_rtwrk_if_necessary{
     assert launched = FALSE;
 
     let (rtwrk_id) = IRtwrkDrawer.currentRtwrkId(contract_address=rtwrk_drawer_contract_address);
-    assert rtwrk_id = 1;
+    assert ORIGINAL_RTWRKS_COUNT + 1 = rtwrk_id;
 
     // 26+ hour is enough to launch new rtwrk
 
@@ -332,7 +345,7 @@ func test_pixel_launch_new_rtwrk_if_necessary{
     assert launched = TRUE;
 
     let (rtwrk_id) = IRtwrkDrawer.currentRtwrkId(contract_address=rtwrk_drawer_contract_address);
-    assert rtwrk_id = 2;
+    assert ORIGINAL_RTWRKS_COUNT + 2 = rtwrk_id;
 
     let (current_timestamp) = IRtwrkDrawer.currentRtwrkTimestamp(
         contract_address=rtwrk_drawer_contract_address
@@ -340,14 +353,16 @@ func test_pixel_launch_new_rtwrk_if_necessary{
     assert new_timestamp = current_timestamp;
 
     let (previous_timestamp) = IRtwrkDrawer.rtwrkTimestamp(
-        contract_address=rtwrk_drawer_contract_address, rtwrkId=1
+        contract_address=rtwrk_drawer_contract_address, rtwrkId=ORIGINAL_RTWRKS_COUNT + 1
     );
     assert 'start_timestamp' = previous_timestamp;
 
     // Let's verify we can get back the 2 felt theme
 
     // Getting theme
-    let (theme_len: felt, theme: felt*) = IRtwrkDrawer.rtwrkTheme(rtwrk_drawer_contract_address, 2);
+    let (theme_len: felt, theme: felt*) = IRtwrkDrawer.rtwrkTheme(
+        rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 2
+    );
     assert 2 = theme_len;
     assert 'Ceci est un theme qui fait plus' = theme[0];
     assert 'que 31 characteres' = theme[1];
@@ -358,7 +373,7 @@ func test_pixel_launch_new_rtwrk_if_necessary{
 }
 
 @view
-func test_pixel_drawing_fails_if_old_rtwrk{
+func test_rtwrk_drawer_drawing_fails_if_old_rtwrk{
     syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
 }() {
     alloc_locals;
@@ -371,7 +386,7 @@ func test_pixel_drawing_fails_if_old_rtwrk{
     // after calling start() in setup, we're at rtwrk 1
 
     let (rtwrk_id) = IRtwrkDrawer.currentRtwrkId(contract_address=rtwrk_drawer_contract_address);
-    assert rtwrk_id = 1;
+    assert ORIGINAL_RTWRKS_COUNT + 1 = rtwrk_id;
 
     local account;
     %{ ids.account = context.account %}
@@ -400,7 +415,7 @@ func test_pixel_drawing_fails_if_old_rtwrk{
     );
 
     let (rtwrk_id) = IRtwrkDrawer.currentRtwrkId(contract_address=rtwrk_drawer_contract_address);
-    assert rtwrk_id = 1;
+    assert ORIGINAL_RTWRKS_COUNT + 1 = rtwrk_id;
 
     // 26+ hour is enough to launch new rtwrk
 
@@ -419,7 +434,7 @@ func test_pixel_drawing_fails_if_old_rtwrk{
 }
 
 @view
-func test_pixel_get_grid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
+func test_rtwrk_drawer_get_grid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
     alloc_locals;
     local pxl_erc721_contract_address;
     %{ ids.pxl_erc721_contract_address = context.pxl_erc721_contract_address %}
@@ -430,7 +445,7 @@ func test_pixel_get_grid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: Hash
     // after calling start() in setup, we're at rtwrk 1
 
     let (rtwrk_id) = IRtwrkDrawer.currentRtwrkId(contract_address=rtwrk_drawer_contract_address);
-    assert rtwrk_id = 1;
+    assert ORIGINAL_RTWRKS_COUNT + 1 = rtwrk_id;
 
     local account;
     %{ ids.account = context.account %}
@@ -463,7 +478,7 @@ func test_pixel_get_grid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: Hash
     );
 
     let (rtwrk_id) = IRtwrkDrawer.currentRtwrkId(contract_address=rtwrk_drawer_contract_address);
-    assert rtwrk_id = 2;
+    assert ORIGINAL_RTWRKS_COUNT + 2 = rtwrk_id;
 
     // Drawing pixel after launching new rtwrk
     let (pixel_colorizations: PixelColorization*) = alloc();
@@ -474,10 +489,14 @@ func test_pixel_get_grid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: Hash
     );
 
     let (grid_1_len: felt, grid_1: felt*) = IRtwrkDrawer.getRtwrkGrid(
-        contract_address=rtwrk_drawer_contract_address, rtwrkId=1, rtwrkStep=0
+        contract_address=rtwrk_drawer_contract_address,
+        rtwrkId=ORIGINAL_RTWRKS_COUNT + 1,
+        rtwrkStep=0,
     );
     let (grid_2_len: felt, grid_2: felt*) = IRtwrkDrawer.getRtwrkGrid(
-        contract_address=rtwrk_drawer_contract_address, rtwrkId=2, rtwrkStep=0
+        contract_address=rtwrk_drawer_contract_address,
+        rtwrkId=ORIGINAL_RTWRKS_COUNT + 2,
+        rtwrkStep=0,
     );
 
     // Length is # of pixel * 4 (see PixelColor struct)
@@ -511,7 +530,9 @@ func test_pixel_get_grid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: Hash
     // Get final grid (step=0)
 
     let (grid_2_len: felt, grid_2: felt*) = IRtwrkDrawer.getRtwrkGrid(
-        contract_address=rtwrk_drawer_contract_address, rtwrkId=2, rtwrkStep=0
+        contract_address=rtwrk_drawer_contract_address,
+        rtwrkId=ORIGINAL_RTWRKS_COUNT + 2,
+        rtwrkStep=0,
     );
 
     // Pixel 18 of rtwrk 2 set to color 13 = 156,39,176
@@ -524,7 +545,9 @@ func test_pixel_get_grid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: Hash
     // Get intermediary grid (step=1)
 
     let (grid_2_len: felt, grid_2: felt*) = IRtwrkDrawer.getRtwrkGrid(
-        contract_address=rtwrk_drawer_contract_address, rtwrkId=2, rtwrkStep=1
+        contract_address=rtwrk_drawer_contract_address,
+        rtwrkId=ORIGINAL_RTWRKS_COUNT + 2,
+        rtwrkStep=1,
     );
 
     // Pixel 18 of rtwrk 2 at step 1 is set to color 63 = 255,241,118
@@ -537,7 +560,9 @@ func test_pixel_get_grid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: Hash
     // Get final grid (step=2)
 
     let (grid_2_len: felt, grid_2: felt*) = IRtwrkDrawer.getRtwrkGrid(
-        contract_address=rtwrk_drawer_contract_address, rtwrkId=2, rtwrkStep=2
+        contract_address=rtwrk_drawer_contract_address,
+        rtwrkId=ORIGINAL_RTWRKS_COUNT + 2,
+        rtwrkStep=2,
     );
 
     // Final pixel 18 of rtwrk 2 set to color 13 = 156,39,176
@@ -550,7 +575,9 @@ func test_pixel_get_grid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: Hash
     // Get final grid (step=10, we can query over last step)
 
     let (grid_2_len: felt, grid_2: felt*) = IRtwrkDrawer.getRtwrkGrid(
-        contract_address=rtwrk_drawer_contract_address, rtwrkId=2, rtwrkStep=10
+        contract_address=rtwrk_drawer_contract_address,
+        rtwrkId=ORIGINAL_RTWRKS_COUNT + 2,
+        rtwrkStep=10,
     );
 
     // Final pixel 18 of rtwrk 2 set to color 13 = 156,39,176
@@ -564,7 +591,7 @@ func test_pixel_get_grid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: Hash
 }
 
 @view
-func test_pixel_owner_can_change_launch_flag{
+func test_rtwrk_drawer_owner_can_change_launch_flag{
     syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
 }() {
     tempvar rtwrk_drawer_contract_address;
@@ -598,7 +625,7 @@ func test_pixel_owner_can_change_launch_flag{
 }
 
 @view
-func test_pixel_not_everyone_can_launch_new_rtwrk{
+func test_rtwrk_drawer_not_everyone_can_launch_new_rtwrk{
     syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
 }() {
     alloc_locals;
@@ -613,7 +640,7 @@ func test_pixel_not_everyone_can_launch_new_rtwrk{
     assert FALSE = bool;
 
     let (rtwrk_id) = IRtwrkDrawer.currentRtwrkId(contract_address=rtwrk_drawer_contract_address);
-    assert 1 = rtwrk_id;
+    assert ORIGINAL_RTWRKS_COUNT + 1 = rtwrk_id;
 
     // Check that owner can launch new rtwrk
     %{ stop_prank_drawer = start_prank(context.account, target_contract_address=ids.rtwrk_drawer_contract_address) %}
@@ -630,7 +657,7 @@ func test_pixel_not_everyone_can_launch_new_rtwrk{
     );
 
     let (rtwrk_id) = IRtwrkDrawer.currentRtwrkId(contract_address=rtwrk_drawer_contract_address);
-    assert 2 = rtwrk_id;
+    assert ORIGINAL_RTWRKS_COUNT + 2 = rtwrk_id;
 
     // Check that non owner cannot launch new rtwrk
 
@@ -646,7 +673,7 @@ func test_pixel_not_everyone_can_launch_new_rtwrk{
 }
 
 @view
-func test_pixel_everyone_can_launch_new_rtwrk{
+func test_rtwrk_drawer_everyone_can_launch_new_rtwrk{
     syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
 }() {
     alloc_locals;
@@ -679,7 +706,7 @@ func test_pixel_everyone_can_launch_new_rtwrk{
     );
 
     let (rtwrk_id) = IRtwrkDrawer.currentRtwrkId(contract_address=rtwrk_drawer_contract_address);
-    assert 2 = rtwrk_id;
+    assert ORIGINAL_RTWRKS_COUNT + 2 = rtwrk_id;
 
     return ();
 }
@@ -696,7 +723,9 @@ func test_rtwrk_drawer_number_colorizations{
     %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
 
     // Get current color
-    let (grid_len, grid: PixelColor*) = IRtwrkDrawer.getRtwrkGrid(rtwrk_drawer_contract_address, 1, 0);
+    let (grid_len, grid: PixelColor*) = IRtwrkDrawer.getRtwrkGrid(
+        rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 1, 0
+    );
     let pixel_color = grid[12];
     assert pixel_color.set = 0;  // Unset
     assert pixel_color.color = Color(0, 0, 0);
@@ -714,7 +743,7 @@ func test_rtwrk_drawer_number_colorizations{
     // Getting current # of colorizations
 
     let (count) = IRtwrkDrawer.numberOfPixelColorizations(
-        rtwrk_drawer_contract_address, 1, Uint256(1, 0)
+        rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 1, Uint256(1, 0)
     );
     assert 0 = count;
 
@@ -728,7 +757,7 @@ func test_rtwrk_drawer_number_colorizations{
     );
 
     let (count) = IRtwrkDrawer.numberOfPixelColorizations(
-        rtwrk_drawer_contract_address, 1, Uint256(1, 0)
+        rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 1, Uint256(1, 0)
     );
     assert 3 = count;
 
@@ -750,7 +779,7 @@ func test_rtwrk_drawer_number_colorizations{
     // 10 colorizations that will be batched in 2 felts
 
     let (count) = IRtwrkDrawer.numberOfPixelColorizations(
-        rtwrk_drawer_contract_address, 1, Uint256(1, 0)
+        rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 1, Uint256(1, 0)
     );
     assert 13 = count;
 
@@ -814,7 +843,9 @@ func test_rtwrk_drawer_colorizers{syscall_ptr: felt*, range_check_ptr, pedersen_
         rtwrk_drawer_contract_address, Uint256(1, 0), 3, pixel_colorizations
     );
 
-    let (colorizers_count) = IRtwrkDrawer.numberOfColorizers(rtwrk_drawer_contract_address, 1, 0);
+    let (colorizers_count) = IRtwrkDrawer.numberOfColorizers(
+        rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 1, 0
+    );
     assert 1 = colorizers_count;
 
     // Recolorize from same token and count colorizers (=1)
@@ -827,11 +858,13 @@ func test_rtwrk_drawer_colorizers{syscall_ptr: felt*, range_check_ptr, pedersen_
         rtwrk_drawer_contract_address, Uint256(1, 0), 2, pixel_colorizations
     );
 
-    let (colorizers_count) = IRtwrkDrawer.numberOfColorizers(rtwrk_drawer_contract_address, 1, 0);
+    let (colorizers_count) = IRtwrkDrawer.numberOfColorizers(
+        rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 1, 0
+    );
     assert 1 = colorizers_count;
 
     let (colorizers_len, colorizers: felt*) = IRtwrkDrawer.getColorizers(
-        rtwrk_drawer_contract_address, 1, 0
+        rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 1, 0
     );
     assert 1 = colorizers_len;
     assert 1 = colorizers[0];
@@ -847,11 +880,13 @@ func test_rtwrk_drawer_colorizers{syscall_ptr: felt*, range_check_ptr, pedersen_
         rtwrk_drawer_contract_address, Uint256(2, 0), 3, pixel_colorizations
     );
 
-    let (colorizers_count) = IRtwrkDrawer.numberOfColorizers(rtwrk_drawer_contract_address, 1, 0);
+    let (colorizers_count) = IRtwrkDrawer.numberOfColorizers(
+        rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 1, 0
+    );
     assert 2 = colorizers_count;
 
     let (colorizers_len, colorizers: felt*) = IRtwrkDrawer.getColorizers(
-        rtwrk_drawer_contract_address, 1, 0
+        rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 1, 0
     );
     assert 2 = colorizers_len;
     assert 1 = colorizers[0];
@@ -884,9 +919,11 @@ func test_rtwrk_drawer_total_number_colorizations{
     // Getting current # of colorizations
 
     let (count) = IRtwrkDrawer.numberOfPixelColorizations(
-        rtwrk_drawer_contract_address, 1, Uint256(1, 0)
+        rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 1, Uint256(1, 0)
     );
-    let (count_total) = IRtwrkDrawer.totalNumberOfPixelColorizations(rtwrk_drawer_contract_address, 1);
+    let (count_total) = IRtwrkDrawer.totalNumberOfPixelColorizations(
+        rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 1
+    );
     assert 0 = count;
     assert 0 = count_total;
 
@@ -900,9 +937,11 @@ func test_rtwrk_drawer_total_number_colorizations{
     );
 
     let (count) = IRtwrkDrawer.numberOfPixelColorizations(
-        rtwrk_drawer_contract_address, 1, Uint256(1, 0)
+        rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 1, Uint256(1, 0)
     );
-    let (count_total) = IRtwrkDrawer.totalNumberOfPixelColorizations(rtwrk_drawer_contract_address, 1);
+    let (count_total) = IRtwrkDrawer.totalNumberOfPixelColorizations(
+        rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 1
+    );
     assert 3 = count;
     assert 3 = count_total;
 
@@ -924,16 +963,98 @@ func test_rtwrk_drawer_total_number_colorizations{
     // 10 colorizations that will be batched in 2 felts
 
     let (count_1) = IRtwrkDrawer.numberOfPixelColorizations(
-        rtwrk_drawer_contract_address, 1, Uint256(1, 0)
+        rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 1, Uint256(1, 0)
     );
     let (count_2) = IRtwrkDrawer.numberOfPixelColorizations(
-        rtwrk_drawer_contract_address, 1, Uint256(2, 0)
+        rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 1, Uint256(2, 0)
     );
-    let (count_total) = IRtwrkDrawer.totalNumberOfPixelColorizations(rtwrk_drawer_contract_address, 1);
+    let (count_total) = IRtwrkDrawer.totalNumberOfPixelColorizations(
+        rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 1
+    );
     assert 3 = count;
     assert 10 = count_2;
     assert 13 = count_total;
 
     %{ stop_prank_drawer() %}
+    return ();
+}
+
+@view
+func test_rtwrk_drawer_original_rtwrks{
+    syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
+}() {
+    alloc_locals;
+
+    local rtwrk_drawer_contract_address;
+    %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
+
+    let (rtwrk_id) = IRtwrkDrawer.currentRtwrkId(contract_address=rtwrk_drawer_contract_address);
+    assert ORIGINAL_RTWRKS_COUNT + 1 = rtwrk_id;
+
+    // Verify that we're able to get original rtwrks from dw data
+
+    // TODO => add grid 1 when we have the mapping
+
+    let (grid_2_len: felt, grid_2: felt*) = IRtwrkDrawer.getRtwrkGrid(
+        contract_address=rtwrk_drawer_contract_address, rtwrkId=2, rtwrkStep=0
+    );
+    let (grid_7_final_len: felt, grid_7_final: felt*) = IRtwrkDrawer.getRtwrkGrid(
+        contract_address=rtwrk_drawer_contract_address, rtwrkId=7, rtwrkStep=0
+    );
+    let (
+        grid_7_intermediate_109_len: felt, grid_7_intermediate_109: felt*
+    ) = IRtwrkDrawer.getRtwrkGrid(
+        contract_address=rtwrk_drawer_contract_address, rtwrkId=7, rtwrkStep=109
+    );
+    let (grid_7_intermediate_4_len: felt, grid_7_intermediate_4: felt*) = IRtwrkDrawer.getRtwrkGrid(
+        contract_address=rtwrk_drawer_contract_address, rtwrkId=7, rtwrkStep=4
+    );
+
+    // Length is # of pixel * 4 (see PixelColor struct)
+    assert 20 * 20 * 4 = grid_2_len;
+    assert 20 * 20 * 4 = grid_7_final_len;
+    assert 20 * 20 * 4 = grid_7_intermediate_109_len;
+    assert 20 * 20 * 4 = grid_7_intermediate_4_len;
+
+    // TODO => add grid 1 when we have the mapping
+
+    assert TRUE = grid_2[0];
+    assert 242 = grid_2[1];
+    assert 242 = grid_2[2];
+    assert 242 = grid_2[3];
+
+    assert TRUE = grid_2[5 * 4];
+    assert 26 = grid_2[5 * 4 + 1];
+    assert 35 = grid_2[5 * 4 + 2];
+    assert 126 = grid_2[5 * 4 + 3];
+
+    assert TRUE = grid_2[395 * 4];
+    assert 26 = grid_2[395 * 4 + 1];
+    assert 35 = grid_2[395 * 4 + 2];
+    assert 126 = grid_2[395 * 4 + 3];
+
+    assert TRUE = grid_2[399 * 4];
+    assert 242 = grid_2[399 * 4 + 1];
+    assert 242 = grid_2[399 * 4 + 2];
+    assert 242 = grid_2[399 * 4 + 3];
+
+    // Pixel 19 of rtwrk 7 is non colored at step 4,
+    // black at step 109, orange (255,111,0) at final step
+
+    assert FALSE = grid_7_intermediate_4[18 * 4];
+    assert 0 = grid_7_intermediate_4[18 * 4 + 1];
+    assert 0 = grid_7_intermediate_4[18 * 4 + 2];
+    assert 0 = grid_7_intermediate_4[18 * 4 + 3];
+
+    assert TRUE = grid_7_intermediate_109[18 * 4];
+    assert 0 = grid_7_intermediate_109[18 * 4 + 1];
+    assert 0 = grid_7_intermediate_109[18 * 4 + 2];
+    assert 0 = grid_7_intermediate_109[18 * 4 + 3];
+
+    assert TRUE = grid_7_final[18 * 4];
+    assert 255 = grid_7_final[18 * 4 + 1];
+    assert 111 = grid_7_final[18 * 4 + 2];
+    assert 0 = grid_7_final[18 * 4 + 3];
+
     return ();
 }

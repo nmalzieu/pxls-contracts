@@ -5,6 +5,7 @@ from starkware.cairo.common.uint256 import Uint256
 from starkware.cairo.common.alloc import alloc
 
 from pxls.RtwrkDrawer.colorization import PixelColorization, Colorization, save_rtwrk_colorization
+from pxls.RtwrkDrawer.original_rtwrks import ORIGINAL_RTWRKS_COUNT
 
 from pxls.RtwrkDrawer.grid import get_grid
 from pxls.RtwrkDrawer.token_uri import get_rtwrk_token_uri
@@ -71,11 +72,11 @@ func __setup__{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}(
                 pixel_index = random.randrange(400)
                 color_index = random.randrange(95)
                 colorization_packed = (pixel_index * 95 + color_index) * 400 + token_id
-                store(context.rtwrk_drawer_contract_address, "rtwrk_colorizations", [colorization_packed], key=[1,colorization_index])
+                store(context.rtwrk_drawer_contract_address, "rtwrk_colorizations", [colorization_packed], key=[ids.ORIGINAL_RTWRKS_COUNT + 1,colorization_index])
                 colorization_index += 1
-            store(context.rtwrk_drawer_contract_address, "number_of_pixel_colorizations_per_colorizer", [20], key=[1,token_id,0])
-        store(context.rtwrk_drawer_contract_address, "rtwrk_colorization_index", [colorization_index], key=[1])
-        store(context.rtwrk_drawer_contract_address, "number_of_pixel_colorizations_total", [1980], key=[1])
+            store(context.rtwrk_drawer_contract_address, "number_of_pixel_colorizations_per_colorizer", [20], key=[ids.ORIGINAL_RTWRKS_COUNT + 1,token_id,0])
+        store(context.rtwrk_drawer_contract_address, "rtwrk_colorization_index", [colorization_index], key=[ids.ORIGINAL_RTWRKS_COUNT + 1])
+        store(context.rtwrk_drawer_contract_address, "number_of_pixel_colorizations_total", [1980], key=[ids.ORIGINAL_RTWRKS_COUNT + 1])
     %}
 
     // 99 persons colorize 20 pixels in 1 transactions of 20 colorization = 1980 colorizations < MAX
@@ -93,15 +94,15 @@ func __setup__{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}(
                 pixel_colorizations_packed = pixel_colorizations_packed * 38000 + pixel_colorization_packed
                 if (i + 1) % 8 == 0:
                     colorization_packed = pixel_colorizations_packed * 400 + token_id
-                    store(context.rtwrk_drawer_contract_address, "rtwrk_colorizations", [colorization_packed], key=[2,colorization_index])
+                    store(context.rtwrk_drawer_contract_address, "rtwrk_colorizations", [colorization_packed], key=[ids.ORIGINAL_RTWRKS_COUNT + 2,colorization_index])
                     colorization_index += 1
                     pixel_colorizations_packed = 0
             if pixel_colorizations_packed != 0:
                 colorization_packed = pixel_colorizations_packed * 400 + token_id
-                store(context.rtwrk_drawer_contract_address, "rtwrk_colorizations", [colorization_packed], key=[2,colorization_index])
-            store(context.rtwrk_drawer_contract_address, "number_of_pixel_colorizations_per_colorizer", [20], key=[2,token_id,0])
-        store(context.rtwrk_drawer_contract_address, "rtwrk_colorization_index", [colorization_index], key=[2])
-        store(context.rtwrk_drawer_contract_address, "number_of_pixel_colorizations_total", [1980], key=[2])
+                store(context.rtwrk_drawer_contract_address, "rtwrk_colorizations", [colorization_packed], key=[ids.ORIGINAL_RTWRKS_COUNT + 2,colorization_index])
+            store(context.rtwrk_drawer_contract_address, "number_of_pixel_colorizations_per_colorizer", [20], key=[ids.ORIGINAL_RTWRKS_COUNT + 2,token_id,0])
+        store(context.rtwrk_drawer_contract_address, "rtwrk_colorization_index", [colorization_index], key=[ids.ORIGINAL_RTWRKS_COUNT + 2])
+        store(context.rtwrk_drawer_contract_address, "number_of_pixel_colorizations_total", [1980], key=[ids.ORIGINAL_RTWRKS_COUNT + 2])
     %}
 
     %{ stop_prank_drawer() %}
@@ -116,7 +117,9 @@ func test_get_grid_1_by_1{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: Has
     local rtwrk_drawer_contract_address;
     %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
     let (grid_len: felt, grid: felt*) = IRtwrkDrawer.getRtwrkGrid(
-        contract_address=rtwrk_drawer_contract_address, rtwrkId=1, rtwrkStep=0
+        contract_address=rtwrk_drawer_contract_address,
+        rtwrkId=ORIGINAL_RTWRKS_COUNT + 1,
+        rtwrkStep=0,
     );
     return ();
 }
@@ -131,14 +134,16 @@ func test_get_grid_20_by_20{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: H
 
     // Fake rtwrk 2
     %{
-        store(context.rtwrk_drawer_contract_address, "current_rtwrk_id", [2])
-        store(context.rtwrk_drawer_contract_address, "rtwrk_timestamp", [ids.new_timestamp], key=[2])
+        store(context.rtwrk_drawer_contract_address, "current_rtwrk_id", [ids.ORIGINAL_RTWRKS_COUNT + 2])
+        store(context.rtwrk_drawer_contract_address, "rtwrk_timestamp", [ids.new_timestamp], key=[ids.ORIGINAL_RTWRKS_COUNT + 2])
     %}
 
     local rtwrk_drawer_contract_address;
     %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
     let (grid_len: felt, grid: felt*) = IRtwrkDrawer.getRtwrkGrid(
-        contract_address=rtwrk_drawer_contract_address, rtwrkId=2, rtwrkStep=0
+        contract_address=rtwrk_drawer_contract_address,
+        rtwrkId=ORIGINAL_RTWRKS_COUNT + 2,
+        rtwrkStep=0,
     );
     return ();
 }
@@ -152,10 +157,14 @@ func test_get_grid_and_generate_token_uri{
     local rtwrk_drawer_contract_address;
     %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
     let (grid_len: felt, grid: felt*) = IRtwrkDrawer.getRtwrkGrid(
-        contract_address=rtwrk_drawer_contract_address, rtwrkId=1, rtwrkStep=0
+        contract_address=rtwrk_drawer_contract_address,
+        rtwrkId=ORIGINAL_RTWRKS_COUNT + 1,
+        rtwrkStep=0,
     );
 
-    let (token_uri_len: felt, token_uri: felt*) = get_rtwrk_token_uri(20, 1, grid_len, grid);
+    let (token_uri_len: felt, token_uri: felt*) = get_rtwrk_token_uri(
+        20, ORIGINAL_RTWRKS_COUNT + 1, grid_len, grid
+    );
 
     return ();
 }
@@ -190,8 +199,8 @@ func test_colorize_20_by_20{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: H
 
     // Fake rtwrk 2
     %{
-        store(context.rtwrk_drawer_contract_address, "current_rtwrk_id", [2])
-        store(context.rtwrk_drawer_contract_address, "rtwrk_timestamp", [ids.new_timestamp], key=[2])
+        store(context.rtwrk_drawer_contract_address, "current_rtwrk_id", [ids.ORIGINAL_RTWRKS_COUNT+2])
+        store(context.rtwrk_drawer_contract_address, "rtwrk_timestamp", [ids.new_timestamp], key=[ids.ORIGINAL_RTWRKS_COUNT+2])
     %}
 
     local rtwrk_drawer_contract_address;
@@ -274,8 +283,8 @@ func test_colorize_hit_limit_20_by_20{
 
     // Fake rtwrk 2
     %{
-        store(context.rtwrk_drawer_contract_address, "current_rtwrk_id", [2])
-        store(context.rtwrk_drawer_contract_address, "rtwrk_timestamp", [ids.new_timestamp], key=[2])
+        store(context.rtwrk_drawer_contract_address, "current_rtwrk_id", [ids.ORIGINAL_RTWRKS_COUNT+2])
+        store(context.rtwrk_drawer_contract_address, "rtwrk_timestamp", [ids.new_timestamp], key=[ids.ORIGINAL_RTWRKS_COUNT+2])
     %}
 
     %{ stop_prank_drawer = start_prank(context.account, target_contract_address=context.rtwrk_drawer_contract_address) %}
@@ -325,7 +334,9 @@ func test_get_colorizers_1_by_1{syscall_ptr: felt*, range_check_ptr, pedersen_pt
     local rtwrk_drawer_contract_address;
     %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
     let (count: felt) = IRtwrkDrawer.numberOfColorizers(
-        contract_address=rtwrk_drawer_contract_address, rtwrkId=1, rtwrkStep=0
+        contract_address=rtwrk_drawer_contract_address,
+        rtwrkId=ORIGINAL_RTWRKS_COUNT + 1,
+        rtwrkStep=0,
     );
     assert 99 = count;
     return ();
@@ -342,14 +353,16 @@ func test_get_colorizers_20_by_20{syscall_ptr: felt*, range_check_ptr, pedersen_
 
     // Fake rtwrk 2
     %{
-        store(context.rtwrk_drawer_contract_address, "current_rtwrk_id", [2])
-        store(context.rtwrk_drawer_contract_address, "rtwrk_timestamp", [ids.new_timestamp], key=[2])
+        store(context.rtwrk_drawer_contract_address, "current_rtwrk_id", [ids.ORIGINAL_RTWRKS_COUNT+2])
+        store(context.rtwrk_drawer_contract_address, "rtwrk_timestamp", [ids.new_timestamp], key=[ids.ORIGINAL_RTWRKS_COUNT+2])
     %}
 
     local rtwrk_drawer_contract_address;
     %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
     let (count: felt) = IRtwrkDrawer.numberOfColorizers(
-        contract_address=rtwrk_drawer_contract_address, rtwrkId=2, rtwrkStep=0
+        contract_address=rtwrk_drawer_contract_address,
+        rtwrkId=ORIGINAL_RTWRKS_COUNT + 2,
+        rtwrkStep=0,
     );
     assert 99 = count;
     return ();
@@ -364,7 +377,9 @@ func test_number_colorizations_1_by_1{
     local rtwrk_drawer_contract_address;
     %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
     let (count: felt) = IRtwrkDrawer.numberOfPixelColorizations(
-        contract_address=rtwrk_drawer_contract_address, rtwrkId=1, pxlId=Uint256(2, 0)
+        contract_address=rtwrk_drawer_contract_address,
+        rtwrkId=ORIGINAL_RTWRKS_COUNT + 1,
+        pxlId=Uint256(2, 0),
     );
     assert 20 = count;
     return ();
@@ -382,14 +397,16 @@ func test_number_colorizations_20_by_20{
 
     // Fake rtwrk 2
     %{
-        store(context.rtwrk_drawer_contract_address, "current_rtwrk_id", [2])
-        store(context.rtwrk_drawer_contract_address, "rtwrk_timestamp", [ids.new_timestamp], key=[2])
+        store(context.rtwrk_drawer_contract_address, "current_rtwrk_id", [ids.ORIGINAL_RTWRKS_COUNT+2])
+        store(context.rtwrk_drawer_contract_address, "rtwrk_timestamp", [ids.new_timestamp], key=[ids.ORIGINAL_RTWRKS_COUNT+2])
     %}
 
     local rtwrk_drawer_contract_address;
     %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
     let (count: felt) = IRtwrkDrawer.numberOfPixelColorizations(
-        contract_address=rtwrk_drawer_contract_address, rtwrkId=2, pxlId=Uint256(2, 0)
+        contract_address=rtwrk_drawer_contract_address,
+        rtwrkId=ORIGINAL_RTWRKS_COUNT + 2,
+        pxlId=Uint256(2, 0),
     );
     assert 20 = count;
     return ();

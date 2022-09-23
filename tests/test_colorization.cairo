@@ -17,6 +17,7 @@ from pxls.RtwrkDrawer.colorization import (
     save_rtwrk_colorization,
     get_all_rtwrk_colorizations,
 )
+from pxls.RtwrkDrawer.original_rtwrks import ORIGINAL_RTWRKS_COUNT
 from pxls.RtwrkDrawer.storage import max_pixel_colorizations_per_colorizer
 
 from pxls.RtwrkDrawer.grid import get_grid
@@ -155,19 +156,19 @@ func test_save_rtwrk_colorization{syscall_ptr: felt*, range_check_ptr, pedersen_
     let (other_colorization: Colorization) = fixture_colorization_2();
 
     save_rtwrk_colorization(
-        1,
+        ORIGINAL_RTWRKS_COUNT + 1,
         one_colorization.pxl_id,
         one_colorization.pixel_colorizations_len,
         one_colorization.pixel_colorizations,
     );
     save_rtwrk_colorization(
-        1,
+        ORIGINAL_RTWRKS_COUNT + 1,
         other_colorization.pxl_id,
         other_colorization.pixel_colorizations_len,
         other_colorization.pixel_colorizations,
     );
 
-    let (colorization_len: felt, colorizations: Colorization*) = get_all_rtwrk_colorizations(1, 0);
+    let (colorization_len: felt, colorizations: Colorization*) = get_all_rtwrk_colorizations(ORIGINAL_RTWRKS_COUNT + 1, 0);
 
     assert 2 = colorization_len;
 
@@ -185,7 +186,7 @@ func test_save_rtwrk_colorization{syscall_ptr: felt*, range_check_ptr, pedersen_
     assert 46 = colorizations[1].pixel_colorizations[0].pixel_index;
     assert 23 = colorizations[1].pixel_colorizations[0].color_index;
 
-    let (grid_len: felt, grid: felt*) = get_grid(1, 400, 0);
+    let (grid_len: felt, grid: felt*) = get_grid(ORIGINAL_RTWRKS_COUNT + 1, 400, 0);
     assert 1600 = grid_len;
 
     // We know pixel_index 35 is not colorized
@@ -239,9 +240,9 @@ func test_save_rtwrk_colorizations_per_batch{
     assert pixel_colorizations[12] = PixelColorization(pixel_index=1, color_index=12);
 
     // Saving 13 pixel colorizations, more than 8, so 2 batches (1 of 8 and 1 of 5)
-    save_rtwrk_colorization(1, Uint256(35, 0), 13, pixel_colorizations);
+    save_rtwrk_colorization(ORIGINAL_RTWRKS_COUNT + 1, Uint256(35, 0), 13, pixel_colorizations);
 
-    let (colorizations_len: felt, colorizations: Colorization*) = get_all_rtwrk_colorizations(1, 0);
+    let (colorizations_len: felt, colorizations: Colorization*) = get_all_rtwrk_colorizations(ORIGINAL_RTWRKS_COUNT + 1, 0);
 
     assert 2 = colorizations_len;
 

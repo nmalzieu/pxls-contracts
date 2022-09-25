@@ -50,7 +50,7 @@ and keep track of the address to which they are deployed.
 ## ERC721 Contract
 
   
-    protostar -p testnet deploy ./build/pixel_erc721.json --inputs 1350069363 1347963987 20 0 "<owner_account_address>" "<pxls_1_100_address>" "<pxls_101_200_address>" "<pxls_201_300_address>" "<pxls_301_400_address>"
+    protostar -p testnet deploy ./build/pxl_erc721.json --inputs 1350069363 1347963987 20 0 "<owner_account_address>" "<pxls_1_100_address>" "<pxls_101_200_address>" "<pxls_201_300_address>" "<pxls_301_400_address>"
 
 
   
@@ -68,7 +68,7 @@ Current IPFS CID : `QmQvfChVRwfmzsjnHvm27R3c4UYqUod8fzzYrvLNuRhAHK`
 ## Drawer Contract
 
   
-    protostar -p testnet deploy ./build/pixel_drawer.json --inputs "<owner_account_address>" "<pxl_erc721_contract_address>" <max_colorizations_per_token>
+    protostar -p testnet deploy ./build/rtwrk_drawer.json --inputs "<owner_account_address>" "<pxl_erc721_contract_address>" <max_colorizations_per_token>
 
 
 

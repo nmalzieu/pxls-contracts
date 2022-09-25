@@ -29,7 +29,7 @@ gateway_url="http://127.0.0.1:5050/"
 chain_id=1
 
 [profile.testnet.protostar.deploy]
-network="alpha-goerli"
+network="testnet"
 
 [profile.mainnet.protostar.deploy]
-network="alpha-mainnet"
+network="mainnet"

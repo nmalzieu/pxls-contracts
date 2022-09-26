@@ -94,11 +94,19 @@ func assert_bid_amount_valid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, ran
     alloc_locals;
     // Let's make sure the amount of the bid is more than last bid + increment
     let (last_bid_id) = auction_bids_count.read(auction_id);
-    let (local last_bid_amount) = bid_amount.read(auction_id, last_bid_id - 1);
-    local minimum_new_bid_amount = last_bid_amount + BID_INCREMENT;
-    with_attr error_message(
-            "Bid amount must be at least {minimum_new_bid_amount} since last bid is {last_bid_amount}") {
-        assert_le(minimum_new_bid_amount, bid.amount);
+    if (last_bid_id == 0) {
+        local minimum_new_bid_amount = BID_INCREMENT;
+        with_attr error_message(
+                "Bid amount must be at least {minimum_new_bid_amount} since last bid is {last_bid_amount}") {
+            assert_le(minimum_new_bid_amount, bid.amount);
+        }
+    } else {
+        let (local last_bid_amount) = bid_amount.read(auction_id, last_bid_id - 1);
+        local minimum_new_bid_amount = last_bid_amount + BID_INCREMENT;
+        with_attr error_message(
+                "Bid amount must be at least {minimum_new_bid_amount} since last bid is {last_bid_amount}") {
+            assert_le(minimum_new_bid_amount, bid.amount);
+        }
     }
     return ();
 }
@@ -157,5 +165,9 @@ func place_bid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     assert_bid_valid(auction_id, bid);
     // Then let's move ETH from bidder's wallet to the smart contract
     transfer_amount_from_bidder(bid);
+
+    // TODO => test
+    // TODO => reimburse previous bidder (if any !)
+    // TODO => if everything worked, store the bid
     return ();
 }

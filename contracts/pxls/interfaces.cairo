@@ -12,8 +12,6 @@ namespace IPxlMetadata {
 
 @contract_interface
 namespace IPxlERC721 {
-    func initialize(pixel_drawer_address: felt) {
-    }
     func matrixSize() -> (size: Uint256) {
     }
     func maxSupply() -> (count: Uint256) {
@@ -70,12 +68,42 @@ namespace IRtwrkDrawer {
     }
     func numberOfColorizers(rtwrkId: felt, rtwrkStep: felt) -> (count: felt) {
     }
-    func colorizers(rtwrkId: felt, rtwrkStep: felt) -> (
-        colorizers_len: felt, colorizers: felt*
-    ) {
+    func colorizers(rtwrkId: felt, rtwrkStep: felt) -> (colorizers_len: felt, colorizers: felt*) {
     }
     func rtwrkTheme(rtwrkId: felt) -> (theme_len: felt, theme: felt*) {
     }
-    func rtwrkStepsCount(rtwrkId: felt) -> (steps_count: felt){
+    func rtwrkStepsCount(rtwrkId: felt) -> (steps_count: felt) {
+    }
+}
+
+@contract_interface
+namespace IRtwrkERC721 {
+    func totalSupply() -> (count: Uint256) {
+    }
+    func mint(to: felt) {
+    }
+    func transferFrom(from_: felt, to: felt, tokenId: Uint256) {
+    }
+    func setContractURIHash(hash_len: felt, hash: felt*) {
+    }
+    func contractURI() -> (contractURI_len: felt, contractURI: felt*) {
+    }
+    func exists(tokenId: Uint256) -> (token_exists: felt) {
+    }
+    func tokenURI(tokenId: Uint256) -> (tokenURI_len: felt, tokenURI: felt*) {
+    }
+    func owner() -> (owner: felt) {
+    }
+    func transferOwnership(newOwner: felt) -> () {
+    }
+    func balanceOf(owner: felt) -> (balance: Uint256) {
+    }
+}
+
+@contract_interface
+namespace IEthERC20 {
+    func transfer(recipient: felt, amount: felt) {
+    }
+    func transferFrom(sender: felt, recipient: felt, amount: felt) {
     }
 }

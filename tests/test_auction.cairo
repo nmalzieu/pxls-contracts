@@ -4,7 +4,12 @@ from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.bool import TRUE, FALSE
 
 from pxls.RtwrkThemeAuction.auction import is_running_auction, launch_auction
-from pxls.RtwrkThemeAuction.storage import auction_timestamp, current_auction_id
+from pxls.RtwrkThemeAuction.storage import (
+    auction_timestamp,
+    current_auction_id,
+    rtwrk_drawer_address,
+    rtwrk_erc721_address,
+)
 
 @view
 func test_is_running_auction{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
@@ -29,11 +34,20 @@ func test_is_running_auction{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: 
     return ();
 }
 
-
-
 @view
 func test_launch_auction{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
     %{ warp(1664192254) %}
+
+    let rtwrk_contract_address = 'rtwrk_contract_address';
+    rtwrk_drawer_address.write(rtwrk_contract_address);
+
+    let rtwrk_collection_address = 'rtwrk_collection_address';
+    rtwrk_erc721_address.write(rtwrk_collection_address);
+
+    %{ stop_mock_rtwrk_id = mock_call(ids.rtwrk_contract_address, "currentRtwrkId", [1]) %}
+    %{ stop_mock_rtwrk_timestamp = mock_call(ids.rtwrk_contract_address, "rtwrkTimestamp", [1664192254 - 26 * 3600]) %}
+    %{ stop_mock_rtwrk_minted = mock_call(ids.rtwrk_collection_address, "exists", [1]) %}
+
     let (running) = is_running_auction();
     assert FALSE = running;
     let (current_id) = current_auction_id.read();
@@ -49,6 +63,56 @@ func test_launch_auction{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: Hash
     assert 1664192254 = timestamp;
 
     %{ expect_revert(error_message="Cannot call this method while an auction is running") %}
+    launch_auction();
+
+    return ();
+}
+
+@view
+func test_launch_auction_rtwrk_running{
+    syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
+}() {
+    %{ warp(1664192254) %}
+
+    let rtwrk_contract_address = 'rtwrk_contract_address';
+    rtwrk_drawer_address.write(rtwrk_contract_address);
+
+    %{ stop_mock_rtwrk_id = mock_call(ids.rtwrk_contract_address, "currentRtwrkId", [1]) %}
+    %{ stop_mock_rtwrk_timestamp = mock_call(ids.rtwrk_contract_address, "rtwrkTimestamp", [1664192254]) %}
+
+    let (running) = is_running_auction();
+    assert FALSE = running;
+    let (current_id) = current_auction_id.read();
+    assert 0 = current_id;
+
+    %{ expect_revert(error_message="Cannot call this method while an rtwrk is running") %}
+    launch_auction();
+
+    return ();
+}
+
+@view
+func test_launch_auction_last_rtwrk_not_minted{
+    syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
+}() {
+    %{ warp(1664192254) %}
+
+    let rtwrk_contract_address = 'rtwrk_contract_address';
+    rtwrk_drawer_address.write(rtwrk_contract_address);
+
+    let rtwrk_collection_address = 'rtwrk_collection_address';
+    rtwrk_erc721_address.write(rtwrk_collection_address);
+
+    %{ stop_mock_rtwrk_id = mock_call(ids.rtwrk_contract_address, "currentRtwrkId", [1]) %}
+    %{ stop_mock_rtwrk_timestamp = mock_call(ids.rtwrk_contract_address, "rtwrkTimestamp", [1664192254 - 26 * 3600]) %}
+    %{ stop_mock_rtwrk_minted = mock_call(ids.rtwrk_collection_address, "exists", [0]) %}
+
+    let (running) = is_running_auction();
+    assert FALSE = running;
+    let (current_id) = current_auction_id.read();
+    assert 0 = current_id;
+
+    %{ expect_revert(error_message="Rtwrk 1 has not been minted") %}
     launch_auction();
 
     return ();

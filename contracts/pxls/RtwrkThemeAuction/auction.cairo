@@ -6,6 +6,8 @@ from starkware.cairo.common.bool import TRUE, FALSE
 
 from pxls.RtwrkThemeAuction.storage import current_auction_id, auction_timestamp
 from pxls.RtwrkThemeAuction.variables import BLOCK_TIME_BUFFER
+from pxls.RtwrkThemeAuction.drawer import assert_no_running_rtwrk
+from pxls.RtwrkThemeAuction.rtwrk_collection import assert_current_rtwrk_is_minted
 
 // 1 full day in seconds (get_block_timestamp returns timestamp in seconds)
 const DAY_DURATION = 24 * 3600;
@@ -44,6 +46,8 @@ func assert_no_running_auction{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, r
 
 func launch_auction{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() {
     assert_no_running_auction();
+    assert_no_running_rtwrk();
+    assert_current_rtwrk_is_minted();
     let (current_id: felt) = current_auction_id.read();
     let new_auction_id = current_id + 1;
     let (block_timestamp) = get_block_timestamp();

@@ -97,7 +97,7 @@ func assert_bid_amount_valid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, ran
     if (last_bid_id == 0) {
         local minimum_new_bid_amount = BID_INCREMENT;
         with_attr error_message(
-                "Bid amount must be at least {minimum_new_bid_amount} since last bid is {last_bid_amount}") {
+                "Bid amount must be at least {minimum_new_bid_amount} since last bid is 0") {
             assert_le(minimum_new_bid_amount, bid.amount);
         }
     } else {

@@ -87,7 +87,24 @@ func test_validate_bid_theme_too_long{
 }
 
 @view
-func test_validate_bid_amount_too_low{
+func test_validate_first_bid_amount_too_low{
+    syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
+}() {
+    alloc_locals;
+    let (theme: felt*) = alloc();
+    assert theme[0] = 'My super theme';
+
+    let bid = Bid(account='account', amount=2000000000000000, theme_len=1, theme=theme);
+
+    %{ expect_revert(error_message="Bid amount must be at least 5000000000000000 since last bid is 0") %}
+    assert_bid_valid(auction_id=2, bid=bid);
+
+    return ();
+}
+
+
+@view
+func test_validate_second_bid_amount_too_low{
     syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
 }() {
     alloc_locals;

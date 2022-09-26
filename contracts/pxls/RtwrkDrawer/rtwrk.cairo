@@ -8,8 +8,11 @@ from starkware.starknet.common.syscalls import get_block_timestamp
 from pxls.RtwrkDrawer.storage import current_rtwrk_id, rtwrk_timestamp, rtwrk_theme
 
 // 1 full day in seconds (get_block_timestamp returns timestamp in seconds)
-// 24 hours + margin of 2 hours for block time
-const DAY_DURATION = 93600;
+const DAY_DURATION = 24 * 3600;
+// Block time buffer of 2 hours right now
+const BLOCK_TIME_BUFFER = 2 * 3600;
+
+const DAY_DURATION_WITH_BUFFER = DAY_DURATION + BLOCK_TIME_BUFFER;
 
 //
 // Methods about the current rtwrk, if a rtwrk
@@ -44,8 +47,8 @@ func should_launch_new_rtwrk{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, ran
     let (block_timestamp) = get_block_timestamp();
     let (last_rtwrk_timestamp) = current_rtwrk_timestamp();
     let duration = block_timestamp - last_rtwrk_timestamp;
-    // if duration >= DAY_DURATION (last drawing lasted 1 day)
-    let should_launch = is_le(DAY_DURATION, duration);
+    // if duration >= DAY_DURATION_WITH_BUFFER (last drawing lasted 1 day)
+    let should_launch = is_le(DAY_DURATION_WITH_BUFFER, duration);
     return (should_launch=should_launch);
 }
 

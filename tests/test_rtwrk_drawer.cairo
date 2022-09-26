@@ -212,7 +212,9 @@ func test_rtwrk_drawer_pixel_wrong_color{
     %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
 
     // Get current color
-    let (grid_len, grid: PixelColor*) = IRtwrkDrawer.rtwrkGrid(rtwrk_drawer_contract_address, 1, 0);
+    let (grid_len, grid: PixelColor*) = IRtwrkDrawer.rtwrkGrid(
+        rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 1, 0
+    );
     let pixel_color = grid[12];
     assert pixel_color.set = 0;  // Unset
     assert pixel_color.color = Color(0, 0, 0);
@@ -277,6 +279,20 @@ func test_rtwrk_drawer_colorize_pixels{
     let (pixel_colorizations: PixelColorization*) = alloc();
     assert pixel_colorizations[0] = PixelColorization(pixel_index=12, color_index=93);
     assert pixel_colorizations[1] = PixelColorization(pixel_index=300, color_index=2);
+
+    %{
+        expect_events({
+               "name": "pixels_colorized",
+               "data": {
+                   "pxl_id": 1,
+                   "account_address": context.account,
+                   "pixel_colorizations": [
+                       {"pixel_index": 12, "color_index": 93},
+                       {"pixel_index": 300, "color_index": 2}
+                   ]
+               }
+           })
+    %}
 
     IRtwrkDrawer.colorizePixels(
         rtwrk_drawer_contract_address, Uint256(1, 0), 2, pixel_colorizations

@@ -18,6 +18,7 @@ from pxls.RtwrkDrawer.storage import (
     number_of_pixel_colorizations_per_colorizer,
     number_of_pixel_colorizations_total,
 )
+from pxls.RtwrkDrawer.events import pixels_colorized
 from pxls.RtwrkDrawer.rtwrk import (
     assert_rtwrk_id_exists,
     get_rtwrk_timestamp,
@@ -198,6 +199,7 @@ func rtwrkStepsCount{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check
 func colorizePixels{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(
     pxlId: Uint256, pixel_colorizations_len: felt, pixel_colorizations: PixelColorization*
 ) {
+    alloc_locals;
     let (caller_address) = get_caller_address();
 
     assert_pxl_owner(caller_address, pxlId);
@@ -206,6 +208,14 @@ func colorizePixels{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_
     let (rtwrk_id) = current_rtwrk_id.read();
 
     save_rtwrk_colorization(rtwrk_id, pxlId, pixel_colorizations_len, pixel_colorizations);
+
+    pixels_colorized.emit(
+        pxl_id=pxlId,
+        account_address=caller_address,
+        pixel_colorizations_len=pixel_colorizations_len,
+        pixel_colorizations=pixel_colorizations,
+    );
+
     return ();
 }
 

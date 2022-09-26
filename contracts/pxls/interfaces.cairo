@@ -56,7 +56,7 @@ namespace IRtwrkDrawer {
     }
     func launchNewRtwrkIfNecessary(theme_len: felt, theme: felt*) -> (launched: felt) {
     }
-    func getRtwrkGrid(rtwrkId: felt, rtwrkStep: felt) -> (grid_len: felt, grid: felt*) {
+    func rtwrkGrid(rtwrkId: felt, rtwrkStep: felt) -> (grid_len: felt, grid: felt*) {
     }
     func owner() -> (owner: felt) {
     }
@@ -76,10 +76,12 @@ namespace IRtwrkDrawer {
     }
     func numberOfColorizers(rtwrkId: felt, rtwrkStep: felt) -> (count: felt) {
     }
-    func getColorizers(rtwrkId: felt, rtwrkStep: felt) -> (
+    func colorizers(rtwrkId: felt, rtwrkStep: felt) -> (
         colorizers_len: felt, colorizers: felt*
     ) {
     }
     func rtwrkTheme(rtwrkId: felt) -> (theme_len: felt, theme: felt*) {
+    }
+    func rtwrkStepsCount(rtwrkId: felt) -> (steps_count: felt){
     }
 }

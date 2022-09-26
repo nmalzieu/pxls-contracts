@@ -32,6 +32,7 @@ from pxls.RtwrkDrawer.colorization import (
     save_rtwrk_colorization,
     get_all_rtwrk_colorizations,
     get_colorizers,
+    count_rtwrk_colorizations,
 )
 from pxls.RtwrkDrawer.grid import get_grid
 from pxls.RtwrkDrawer.original_rtwrks import initialize_original_rtwrks
@@ -113,7 +114,7 @@ func currentRtwrkId{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_
 }
 
 @view
-func getRtwrkGrid{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(
+func rtwrkGrid{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(
     rtwrkId: felt, rtwrkStep: felt
 ) -> (grid_len: felt, grid: felt*) {
     alloc_locals;
@@ -167,7 +168,7 @@ func numberOfColorizers{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_ch
 }
 
 @view
-func getColorizers{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+func colorizers{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     rtwrkId: felt, rtwrkStep: felt
 ) -> (colorizers_len: felt, colorizers: felt*) {
     assert_rtwrk_id_exists(rtwrkId);
@@ -179,6 +180,14 @@ func rtwrkTheme{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}
     theme_len: felt, theme: felt*
 ) {
     return read_theme(rtwrkId);
+}
+
+@view
+func rtwrkStepsCount{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    rtwrkId: felt
+) -> (steps_count: felt) {
+    let (count) = count_rtwrk_colorizations(rtwrkId, 0);
+    return (steps_count=count);
 }
 
 //

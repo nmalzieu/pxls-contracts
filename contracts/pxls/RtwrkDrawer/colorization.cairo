@@ -390,3 +390,15 @@ func fill_colorizations_per_pxl_id{syscall_ptr: felt*, pedersen_ptr: HashBuiltin
         );
     }
 }
+
+func count_rtwrk_colorizations{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    rtwrk_id: felt, current_count: felt
+) -> (count: felt) {
+    let (storage_colorization_packed) = get_rtwrk_colorization_from_storage_or_dw(
+        rtwrk_id, current_count
+    );
+    if (storage_colorization_packed == 0) {
+        return (count=current_count);
+    }
+    return count_rtwrk_colorizations(rtwrk_id, current_count + 1);
+}

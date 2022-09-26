@@ -212,9 +212,7 @@ func test_rtwrk_drawer_pixel_wrong_color{
     %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
 
     // Get current color
-    let (grid_len, grid: PixelColor*) = IRtwrkDrawer.getRtwrkGrid(
-        rtwrk_drawer_contract_address, 1, 0
-    );
+    let (grid_len, grid: PixelColor*) = IRtwrkDrawer.rtwrkGrid(rtwrk_drawer_contract_address, 1, 0);
     let pixel_color = grid[12];
     assert pixel_color.set = 0;  // Unset
     assert pixel_color.color = Color(0, 0, 0);
@@ -252,14 +250,14 @@ func test_rtwrk_drawer_colorize_pixels{
     %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
 
     // Get current colors
-    let (grid_len, grid: PixelColor*) = IRtwrkDrawer.getRtwrkGrid(
+    let (grid_len, grid: PixelColor*) = IRtwrkDrawer.rtwrkGrid(
         rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 1, 0
     );
     let pixel_1_color = grid[12];
     assert 0 = pixel_1_color.set;  // Unset
     assert Color(0, 0, 0) = pixel_1_color.color;
 
-    let (grid_len, grid: PixelColor*) = IRtwrkDrawer.getRtwrkGrid(
+    let (grid_len, grid: PixelColor*) = IRtwrkDrawer.rtwrkGrid(
         rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 1, 0
     );
     let pixel_2_color = grid[300];
@@ -285,13 +283,13 @@ func test_rtwrk_drawer_colorize_pixels{
     );
 
     // Check pixel colors have been set
-    let (grid_len, grid: PixelColor*) = IRtwrkDrawer.getRtwrkGrid(
+    let (grid_len, grid: PixelColor*) = IRtwrkDrawer.rtwrkGrid(
         rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 1, 0
     );
     let pixel_1_color = grid[12];
     assert TRUE = pixel_1_color.set;  // Set
     assert Color(242, 242, 242) = pixel_1_color.color;
-    let (grid_len, grid: PixelColor*) = IRtwrkDrawer.getRtwrkGrid(
+    let (grid_len, grid: PixelColor*) = IRtwrkDrawer.rtwrkGrid(
         rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 1, 0
     );
     let pixel_2_color = grid[300];
@@ -488,12 +486,12 @@ func test_rtwrk_drawer_get_grid{syscall_ptr: felt*, range_check_ptr, pedersen_pt
         rtwrk_drawer_contract_address, Uint256(1, 0), 1, pixel_colorizations
     );
 
-    let (grid_1_len: felt, grid_1: felt*) = IRtwrkDrawer.getRtwrkGrid(
+    let (grid_1_len: felt, grid_1: felt*) = IRtwrkDrawer.rtwrkGrid(
         contract_address=rtwrk_drawer_contract_address,
         rtwrkId=ORIGINAL_RTWRKS_COUNT + 1,
         rtwrkStep=0,
     );
-    let (grid_2_len: felt, grid_2: felt*) = IRtwrkDrawer.getRtwrkGrid(
+    let (grid_2_len: felt, grid_2: felt*) = IRtwrkDrawer.rtwrkGrid(
         contract_address=rtwrk_drawer_contract_address,
         rtwrkId=ORIGINAL_RTWRKS_COUNT + 2,
         rtwrkStep=0,
@@ -529,7 +527,7 @@ func test_rtwrk_drawer_get_grid{syscall_ptr: felt*, range_check_ptr, pedersen_pt
 
     // Get final grid (step=0)
 
-    let (grid_2_len: felt, grid_2: felt*) = IRtwrkDrawer.getRtwrkGrid(
+    let (grid_2_len: felt, grid_2: felt*) = IRtwrkDrawer.rtwrkGrid(
         contract_address=rtwrk_drawer_contract_address,
         rtwrkId=ORIGINAL_RTWRKS_COUNT + 2,
         rtwrkStep=0,
@@ -544,7 +542,7 @@ func test_rtwrk_drawer_get_grid{syscall_ptr: felt*, range_check_ptr, pedersen_pt
 
     // Get intermediary grid (step=1)
 
-    let (grid_2_len: felt, grid_2: felt*) = IRtwrkDrawer.getRtwrkGrid(
+    let (grid_2_len: felt, grid_2: felt*) = IRtwrkDrawer.rtwrkGrid(
         contract_address=rtwrk_drawer_contract_address,
         rtwrkId=ORIGINAL_RTWRKS_COUNT + 2,
         rtwrkStep=1,
@@ -559,7 +557,7 @@ func test_rtwrk_drawer_get_grid{syscall_ptr: felt*, range_check_ptr, pedersen_pt
 
     // Get final grid (step=2)
 
-    let (grid_2_len: felt, grid_2: felt*) = IRtwrkDrawer.getRtwrkGrid(
+    let (grid_2_len: felt, grid_2: felt*) = IRtwrkDrawer.rtwrkGrid(
         contract_address=rtwrk_drawer_contract_address,
         rtwrkId=ORIGINAL_RTWRKS_COUNT + 2,
         rtwrkStep=2,
@@ -574,7 +572,7 @@ func test_rtwrk_drawer_get_grid{syscall_ptr: felt*, range_check_ptr, pedersen_pt
 
     // Get final grid (step=10, we can query over last step)
 
-    let (grid_2_len: felt, grid_2: felt*) = IRtwrkDrawer.getRtwrkGrid(
+    let (grid_2_len: felt, grid_2: felt*) = IRtwrkDrawer.rtwrkGrid(
         contract_address=rtwrk_drawer_contract_address,
         rtwrkId=ORIGINAL_RTWRKS_COUNT + 2,
         rtwrkStep=10,
@@ -586,6 +584,12 @@ func test_rtwrk_drawer_get_grid{syscall_ptr: felt*, range_check_ptr, pedersen_pt
     assert 156 = grid_2[18 * 4 + 1];
     assert 39 = grid_2[18 * 4 + 2];
     assert 176 = grid_2[18 * 4 + 3];
+
+    // Verify we can get back steps from getter
+    let (steps_count) = IRtwrkDrawer.rtwrkStepsCount(
+        contract_address=rtwrk_drawer_contract_address, rtwrkId=ORIGINAL_RTWRKS_COUNT + 2
+    );
+    assert 2 = steps_count;
 
     return ();
 }
@@ -723,7 +727,7 @@ func test_rtwrk_drawer_number_colorizations{
     %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
 
     // Get current color
-    let (grid_len, grid: PixelColor*) = IRtwrkDrawer.getRtwrkGrid(
+    let (grid_len, grid: PixelColor*) = IRtwrkDrawer.rtwrkGrid(
         rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 1, 0
     );
     let pixel_color = grid[12];
@@ -863,7 +867,7 @@ func test_rtwrk_drawer_colorizers{syscall_ptr: felt*, range_check_ptr, pedersen_
     );
     assert 1 = colorizers_count;
 
-    let (colorizers_len, colorizers: felt*) = IRtwrkDrawer.getColorizers(
+    let (colorizers_len, colorizers: felt*) = IRtwrkDrawer.colorizers(
         rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 1, 0
     );
     assert 1 = colorizers_len;
@@ -885,7 +889,7 @@ func test_rtwrk_drawer_colorizers{syscall_ptr: felt*, range_check_ptr, pedersen_
     );
     assert 2 = colorizers_count;
 
-    let (colorizers_len, colorizers: felt*) = IRtwrkDrawer.getColorizers(
+    let (colorizers_len, colorizers: felt*) = IRtwrkDrawer.colorizers(
         rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 1, 0
     );
     assert 2 = colorizers_len;
@@ -993,22 +997,22 @@ func test_rtwrk_drawer_original_rtwrks{
 
     // Verify that we're able to get original rtwrks from dw data
 
-    let (grid_1_len: felt, grid_1: felt*) = IRtwrkDrawer.getRtwrkGrid(
+    let (grid_1_len: felt, grid_1: felt*) = IRtwrkDrawer.rtwrkGrid(
         contract_address=rtwrk_drawer_contract_address, rtwrkId=1, rtwrkStep=0
     );
 
-    let (grid_2_len: felt, grid_2: felt*) = IRtwrkDrawer.getRtwrkGrid(
+    let (grid_2_len: felt, grid_2: felt*) = IRtwrkDrawer.rtwrkGrid(
         contract_address=rtwrk_drawer_contract_address, rtwrkId=2, rtwrkStep=0
     );
-    let (grid_7_final_len: felt, grid_7_final: felt*) = IRtwrkDrawer.getRtwrkGrid(
+    let (grid_7_final_len: felt, grid_7_final: felt*) = IRtwrkDrawer.rtwrkGrid(
         contract_address=rtwrk_drawer_contract_address, rtwrkId=7, rtwrkStep=0
     );
     let (
         grid_7_intermediate_109_len: felt, grid_7_intermediate_109: felt*
-    ) = IRtwrkDrawer.getRtwrkGrid(
+    ) = IRtwrkDrawer.rtwrkGrid(
         contract_address=rtwrk_drawer_contract_address, rtwrkId=7, rtwrkStep=109
     );
-    let (grid_7_intermediate_4_len: felt, grid_7_intermediate_4: felt*) = IRtwrkDrawer.getRtwrkGrid(
+    let (grid_7_intermediate_4_len: felt, grid_7_intermediate_4: felt*) = IRtwrkDrawer.rtwrkGrid(
         contract_address=rtwrk_drawer_contract_address, rtwrkId=7, rtwrkStep=4
     );
 

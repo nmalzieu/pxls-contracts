@@ -116,7 +116,7 @@ func test_get_grid_1_by_1{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: Has
 
     local rtwrk_drawer_contract_address;
     %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
-    let (grid_len: felt, grid: felt*) = IRtwrkDrawer.getRtwrkGrid(
+    let (grid_len: felt, grid: felt*) = IRtwrkDrawer.rtwrkGrid(
         contract_address=rtwrk_drawer_contract_address,
         rtwrkId=ORIGINAL_RTWRKS_COUNT + 1,
         rtwrkStep=0,
@@ -140,7 +140,7 @@ func test_get_grid_20_by_20{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: H
 
     local rtwrk_drawer_contract_address;
     %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
-    let (grid_len: felt, grid: felt*) = IRtwrkDrawer.getRtwrkGrid(
+    let (grid_len: felt, grid: felt*) = IRtwrkDrawer.rtwrkGrid(
         contract_address=rtwrk_drawer_contract_address,
         rtwrkId=ORIGINAL_RTWRKS_COUNT + 2,
         rtwrkStep=0,
@@ -156,7 +156,7 @@ func test_get_grid_and_generate_token_uri{
 
     local rtwrk_drawer_contract_address;
     %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
-    let (grid_len: felt, grid: felt*) = IRtwrkDrawer.getRtwrkGrid(
+    let (grid_len: felt, grid: felt*) = IRtwrkDrawer.rtwrkGrid(
         contract_address=rtwrk_drawer_contract_address,
         rtwrkId=ORIGINAL_RTWRKS_COUNT + 1,
         rtwrkStep=0,

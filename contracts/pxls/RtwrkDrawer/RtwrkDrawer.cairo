@@ -13,8 +13,6 @@ from pxls.interfaces import IPxlERC721
 from pxls.RtwrkDrawer.storage import (
     pxl_erc721_address,
     current_rtwrk_id,
-    everyone_can_launch_rtwrk,
-    max_pixel_colorizations_per_colorizer,
     number_of_pixel_colorizations_per_colorizer,
     number_of_pixel_colorizations_total,
 )
@@ -35,6 +33,7 @@ from pxls.RtwrkDrawer.colorization import (
     get_colorizers,
     count_rtwrk_colorizations,
 )
+from pxls.RtwrkDrawer.variables import MAX_PIXEL_COLORIZATIONS_PER_COLORIZER
 from pxls.RtwrkDrawer.grid import get_grid
 from pxls.RtwrkDrawer.original_rtwrks import initialize_original_rtwrks
 
@@ -45,12 +44,10 @@ from pxls.RtwrkDrawer.original_rtwrks import initialize_original_rtwrks
 
 @constructor
 func constructor{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    owner: felt, pxl_erc721: felt, max_pixel_colorizations_per_colorizer_value: felt
+    owner: felt, pxl_erc721: felt
 ) {
     Ownable.initializer(owner);
     pxl_erc721_address.write(pxl_erc721);
-    // Written during deploy but could be changed later
-    max_pixel_colorizations_per_colorizer.write(max_pixel_colorizations_per_colorizer_value);
     // Writing the "original rtwrks" that happened before regenesis
     initialize_original_rtwrks();
     return ();
@@ -128,14 +125,6 @@ func rtwrkGrid{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(
 }
 
 @view
-func everyoneCanLaunchRtwrk{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() -> (
-    bool: felt
-) {
-    let (bool) = everyone_can_launch_rtwrk.read();
-    return (bool=bool);
-}
-
-@view
 func numberOfPixelColorizations{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     rtwrkId: felt, pxlId: Uint256
 ) -> (count: felt) {
@@ -149,14 +138,6 @@ func totalNumberOfPixelColorizations{
 }(rtwrkId: felt) -> (count: felt) {
     let (count: felt) = number_of_pixel_colorizations_total.read(rtwrkId);
     return (count,);
-}
-
-@view
-func maxPixelColorizationsPerColorizer{
-    syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
-}() -> (max: felt) {
-    let (max) = max_pixel_colorizations_per_colorizer.read();
-    return (max,);
 }
 
 @view
@@ -189,6 +170,11 @@ func rtwrkStepsCount{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check
 ) -> (steps_count: felt) {
     let (count) = count_rtwrk_colorizations(rtwrkId, 0);
     return (steps_count=count);
+}
+
+@view
+func maxPixelColorizationsPerColorizer() -> (max: felt) {
+    return (max=MAX_PIXEL_COLORIZATIONS_PER_COLORIZER);
 }
 
 //
@@ -227,25 +213,11 @@ func launchNewRtwrkIfNecessary{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, r
     with_attr error_message("Theme too long") {
         assert_le(theme_len, 5);
     }
-    let (bool) = everyone_can_launch_rtwrk.read();
-    tempvar syscall_ptr = syscall_ptr;
-    tempvar pedersen_ptr = pedersen_ptr;
-    tempvar range_check_ptr = range_check_ptr;
-    if (bool == FALSE) {
-        Ownable.assert_only_owner();
-    }
+    // Right now only owner can launch rtwrks. This will change with auctions!
+    Ownable.assert_only_owner();
     // Method to just launch a new rtwrk with drawing a pixel
     let (launched) = launch_new_rtwrk_if_necessary(theme_len, theme);
     return (launched=launched);
-}
-
-@external
-func setEveryoneCanLaunchRtwrk{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(
-    bool: felt
-) {
-    Ownable.assert_only_owner();
-    everyone_can_launch_rtwrk.write(bool);
-    return ();
 }
 
 @external
@@ -259,14 +231,5 @@ func transferOwnership{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_che
 @external
 func renounceOwnership{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() {
     Ownable.renounce_ownership();
-    return ();
-}
-
-@external
-func setMaxColorizationsPerColorizer{
-    syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
-}(new_max: felt) {
-    Ownable.assert_only_owner();
-    max_pixel_colorizations_per_colorizer.write(new_max);
     return ();
 }

@@ -30,11 +30,6 @@ func number_of_pixel_colorizations_per_colorizer(rtwrk_id: felt, pxl_id: Uint256
 func number_of_pixel_colorizations_total(rtwrk_id: felt) -> (count: felt) {
 }
 
-// The max number of colorizations per token / rwtrk is a variable
-@storage_var
-func max_pixel_colorizations_per_colorizer() -> (max: felt) {
-}
-
 // This saves the start timestamp of an rtwrk
 @storage_var
 func rtwrk_timestamp(rtwrk_id: felt) -> (timestamp: felt) {
@@ -43,12 +38,6 @@ func rtwrk_timestamp(rtwrk_id: felt) -> (timestamp: felt) {
 // This returns the current rtwrk id
 @storage_var
 func current_rtwrk_id() -> (rtwrk_id: felt) {
-}
-
-// A flag to tell if anyone can launch
-// an rtwrk or only the owner of the contract
-@storage_var
-func everyone_can_launch_rtwrk() -> (bool: felt) {
 }
 
 // Each rtwrk can have a theme that is an array

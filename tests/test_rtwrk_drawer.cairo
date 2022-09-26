@@ -33,7 +33,7 @@ func __setup__{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}(
             context.sample_pxl_metadata_address
         ]).contract_address
     %}
-    %{ context.rtwrk_drawer_contract_address = deploy_contract("contracts/pxls/RtwrkDrawer/RtwrkDrawer.cairo", [context.account, context.pxl_erc721_contract_address, 5]).contract_address %}
+    %{ context.rtwrk_drawer_contract_address = deploy_contract("contracts/pxls/RtwrkDrawer/RtwrkDrawer.cairo", [context.account, context.pxl_erc721_contract_address]).contract_address %}
 
     %{ stop_prank_pixel = start_prank(context.account, target_contract_address=context.pxl_erc721_contract_address) %}
     %{ stop_prank_drawer = start_prank(context.account, target_contract_address=context.rtwrk_drawer_contract_address) %}
@@ -77,11 +77,6 @@ func test_rtwrk_drawer_getters{syscall_ptr: felt*, range_check_ptr, pedersen_ptr
     let (owner: felt) = IRtwrkDrawer.owner(contract_address=rtwrk_drawer_contract_address);
     assert 123456 = owner;
 
-    let (bool: felt) = IRtwrkDrawer.everyoneCanLaunchRtwrk(
-        contract_address=rtwrk_drawer_contract_address
-    );
-    assert FALSE = bool;
-
     // Timestamp must have been set to the deployment timestamp
 
     let (returned_timestamp) = IRtwrkDrawer.currentRtwrkTimestamp(
@@ -89,9 +84,8 @@ func test_rtwrk_drawer_getters{syscall_ptr: felt*, range_check_ptr, pedersen_ptr
     );
     assert returned_timestamp = 'start_timestamp';
 
-    // Max has been set during deploy also
     let (max) = IRtwrkDrawer.maxPixelColorizationsPerColorizer(rtwrk_drawer_contract_address);
-    assert 5 = max;
+    assert 20 = max;
 
     // Getting theme
     let (theme_len: felt, theme: felt*) = IRtwrkDrawer.rtwrkTheme(
@@ -105,26 +99,6 @@ func test_rtwrk_drawer_getters{syscall_ptr: felt*, range_check_ptr, pedersen_ptr
         rtwrk_drawer_contract_address, 1
     );
     assert 0 = total_colorizations;
-
-    return ();
-}
-
-@view
-func test_rtwrk_drawer_max_colorizations_update{
-    syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
-}() {
-    tempvar rtwrk_drawer_contract_address;
-    %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
-
-    %{ stop_prank = start_prank(context.account, target_contract_address=ids.rtwrk_drawer_contract_address) %}
-
-    IRtwrkDrawer.setMaxColorizationsPerColorizer(rtwrk_drawer_contract_address, 10);
-
-    // Max has been set during deploy also
-    let (new_max) = IRtwrkDrawer.maxPixelColorizationsPerColorizer(rtwrk_drawer_contract_address);
-    assert 10 = new_max;
-
-    %{ stop_prank() %}
 
     return ();
 }
@@ -611,53 +585,12 @@ func test_rtwrk_drawer_get_grid{syscall_ptr: felt*, range_check_ptr, pedersen_pt
 }
 
 @view
-func test_rtwrk_drawer_owner_can_change_launch_flag{
-    syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
-}() {
-    tempvar rtwrk_drawer_contract_address;
-    %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
-
-    let (bool: felt) = IRtwrkDrawer.everyoneCanLaunchRtwrk(
-        contract_address=rtwrk_drawer_contract_address
-    );
-    assert FALSE = bool;
-
-    // Check that owner can, indeed, modify the flag
-    %{ stop_prank_drawer = start_prank(context.account, target_contract_address=ids.rtwrk_drawer_contract_address) %}
-    IRtwrkDrawer.setEveryoneCanLaunchRtwrk(
-        contract_address=rtwrk_drawer_contract_address, bool=TRUE
-    );
-
-    let (bool: felt) = IRtwrkDrawer.everyoneCanLaunchRtwrk(
-        contract_address=rtwrk_drawer_contract_address
-    );
-    assert TRUE = bool;
-
-    %{ stop_prank_drawer() %}
-
-    // Check that non owner cannot update flag
-    %{ expect_revert(error_message="Ownable: caller is not the owner") %}
-    IRtwrkDrawer.setEveryoneCanLaunchRtwrk(
-        contract_address=rtwrk_drawer_contract_address, bool=FALSE
-    );
-
-    return ();
-}
-
-@view
 func test_rtwrk_drawer_not_everyone_can_launch_new_rtwrk{
     syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
 }() {
     alloc_locals;
     local rtwrk_drawer_contract_address;
     %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
-
-    // At beginning, not everyone can launch new rtwrk!
-
-    let (bool: felt) = IRtwrkDrawer.everyoneCanLaunchRtwrk(
-        contract_address=rtwrk_drawer_contract_address
-    );
-    assert FALSE = bool;
 
     let (rtwrk_id) = IRtwrkDrawer.currentRtwrkId(contract_address=rtwrk_drawer_contract_address);
     assert ORIGINAL_RTWRKS_COUNT + 1 = rtwrk_id;
@@ -693,45 +626,6 @@ func test_rtwrk_drawer_not_everyone_can_launch_new_rtwrk{
 }
 
 @view
-func test_rtwrk_drawer_everyone_can_launch_new_rtwrk{
-    syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
-}() {
-    alloc_locals;
-    local rtwrk_drawer_contract_address;
-    %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
-
-    // Owner can update flag
-    %{ stop_prank_drawer = start_prank(context.account, target_contract_address=ids.rtwrk_drawer_contract_address) %}
-    IRtwrkDrawer.setEveryoneCanLaunchRtwrk(
-        contract_address=rtwrk_drawer_contract_address, bool=TRUE
-    );
-
-    let (bool: felt) = IRtwrkDrawer.everyoneCanLaunchRtwrk(
-        contract_address=rtwrk_drawer_contract_address
-    );
-    assert TRUE = bool;
-
-    %{ stop_prank_drawer() %}
-
-    // 26+ hour is enough to launch new rtwrk
-    let new_timestamp = 'start_timestamp' + (26 * 3600 + 136);
-    %{ warp(ids.new_timestamp, context.rtwrk_drawer_contract_address) %}
-
-    let (theme: felt*) = alloc();
-    assert theme[0] = 'Super theme';
-
-    // We're not owner but we can now launch new rtwrk
-    IRtwrkDrawer.launchNewRtwrkIfNecessary(
-        contract_address=rtwrk_drawer_contract_address, theme_len=1, theme=theme
-    );
-
-    let (rtwrk_id) = IRtwrkDrawer.currentRtwrkId(contract_address=rtwrk_drawer_contract_address);
-    assert ORIGINAL_RTWRKS_COUNT + 2 = rtwrk_id;
-
-    return ();
-}
-
-@view
 func test_rtwrk_drawer_number_colorizations{
     syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
 }() {
@@ -754,8 +648,6 @@ func test_rtwrk_drawer_number_colorizations{
 
     local account;
     %{ ids.account = context.account %}
-
-    IRtwrkDrawer.setMaxColorizationsPerColorizer(rtwrk_drawer_contract_address, 13);
 
     // Minting first pixel
     IPxlERC721.mint(contract_address=pxl_erc721_contract_address, to=account);
@@ -792,8 +684,15 @@ func test_rtwrk_drawer_number_colorizations{
     assert pixel_colorizations[7] = PixelColorization(pixel_index=300, color_index=12);
     assert pixel_colorizations[8] = PixelColorization(pixel_index=27, color_index=18);
     assert pixel_colorizations[9] = PixelColorization(pixel_index=82, color_index=92);
+    assert pixel_colorizations[10] = PixelColorization(pixel_index=360, color_index=78);
+    assert pixel_colorizations[11] = PixelColorization(pixel_index=220, color_index=57);
+    assert pixel_colorizations[12] = PixelColorization(pixel_index=48, color_index=32);
+    assert pixel_colorizations[13] = PixelColorization(pixel_index=178, color_index=90);
+    assert pixel_colorizations[14] = PixelColorization(pixel_index=300, color_index=12);
+    assert pixel_colorizations[15] = PixelColorization(pixel_index=27, color_index=18);
+    assert pixel_colorizations[16] = PixelColorization(pixel_index=82, color_index=92);
     IRtwrkDrawer.colorizePixels(
-        rtwrk_drawer_contract_address, Uint256(1, 0), 10, pixel_colorizations
+        rtwrk_drawer_contract_address, Uint256(1, 0), 17, pixel_colorizations
     );
 
     // 10 colorizations that will be batched in 2 felts
@@ -801,7 +700,7 @@ func test_rtwrk_drawer_number_colorizations{
     let (count) = IRtwrkDrawer.numberOfPixelColorizations(
         rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 1, Uint256(1, 0)
     );
-    assert 13 = count;
+    assert 20 = count;
 
     // We updated the contract with 13 as max colorizations / rtwrk so can't write anymore !
 
@@ -930,8 +829,6 @@ func test_rtwrk_drawer_total_number_colorizations{
     mint_two_pixels();
 
     %{ stop_prank_drawer = start_prank(context.account, target_contract_address=ids.rtwrk_drawer_contract_address) %}
-
-    IRtwrkDrawer.setMaxColorizationsPerColorizer(rtwrk_drawer_contract_address, 10);
 
     local account;
     %{ ids.account = context.account %}

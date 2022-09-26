@@ -12,18 +12,17 @@ from starkware.cairo.common.dict import dict_write, dict_read
 from pxls.utils.colors import Color
 from pxls.RtwrkDrawer.storage import (
     rtwrk_colorizations,
-    max_pixel_colorizations_per_colorizer,
     number_of_pixel_colorizations_per_colorizer,
     number_of_pixel_colorizations_total,
     rtwrk_colorization_index,
 )
 from pxls.RtwrkDrawer.original_rtwrks import ORIGINAL_RTWRKS_COUNT, original_rtwrk_colorizations
+from pxls.RtwrkDrawer.variables import MAX_TOTAL_PIXEL_COLORIZATIONS, MAX_PIXEL_COLORIZATIONS_PER_COLORIZER
 
 const MAX_PIXEL_VALUE = 399;  // grid of 400 pixels from 0 to 399
 const MAX_COLOR_VALUE = 94;  // palette of 95 colors from 0 to 94
 const MAX_COLORIZATION_VALUE = MAX_PIXEL_VALUE * (MAX_COLOR_VALUE + 1) + MAX_COLOR_VALUE;
 const MAX_COLORIZATIONS_PER_FELT = 8;  // There is space to store more, but we can't unpack due to div_rem bounds
-const MAX_TOTAL_COLORIZATIONS = 2000;  // For performance limit to reconstitute grid
 
 struct PixelColorization {
     pixel_index: felt,
@@ -190,15 +189,14 @@ func save_rtwrk_colorization{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, ran
     // Then total # of colorizations for all tokens
     let (total_colorizations_count) = number_of_pixel_colorizations_total.read(rtwrk_id);
     // Then max colorizations allowed per token
-    let (max_token_colorizations) = max_pixel_colorizations_per_colorizer.read();
-    let colorizations_remaining = max_token_colorizations - colorizations_from_this_pxl_id;
+    let colorizations_remaining = MAX_PIXEL_COLORIZATIONS_PER_COLORIZER - colorizations_from_this_pxl_id;
     with_attr error_message(
             "You have reached the max number of allowed colorizations for this rtwrk") {
         assert_le(pixel_colorizations_len, colorizations_remaining);
     }
 
     // Then total max colorizations allowed
-    let total_colorizations_remaining = MAX_TOTAL_COLORIZATIONS - total_colorizations_count;
+    let total_colorizations_remaining = MAX_TOTAL_PIXEL_COLORIZATIONS - total_colorizations_count;
     with_attr error_message(
             "The max total number of allowed colorizations for this rtwrk has been reached") {
         assert_le(pixel_colorizations_len, total_colorizations_remaining);

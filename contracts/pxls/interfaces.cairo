@@ -62,17 +62,11 @@ namespace IRtwrkDrawer {
     }
     func transferOwnership(newOwner: felt) -> () {
     }
-    func everyoneCanLaunchRtwrk() -> (bool: felt) {
-    }
-    func setEveryoneCanLaunchRtwrk(bool: felt) {
-    }
     func numberOfPixelColorizations(rtwrkId: felt, pxlId: Uint256) -> (count: felt) {
     }
     func totalNumberOfPixelColorizations(rtwrkId: felt) -> (count: felt) {
     }
     func maxPixelColorizationsPerColorizer() -> (max: felt) {
-    }
-    func setMaxColorizationsPerColorizer(new_max: felt) {
     }
     func numberOfColorizers(rtwrkId: felt, rtwrkStep: felt) -> (count: felt) {
     }

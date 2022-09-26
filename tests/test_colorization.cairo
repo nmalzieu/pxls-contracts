@@ -19,7 +19,6 @@ from pxls.RtwrkDrawer.colorization import (
     count_rtwrk_colorizations,
 )
 from pxls.RtwrkDrawer.original_rtwrks import ORIGINAL_RTWRKS_COUNT
-from pxls.RtwrkDrawer.storage import max_pixel_colorizations_per_colorizer
 
 from pxls.RtwrkDrawer.grid import get_grid
 
@@ -152,7 +151,6 @@ func test_unpack_colorization{syscall_ptr: felt*, range_check_ptr, pedersen_ptr:
 func test_save_rtwrk_colorization{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}(
     ) {
     alloc_locals;
-    max_pixel_colorizations_per_colorizer.write(40);
     let (one_colorization: Colorization) = fixture_colorization_1();
     let (other_colorization: Colorization) = fixture_colorization_2();
 
@@ -225,7 +223,6 @@ func test_save_rtwrk_colorizations_per_batch{
     syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
 }() {
     alloc_locals;
-    max_pixel_colorizations_per_colorizer.write(40);
     let (pixel_colorizations: PixelColorization*) = alloc();
 
     assert pixel_colorizations[0] = PixelColorization(pixel_index=399, color_index=94);

@@ -6,11 +6,10 @@ from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.starknet.common.syscalls import get_block_timestamp
 
 from pxls.RtwrkDrawer.storage import current_rtwrk_id, rtwrk_timestamp, rtwrk_theme
+from pxls.RtwrkDrawer.variables import BLOCK_TIME_BUFFER
 
 // 1 full day in seconds (get_block_timestamp returns timestamp in seconds)
 const DAY_DURATION = 24 * 3600;
-// Block time buffer of 2 hours right now
-const BLOCK_TIME_BUFFER = 2 * 3600;
 
 const DAY_DURATION_WITH_BUFFER = DAY_DURATION + BLOCK_TIME_BUFFER;
 

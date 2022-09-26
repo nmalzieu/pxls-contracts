@@ -35,7 +35,7 @@ func __setup__{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}(
             context.sample_pxl_metadata_address
         ]).contract_address
     %}
-    %{ context.rtwrk_drawer_contract_address = deploy_contract("contracts/pxls/RtwrkDrawer/RtwrkDrawer.cairo", [context.account, context.pxl_erc721_contract_address, 40]).contract_address %}
+    %{ context.rtwrk_drawer_contract_address = deploy_contract("contracts/pxls/RtwrkDrawer/RtwrkDrawer.cairo", [context.account, context.pxl_erc721_contract_address]).contract_address %}
 
     %{ stop_prank_pixel = start_prank(context.account, target_contract_address=context.pxl_erc721_contract_address) %}
     %{ stop_prank_drawer = start_prank(context.account, target_contract_address=context.rtwrk_drawer_contract_address) %}
@@ -67,7 +67,8 @@ func __setup__{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}(
     %{
         import random
         colorization_index = 0
-        for token_id in range(2, 101):
+        # Keeping token 1 & 2 without colorizations to test max colorizations
+        for token_id in range(3, 102):
             for i in range(20):
                 pixel_index = random.randrange(400)
                 color_index = random.randrange(95)
@@ -85,7 +86,8 @@ func __setup__{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}(
     %{
         import random
         colorization_index = 0
-        for token_id in range(2, 101):
+        # Keeping token 1 & 2 without colorizations to test max colorizations
+        for token_id in range(3, 102):
             pixel_colorizations_packed = 0
             for i in range(20):
                 pixel_index = random.randrange(400)
@@ -229,6 +231,8 @@ func test_colorize_hit_limit_1_by_1{
     %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
 
     %{ stop_prank_drawer = start_prank(context.account, target_contract_address=context.rtwrk_drawer_contract_address) %}
+
+    // Adding 20 more pixel colorizations for pxl 1 => brings total to 2000 which is max!
     let (pixel_colorizations: PixelColorization*) = alloc();
     assert pixel_colorizations[0] = PixelColorization(pixel_index=12, color_index=92);
     assert pixel_colorizations[1] = PixelColorization(pixel_index=18, color_index=3);
@@ -255,6 +259,16 @@ func test_colorize_hit_limit_1_by_1{
         rtwrk_drawer_contract_address, Uint256(1, 0), 20, pixel_colorizations
     );
     %{ stop_prank_drawer() %}
+
+    let (total_pixel_colorizations_count) = IRtwrkDrawer.totalNumberOfPixelColorizations(
+        rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 1
+    );
+    assert 2000 = total_pixel_colorizations_count;
+
+    let (max_total) = IRtwrkDrawer.totalNumberOfPixelColorizations(
+        rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 1
+    );
+    assert 2000 = total_pixel_colorizations_count;
 
     %{ stop_prank_drawer = start_prank(123457, target_contract_address=context.rtwrk_drawer_contract_address) %}
 
@@ -379,7 +393,7 @@ func test_number_colorizations_1_by_1{
     let (count: felt) = IRtwrkDrawer.numberOfPixelColorizations(
         contract_address=rtwrk_drawer_contract_address,
         rtwrkId=ORIGINAL_RTWRKS_COUNT + 1,
-        pxlId=Uint256(2, 0),
+        pxlId=Uint256(3, 0),
     );
     assert 20 = count;
     return ();
@@ -406,7 +420,7 @@ func test_number_colorizations_20_by_20{
     let (count: felt) = IRtwrkDrawer.numberOfPixelColorizations(
         contract_address=rtwrk_drawer_contract_address,
         rtwrkId=ORIGINAL_RTWRKS_COUNT + 2,
-        pxlId=Uint256(2, 0),
+        pxlId=Uint256(3, 0),
     );
     assert 20 = count;
     return ();

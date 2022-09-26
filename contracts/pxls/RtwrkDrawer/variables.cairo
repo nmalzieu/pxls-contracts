@@ -11,6 +11,6 @@
 const MAX_PIXEL_COLORIZATIONS_PER_COLORIZER = 20;
 const MAX_TOTAL_PIXEL_COLORIZATIONS = 2000;
 
-// The buffer to take into account current block time
+// The buffer to take into account current block time = 2 hours
 
 const BLOCK_TIME_BUFFER = 2 * 3600;

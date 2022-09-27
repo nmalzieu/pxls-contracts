@@ -15,6 +15,11 @@ func eth_erc20_address() -> (address: felt) {
 func rtwrk_drawer_address() -> (address: felt) {
 }
 
+// This is the address of the Pxls NFT contract
+@storage_var
+func pxls_erc721_address() -> (address: felt) {
+}
+
 // This is the address of the Rtwrk NFT contract
 @storage_var
 func rtwrk_erc721_address() -> (address: felt) {

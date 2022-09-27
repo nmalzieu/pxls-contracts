@@ -36,6 +36,8 @@ namespace IPxlERC721 {
     }
     func balanceOf(owner: felt) -> (balance: Uint256) {
     }
+    func ownerOf(tokenId: Uint256) -> (owner: felt) {
+    }
 }
 
 @contract_interface
@@ -102,8 +104,8 @@ namespace IRtwrkERC721 {
 
 @contract_interface
 namespace IEthERC20 {
-    func transfer(recipient: felt, amount: Uint256) {
+    func transfer(recipient: felt, amount: Uint256) -> (success: felt) {
     }
-    func transferFrom(sender: felt, recipient: felt, amount: Uint256) {
+    func transferFrom(sender: felt, recipient: felt, amount: Uint256) -> (success: felt) {
     }
 }

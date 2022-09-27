@@ -191,7 +191,7 @@ func test_place_bid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuilt
     assert theme[2] = 'exactly 3';
 
     // Mocking the erc20 transferFrom
-    %{ stop_mock_erc20 = mock_call(ids.eth_erc20_address_value, "transferFrom", []) %}
+    %{ stop_mock_erc20 = mock_call(ids.eth_erc20_address_value, "transferFrom", [1]) %}
 
     place_bid(auction_id=12, bid_amount=Uint256(5000000000000000, 0), theme_len=3, theme=theme);
 
@@ -216,7 +216,7 @@ func test_place_bid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuilt
     assert 0 = timestamp;
 
     // Mocking the erc20 transferFrom
-    %{ stop_mock_erc20 = mock_call(ids.eth_erc20_address_value, "transfer", []) %}
+    %{ stop_mock_erc20 = mock_call(ids.eth_erc20_address_value, "transfer", [1]) %}
 
     // Place another bid
 

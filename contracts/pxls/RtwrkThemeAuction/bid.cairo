@@ -5,6 +5,7 @@ from starkware.cairo.common.math import assert_le
 from starkware.starknet.common.syscalls import get_caller_address, get_contract_address
 from starkware.starknet.common.syscalls import get_block_timestamp
 from starkware.cairo.common.uint256 import Uint256, assert_uint256_le
+from starkware.cairo.common.bool import TRUE
 
 from openzeppelin.security.reentrancyguard.library import ReentrancyGuard
 from openzeppelin.security.safemath.library import SafeUint256
@@ -14,22 +15,13 @@ from pxls.RtwrkThemeAuction.storage import (
     bid_amount,
     bid_account,
     bid_theme,
-    eth_erc20_address,
     bid_reimbursement_timestamp,
     bid_timestamp,
 )
+from pxls.RtwrkThemeAuction.bid_struct import Bid
 from pxls.RtwrkThemeAuction.variables import THEME_MAX_LENGTH, BID_INCREMENT
-from pxls.interfaces import IEthERC20
 from pxls.RtwrkThemeAuction.auction_checks import assert_running_auction_id
-
-struct Bid {
-    account: felt,
-    amount: Uint256,
-    timestamp: felt,
-    reimbursement_timestamp: felt,
-    theme_len: felt,
-    theme: felt*,
-}
+from pxls.RtwrkThemeAuction.payment import transfer_eth, transfer_eth_from
 
 func store_bid_theme{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     auction_id: felt, bid_id: felt, theme_index: felt, theme_len: felt, theme: felt*
@@ -121,8 +113,7 @@ func assert_bid_amount_valid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, ran
     } else {
         let (last_bid_amount) = bid_amount.read(auction_id, last_bid_id);
         let (minimum_new_bid_amount) = SafeUint256.add(last_bid_amount, bid_increment);
-        with_attr error_message(
-                "Bid amount must be at least the last bid amount + BID_INCREMENT") {
+        with_attr error_message("Bid amount must be at least the last bid amount + BID_INCREMENT") {
             assert_uint256_le(minimum_new_bid_amount, bid.amount);
         }
         return ();
@@ -141,14 +132,12 @@ func transfer_amount_from_bidder{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*,
     bid: Bid
 ) -> () {
     let (auction_contract_address) = get_contract_address();
-    let (eth_contract_address) = eth_erc20_address.read();
-    // This will fail if the amount hasn't been approved first!
-    IEthERC20.transferFrom(
-        contract_address=eth_contract_address,
-        sender=bid.account,
-        recipient=auction_contract_address,
-        amount=bid.amount,
+    let (transfer_success) = transfer_eth_from(
+        sender=bid.account, recipient=auction_contract_address, amount=bid.amount
     );
+    with_attr error_message("Could not transfer amount from bidder") {
+        assert transfer_success = TRUE;
+    }
     return ();
 }
 
@@ -163,12 +152,13 @@ func reimburse_bid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_p
     let (current_block_timestamp) = get_block_timestamp();
     bid_reimbursement_timestamp.write(auction_id, bid_id, current_block_timestamp);
     let (bid_to_reimburse: Bid) = read_bid(auction_id, bid_id);
-    let (eth_contract_address) = eth_erc20_address.read();
-    IEthERC20.transfer(
-        contract_address=eth_contract_address,
-        recipient=bid_to_reimburse.account,
-        amount=bid_to_reimburse.amount,
+
+    let (transfer_success) = transfer_eth(
+        recipient=bid_to_reimburse.account, amount=bid_to_reimburse.amount
     );
+    with_attr error_message("Could not transfer amount from bidder") {
+        assert transfer_success = TRUE;
+    }
     ReentrancyGuard._end();
     return ();
 }

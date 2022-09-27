@@ -2,7 +2,10 @@
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.uint256 import Uint256
 
+from openzeppelin.access.ownable.library import Ownable
+
 from pxls.RtwrkThemeAuction.storage import (
+    pxl_erc721_address,
     rtwrk_drawer_address,
     rtwrk_erc721_address,
     current_auction_id,
@@ -12,7 +15,8 @@ from pxls.RtwrkThemeAuction.storage import (
     colorizers_balance,
     pxls_balance,
 )
-from pxls.RtwrkThemeAuction.bid import Bid, read_bid, place_bid
+from pxls.RtwrkThemeAuction.bid import read_bid, place_bid
+from pxls.RtwrkThemeAuction.bid_struct import Bid
 from pxls.RtwrkThemeAuction.auction import launch_auction, launch_auction_rtwrk
 
 // @dev The constructor initializing the theme auction contract with important data
@@ -21,11 +25,15 @@ from pxls.RtwrkThemeAuction.auction import launch_auction, launch_auction_rtwrk
 
 @constructor
 func constructor{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    owner: felt,
     eth_erc20_address_value: felt,
+    pxl_erc721_address_value: felt,
     rtwrk_drawer_address_value: felt,
     rtwrk_erc721_address_value: felt,
 ) {
+    Ownable.initializer(owner);
     eth_erc20_address.write(eth_erc20_address_value);
+    pxl_erc721_address.write(pxl_erc721_address_value);
     rtwrk_drawer_address.write(rtwrk_drawer_address_value);
     rtwrk_erc721_address.write(rtwrk_erc721_address_value);
 
@@ -123,6 +131,15 @@ func pxlsBalance{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
     return (balance=balance);
 }
 
+// @notice Get the owner of this contract (that will be able to withdraw pxls funds)
+// @return owner: The current owner of this contract
+
+@view
+func owner{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() -> (owner: felt) {
+    let (owner: felt) = Ownable.owner();
+    return (owner,);
+}
+
 // ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 //     @external methods
 // ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -154,5 +171,16 @@ func placeBid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
 @external
 func launchAuctionRtwrk{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() {
     launch_auction_rtwrk();
+    return ();
+}
+
+// @notice Transfer ownership of this contract (change the pxls address that can withdraw)
+// @param newOwner: The new owner
+
+@external
+func transferOwnership{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    newOwner: felt
+) {
+    Ownable.transfer_ownership(newOwner);
     return ();
 }

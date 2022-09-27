@@ -12,7 +12,8 @@ from pxls.RtwrkThemeAuction.drawer import (
     current_rtwrk_id,
 )
 from pxls.RtwrkThemeAuction.rtwrk_collection import assert_current_rtwrk_is_minted, mint_rtwrk
-from pxls.RtwrkThemeAuction.bid import read_bid, Bid
+from pxls.RtwrkThemeAuction.bid import read_bid
+from pxls.RtwrkThemeAuction.bid_struct import Bid
 from pxls.RtwrkThemeAuction.storage import (
     current_auction_id,
     auction_timestamp,

@@ -11,7 +11,7 @@ from pxls.RtwrkThemeAuction.storage import (
     eth_erc20_address,
 )
 from pxls.RtwrkThemeAuction.bid import Bid, read_bid, place_bid
-from pxls.RtwrkThemeAuction.auction import launch_auction
+from pxls.RtwrkThemeAuction.auction import launch_auction, launch_auction_rtwrk
 
 // @dev The constructor initializing the theme auction contract with important data
 // @param rtwrk_drawer_address_value: The address of the Rtwrk Drawer contract
@@ -121,5 +121,13 @@ func placeBid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     auctionId, bidAmount: Uint256, theme_len, theme: felt*
 ) {
     place_bid(auctionId, bidAmount, theme_len, theme);
+    return ();
+}
+
+// @notice Launch an rtwrk when the auction is finished and it has a winner
+
+@external
+func launchAuctionRtwrk{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() {
+    launch_auction_rtwrk();
     return ();
 }

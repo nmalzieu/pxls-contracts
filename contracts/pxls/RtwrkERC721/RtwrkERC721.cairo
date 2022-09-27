@@ -20,10 +20,6 @@ from pxls.PxlERC721.pxls_metadata.pxls_metadata import get_pxl_json_metadata
 //
 
 @storage_var
-func minted_count() -> (count: Uint256) {
-}
-
-@storage_var
 func contract_uri_hash(index: felt) -> (hash: felt) {
 }
 
@@ -144,14 +140,6 @@ func tokenURI{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
 }
 
 @view
-func totalSupply{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() -> (
-    count: Uint256
-) {
-    let (count: Uint256) = minted_count.read();
-    return (count,);
-}
-
-@view
 func owner{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() -> (owner: felt) {
     let (owner: felt) = Ownable.owner();
     return (owner,);
@@ -194,16 +182,14 @@ func safeTransferFrom{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_chec
 }
 
 @external
-func mint{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(to: felt) {
+func mint{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(
+    to: felt, tokenId: Uint256
+) {
     alloc_locals;
 
     // TODO => Ensure only the auction contract can mint !
 
-    let (local lastTokenId: Uint256) = totalSupply();
-    let (local newTokenId: Uint256) = SafeUint256.add(lastTokenId, Uint256(1, 0));
-
-    minted_count.write(newTokenId);
-    ERC721._mint(to, newTokenId);
+    ERC721._mint(to, tokenId);
 
     return ();
 }

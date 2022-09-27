@@ -20,7 +20,7 @@ from pxls.RtwrkThemeAuction.storage import (
 )
 from pxls.RtwrkThemeAuction.variables import THEME_MAX_LENGTH, BID_INCREMENT
 from pxls.interfaces import IEthERC20
-from pxls.RtwrkThemeAuction.auction import assert_running_auction_id
+from pxls.RtwrkThemeAuction.auction_checks import assert_running_auction_id
 
 struct Bid {
     account: felt,

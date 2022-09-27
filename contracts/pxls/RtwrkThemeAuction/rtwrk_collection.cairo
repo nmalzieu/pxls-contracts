@@ -35,9 +35,17 @@ func assert_rtwrk_is_not_minted{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, 
     return ();
 }
 
-func assert_current_rtwrk_is_minted{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    ) {
+func assert_current_rtwrk_is_minted{
+    syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
+}() {
     let (rtwrk_id: felt) = current_rtwrk_id();
     assert_rtwrk_is_minted(rtwrk_id);
+    return ();
+}
+
+func mint_rtwrk{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(to, rtwrk_id) {
+    assert_rtwrk_is_not_minted(rtwrk_id);
+    let (contract_address) = rtwrk_erc721_address.read();
+    IRtwrkERC721.mint(contract_address, to, Uint256(rtwrk_id, 0));
     return ();
 }

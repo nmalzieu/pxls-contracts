@@ -2,67 +2,23 @@
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.starknet.common.syscalls import get_block_timestamp
 from starkware.cairo.common.math_cmp import is_le
-from starkware.cairo.common.bool import TRUE, FALSE
+from starkware.cairo.common.bool import TRUE
+from starkware.cairo.common.math import assert_le, assert_lt
 
+from pxls.RtwrkThemeAuction.auction_checks import assert_no_running_auction, assert_auction_has_bids
+from pxls.RtwrkThemeAuction.drawer import (
+    assert_no_running_rtwrk,
+    launch_rtwrk_for_auction,
+    current_rtwrk_id,
+)
+from pxls.RtwrkThemeAuction.rtwrk_collection import assert_current_rtwrk_is_minted, mint_rtwrk
+from pxls.RtwrkThemeAuction.bid import read_bid, Bid
 from pxls.RtwrkThemeAuction.storage import (
     current_auction_id,
     auction_timestamp,
     auction_rtwrk_launch_timestamp,
+    auction_bids_count,
 )
-from pxls.RtwrkThemeAuction.variables import BLOCK_TIME_BUFFER
-from pxls.RtwrkThemeAuction.drawer import assert_no_running_rtwrk
-from pxls.RtwrkThemeAuction.rtwrk_collection import assert_current_rtwrk_is_minted
-
-// 1 full day in seconds (get_block_timestamp returns timestamp in seconds)
-const DAY_DURATION = 24 * 3600;
-const DAY_DURATION_WITH_BUFFER = DAY_DURATION + BLOCK_TIME_BUFFER;
-
-func is_running_auction{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() -> (
-    running_auction: felt
-) {
-    let (current_id: felt) = current_auction_id.read();
-    if (current_id == 0) {
-        // No auction has ever been launched
-        return (running_auction=FALSE);
-    }
-    let (current_auction_timestamp: felt) = auction_timestamp.read(current_id);
-
-    let (block_timestamp) = get_block_timestamp();
-    let duration = block_timestamp - current_auction_timestamp;
-    // Testing if DAY_DURATION_WITH_BUFFER <= duration
-    // so if it's 1, auction has ended
-    let auction_ended = is_le(DAY_DURATION_WITH_BUFFER, duration);
-    // So we need to return the contrary to check if running auction
-    return (running_auction=1 - auction_ended);
-}
-
-func assert_running_auction{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() {
-    let (running_auction: felt) = is_running_auction();
-    with_attr error_message("There is currently no running auction") {
-        assert running_auction = TRUE;
-    }
-    return ();
-}
-
-func assert_running_auction_id{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    auction_id: felt
-) {
-    alloc_locals;
-    let (local current_id: felt) = current_auction_id.read();
-    with_attr error_message("Current auction is {current_id}, not {auction_id}") {
-        assert current_id = auction_id;
-    }
-    assert_running_auction();
-    return ();
-}
-
-func assert_no_running_auction{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() {
-    let (running_auction: felt) = is_running_auction();
-    with_attr error_message("Cannot call this method while an auction is running") {
-        assert running_auction = FALSE;
-    }
-    return ();
-}
 
 func launch_auction{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() {
     assert_no_running_auction();
@@ -82,25 +38,68 @@ func launch_auction_rtwrk{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_
     assert_no_running_auction();
 
     // Auction must exist
-    let (local current_id: felt) = current_auction_id.read();
-    let current_id_gt_1 = is_le(1, current_id);
+    let (local auction_id: felt) = current_auction_id.read();
+
     with_attr error_message("No auction has ever been launched") {
-        assert current_id_gt_1 = TRUE;
+        assert_lt(0, auction_id);
     }
 
+    assert_auction_has_bids(auction_id);
+
     // Auction rtwrk must not be already launched
-    let (local already_launched_timestamp: felt) = auction_rtwrk_launch_timestamp.read(current_id);
+    let (local already_launched_timestamp: felt) = auction_rtwrk_launch_timestamp.read(auction_id);
     with_attr error_message(
-            "Rtwrk for auction {current_id} has already been launched at timestamp {already_launched_timestamp}") {
+            "Rtwrk for auction {auction_id} has already been launched at timestamp {already_launched_timestamp}") {
         assert already_launched_timestamp = 0;
     }
 
     // Mark this auction rtwrk launched
     let (block_timestamp) = get_block_timestamp();
-    auction_rtwrk_launch_timestamp.write(current_id, block_timestamp);
+    auction_rtwrk_launch_timestamp.write(auction_id, block_timestamp);
 
     // Call the Drawer contract to launch the rtwrk!
-    
-    
+    let (winning_bid_id) = auction_bids_count.read(auction_id);
+    let (winning_bid: Bid) = read_bid(auction_id, winning_bid_id);
+
+    with_attr error_message(
+            "An error occured, the winning bid for auction {auction_id} seems to have an empty theme") {
+        assert_le(1, winning_bid.theme_len);
+    }
+
+    let (launched) = launch_rtwrk_for_auction(winning_bid.theme_len, winning_bid.theme);
+
+    with_attr error_message("An error occured, the rtwrk could not be launched") {
+        assert launched = TRUE;
+    }
+
+    return ();
+}
+
+func settle_auction{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() {
+    alloc_locals;
+    // Auction must be finished
+    assert_no_running_auction();
+    // Let's get the last auction
+    let (local auction_id) = current_auction_id.read();
+    // This auction id must be >= 1
+    with_attr error_message("No auction has ever been launched") {
+        assert_lt(0, auction_id);
+    }
+    // Verify this auction had bids (if not, user must call launch_auction, not settle_auction)
+    assert_auction_has_bids(auction_id);
+    // Verify the last auction rtwrk has been launched
+    let (local already_launched_timestamp) = auction_rtwrk_launch_timestamp.read(auction_id);
+    with_attr error_message(
+            "Rtwrk for auction {auction_id} has not yet been launched so auction cannot be settled") {
+        assert_lt(0, already_launched_timestamp);
+    }
+    // Verify the rtwrk has been finished (i.e. no rtwrk is running)
+    assert_no_running_rtwrk();
+    // Get the winning bid
+    let (winning_bid_id) = auction_bids_count.read(auction_id);
+    let (winning_bid: Bid) = read_bid(auction_id, winning_bid_id);
+    // Let's mint the rtwrk!
+    let (rtwrk_id) = current_rtwrk_id();
+    mint_rtwrk(winning_bid.account, rtwrk_id);
     return ();
 }

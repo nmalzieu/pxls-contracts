@@ -80,7 +80,7 @@ namespace IRtwrkDrawer {
 namespace IRtwrkERC721 {
     func totalSupply() -> (count: Uint256) {
     }
-    func mint(to: felt) {
+    func mint(to: felt, tokenId: Uint256) {
     }
     func transferFrom(from_: felt, to: felt, tokenId: Uint256) {
     }

@@ -4,8 +4,10 @@ from starkware.cairo.common.alloc import alloc
 from starkware.cairo.common.math import assert_le
 from starkware.starknet.common.syscalls import get_caller_address, get_contract_address
 from starkware.starknet.common.syscalls import get_block_timestamp
+from starkware.cairo.common.uint256 import Uint256, assert_uint256_le
 
 from openzeppelin.security.reentrancyguard.library import ReentrancyGuard
+from openzeppelin.security.safemath.library import SafeUint256
 
 from pxls.RtwrkThemeAuction.storage import (
     auction_bids_count,
@@ -22,7 +24,7 @@ from pxls.RtwrkThemeAuction.auction import assert_running_auction_id
 
 struct Bid {
     account: felt,
-    amount: felt,
+    amount: Uint256,
     timestamp: felt,
     reimbursement_timestamp: felt,
     theme_len: felt,
@@ -66,13 +68,14 @@ func store_bid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
 ) {
     alloc_locals;
     let (bid_id) = auction_bids_count.read(auction_id);
-    bid_account.write(auction_id, bid_id, bid.account);
-    bid_amount.write(auction_id, bid_id, bid.amount);
-    bid_timestamp.write(auction_id, bid_id, bid.timestamp);
+    let new_bid_id = bid_id + 1;
+    bid_account.write(auction_id, new_bid_id, bid.account);
+    bid_amount.write(auction_id, new_bid_id, bid.amount);
+    bid_timestamp.write(auction_id, new_bid_id, bid.timestamp);
     // Not updating the reimbursement timestamp storage even if there is
     // a value here, this is ONLY done in reimburse_bid
-    store_bid_theme(auction_id, bid_id, 0, bid.theme_len, bid.theme);
-    auction_bids_count.write(auction_id, bid_id + 1);
+    store_bid_theme(auction_id, new_bid_id, 0, bid.theme_len, bid.theme);
+    auction_bids_count.write(auction_id, new_bid_id);
     return ();
 }
 
@@ -107,24 +110,23 @@ func assert_bid_theme_valid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, rang
 func assert_bid_amount_valid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     auction_id: felt, bid: Bid
 ) -> () {
-    alloc_locals;
     // Let's make sure the amount of the bid is more than last bid + increment
     let (last_bid_id) = auction_bids_count.read(auction_id);
+    let bid_increment = Uint256(BID_INCREMENT, 0);
     if (last_bid_id == 0) {
-        local minimum_new_bid_amount = BID_INCREMENT;
-        with_attr error_message(
-                "Bid amount must be at least {minimum_new_bid_amount} since last bid is 0") {
-            assert_le(minimum_new_bid_amount, bid.amount);
+        with_attr error_message("Bid amount must be at least BID_INCREMENT since last bid is 0") {
+            assert_uint256_le(bid_increment, bid.amount);
         }
+        return ();
     } else {
-        let (local last_bid_amount) = bid_amount.read(auction_id, last_bid_id - 1);
-        local minimum_new_bid_amount = last_bid_amount + BID_INCREMENT;
+        let (last_bid_amount) = bid_amount.read(auction_id, last_bid_id);
+        let (minimum_new_bid_amount) = SafeUint256.add(last_bid_amount, bid_increment);
         with_attr error_message(
-                "Bid amount must be at least {minimum_new_bid_amount} since last bid is {last_bid_amount}") {
-            assert_le(minimum_new_bid_amount, bid.amount);
+                "Bid amount must be at least the last bid amount + BID_INCREMENT") {
+            assert_uint256_le(minimum_new_bid_amount, bid.amount);
         }
+        return ();
     }
-    return ();
 }
 
 func assert_bid_valid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
@@ -172,7 +174,7 @@ func reimburse_bid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_p
 }
 
 func place_bid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    auction_id: felt, bid_amount: felt, theme_len: felt, theme: felt*
+    auction_id: felt, bid_amount: Uint256, theme_len: felt, theme: felt*
 ) -> () {
     alloc_locals;
 
@@ -182,7 +184,7 @@ func place_bid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     let (caller) = get_caller_address();
 
     // Check if we already have a bid on this auction
-    let (current_bid_count) = auction_bids_count.read(auction_id);
+    let (last_bid_id) = auction_bids_count.read(auction_id);
 
     // Create bid object
     let (current_block_timestamp) = get_block_timestamp();
@@ -206,8 +208,7 @@ func place_bid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     store_bid(auction_id, bid);
 
     // Then in the end, reimburse previous bid
-    if (current_bid_count != 0) {
-        let last_bid_id = current_bid_count - 1;
+    if (last_bid_id != 0) {
         reimburse_bid(auction_id, last_bid_id);
     }
     return ();

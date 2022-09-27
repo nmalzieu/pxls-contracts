@@ -102,8 +102,8 @@ namespace IRtwrkERC721 {
 
 @contract_interface
 namespace IEthERC20 {
-    func transfer(recipient: felt, amount: felt) {
+    func transfer(recipient: felt, amount: Uint256) {
     }
-    func transferFrom(sender: felt, recipient: felt, amount: felt) {
+    func transferFrom(sender: felt, recipient: felt, amount: Uint256) {
     }
 }

@@ -3,7 +3,7 @@
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.bool import TRUE, FALSE
 
-from pxls.RtwrkThemeAuction.auction import is_running_auction, launch_auction
+from pxls.RtwrkThemeAuction.auction import is_running_auction, launch_auction, launch_auction_rtwrk
 from pxls.RtwrkThemeAuction.storage import (
     auction_timestamp,
     current_auction_id,
@@ -115,5 +115,56 @@ func test_launch_auction_last_rtwrk_not_minted{
     %{ expect_revert(error_message="Rtwrk 1 has not been minted") %}
     launch_auction();
 
+    return ();
+}
+
+@view
+func test_launch_auction_rtwrk_no_auction{
+    syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
+}() {
+    %{ expect_revert(error_message="No auction has ever been launched") %}
+    launch_auction_rtwrk();
+
+    return ();
+}
+
+@view
+func test_launch_auction_rtwrk_auction_running{
+    syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
+}() {
+    launch_auction_with_mock();
+
+    %{ expect_revert(error_message="Cannot call this method while an auction is running") %}
+    launch_auction_rtwrk();
+
+    return ();
+}
+
+@view
+func test_launch_auction_rtwrk_auction_done{
+    syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
+}() {
+    launch_auction_with_mock();
+    %{ warp(1664192254 + 26*3600) %}
+
+    launch_auction_rtwrk();
+
+    // Cannot launch rtwrk twice
+    %{ expect_revert(error_message="Rtwrk for auction 1 has already been launched at timestamp 1664285854") %}
+    launch_auction_rtwrk();
+
+    return ();
+}
+
+func launch_auction_with_mock{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
+    %{ warp(1664192254) %}
+    let rtwrk_contract_address = 'rtwrk_contract_address';
+    rtwrk_drawer_address.write(rtwrk_contract_address);
+    let rtwrk_collection_address = 'rtwrk_collection_address';
+    rtwrk_erc721_address.write(rtwrk_collection_address);
+    %{ stop_mock_rtwrk_id = mock_call(ids.rtwrk_contract_address, "currentRtwrkId", [1]) %}
+    %{ stop_mock_rtwrk_timestamp = mock_call(ids.rtwrk_contract_address, "rtwrkTimestamp", [1664192254 - 26 * 3600]) %}
+    %{ stop_mock_rtwrk_minted = mock_call(ids.rtwrk_collection_address, "exists", [1]) %}
+    launch_auction();
     return ();
 }

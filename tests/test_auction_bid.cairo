@@ -3,6 +3,7 @@
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.cairo.common.alloc import alloc
+from starkware.cairo.common.uint256 import Uint256, assert_uint256_eq
 
 from pxls.RtwrkThemeAuction.bid import (
     store_bid_theme,
@@ -40,6 +41,7 @@ func test_store_bid_theme{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: Has
 
 @view
 func test_store_bid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
+    alloc_locals;
     let (bids_count) = auction_bids_count.read(2);
 
     assert 0 = bids_count;
@@ -51,7 +53,7 @@ func test_store_bid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuilt
 
     let bid = Bid(
         account='account',
-        amount=12,
+        amount=Uint256(12, 0),
         timestamp=1664192254,
         reimbursement_timestamp=12,
         theme_len=3,
@@ -62,9 +64,9 @@ func test_store_bid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuilt
     let (bids_count) = auction_bids_count.read(2);
     assert 1 = bids_count;
 
-    let (stored_bid) = read_bid(auction_id=2, bid_id=0);
+    let (stored_bid) = read_bid(auction_id=2, bid_id=1);
 
-    assert 12 = stored_bid.amount;
+    assert_uint256_eq(Uint256(12, 0), stored_bid.amount);
     assert 'account' = stored_bid.account;
     assert 3 = stored_bid.theme_len;
     assert 'My super theme' = stored_bid.theme[0];
@@ -73,9 +75,9 @@ func test_store_bid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuilt
     assert 1664192254 = stored_bid.timestamp;
     assert 0 = stored_bid.reimbursement_timestamp;  // This is not updated via store_bid
 
-    let (unexistent_stored_bid) = read_bid(auction_id=2, bid_id=1);
+    let (unexistent_stored_bid) = read_bid(auction_id=2, bid_id=2);
 
-    assert 0 = unexistent_stored_bid.amount;
+    assert_uint256_eq(Uint256(0, 0), unexistent_stored_bid.amount);
     assert 0 = unexistent_stored_bid.account;
     assert 0 = unexistent_stored_bid.theme_len;
     assert 0 = unexistent_stored_bid.timestamp;
@@ -97,7 +99,7 @@ func test_validate_bid_theme_too_long{
 
     let bid = Bid(
         account='account',
-        amount=12,
+        amount=Uint256(12, 0),
         timestamp=1664192254,
         reimbursement_timestamp=0,
         theme_len=6,
@@ -120,14 +122,14 @@ func test_validate_first_bid_amount_too_low{
 
     let bid = Bid(
         account='account',
-        amount=2000000000000000,
+        amount=Uint256(2000000000000000, 0),
         timestamp=1664192254,
         reimbursement_timestamp=0,
         theme_len=1,
         theme=theme,
     );
 
-    %{ expect_revert(error_message="Bid amount must be at least 5000000000000000 since last bid is 0") %}
+    %{ expect_revert(error_message="Bid amount must be at least BID_INCREMENT since last bid is 0") %}
     assert_bid_valid(auction_id=2, bid=bid);
 
     return ();
@@ -143,7 +145,7 @@ func test_validate_second_bid_amount_too_low{
 
     let bid = Bid(
         account='account',
-        amount=7000000000000000,
+        amount=Uint256(7000000000000000, 0),
         timestamp=1664192254,
         reimbursement_timestamp=0,
         theme_len=1,
@@ -155,14 +157,14 @@ func test_validate_second_bid_amount_too_low{
 
     let bid = Bid(
         account='account',
-        amount=0,
+        amount=Uint256(0, 0),
         timestamp=1664192254,
         reimbursement_timestamp=0,
         theme_len=1,
         theme=theme,
     );
 
-    %{ expect_revert(error_message="Bid amount must be at least 12000000000000000 since last bid is 7000000000000000") %}
+    %{ expect_revert(error_message="Bid amount must be at least the last bid amount + BID_INCREMENT") %}
     assert_bid_valid(auction_id=2, bid=bid);
 
     return ();
@@ -191,7 +193,7 @@ func test_place_bid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuilt
     // Mocking the erc20 transferFrom
     %{ stop_mock_erc20 = mock_call(ids.eth_erc20_address_value, "transferFrom", []) %}
 
-    place_bid(auction_id=12, bid_amount=5000000000000000, theme_len=3, theme=theme);
+    place_bid(auction_id=12, bid_amount=Uint256(5000000000000000, 0), theme_len=3, theme=theme);
 
     // Verify that new bid was saved
 
@@ -199,8 +201,8 @@ func test_place_bid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuilt
     assert 1 = count;
 
     // Verify data from the new bid
-    let (stored_bid) = read_bid(auction_id=12, bid_id=0);
-    assert 5000000000000000 = stored_bid.amount;
+    let (stored_bid) = read_bid(auction_id=12, bid_id=1);
+    assert_uint256_eq(Uint256(5000000000000000, 0), stored_bid.amount);
     assert 121212 = stored_bid.account;
     assert 1664192254 = stored_bid.timestamp;
     assert 3 = stored_bid.theme_len;
@@ -218,7 +220,7 @@ func test_place_bid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuilt
 
     // Place another bid
 
-    place_bid(auction_id=12, bid_amount=12000000000000000, theme_len=3, theme=theme);
+    place_bid(auction_id=12, bid_amount=Uint256(12000000000000000, 0), theme_len=3, theme=theme);
 
     // Verify that it was saved
 
@@ -226,11 +228,11 @@ func test_place_bid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuilt
     assert 2 = count;
 
     // Verify that first one was reimbursed
-    let (stored_bid) = read_bid(auction_id=12, bid_id=0);
+    let (stored_bid) = read_bid(auction_id=12, bid_id=1);
     assert 1664192254 = stored_bid.reimbursement_timestamp;
 
     // Verify that new one not reimbursed
-    let (stored_bid) = read_bid(auction_id=12, bid_id=1);
+    let (stored_bid) = read_bid(auction_id=12, bid_id=2);
     assert 0 = stored_bid.reimbursement_timestamp;
 
     return ();

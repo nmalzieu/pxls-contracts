@@ -1,4 +1,5 @@
 %lang starknet
+from starkware.cairo.common.uint256 import Uint256
 
 //
 // Storage
@@ -19,7 +20,8 @@ func rtwrk_drawer_address() -> (address: felt) {
 func rtwrk_erc721_address() -> (address: felt) {
 }
 
-// Store the last (= current if < 24hours) auction id
+// Store the last (= current if < 24hours) auction id.
+// Starts at 1 (0 = never a single auction launched)
 @storage_var
 func current_auction_id() -> (auction_id: felt) {
 }
@@ -29,14 +31,19 @@ func current_auction_id() -> (auction_id: felt) {
 func auction_timestamp(auction_id) -> (timestamp: felt) {
 }
 
-// Store the amount of a bid
+// Store the number of bids for a given auction
 @storage_var
 func auction_bids_count(auction_id) -> (bids_count: felt) {
 }
 
+// Store the timestamp when the auction rtwrk was launched
+@storage_var
+func auction_rtwrk_launch_timestamp(auction_id) -> (timestamp: felt) {
+}
+
 // Store the amount of a bid
 @storage_var
-func bid_amount(auction_id, bid_id) -> (amount: felt) {
+func bid_amount(auction_id, bid_id) -> (amount: Uint256) {
 }
 
 // Store the account that does of a bid

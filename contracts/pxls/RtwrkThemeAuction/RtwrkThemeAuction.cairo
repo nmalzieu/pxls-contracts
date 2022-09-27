@@ -9,6 +9,8 @@ from pxls.RtwrkThemeAuction.storage import (
     auction_timestamp,
     auction_bids_count,
     eth_erc20_address,
+    colorizers_balance,
+    pxls_balance,
 )
 from pxls.RtwrkThemeAuction.bid import Bid, read_bid, place_bid
 from pxls.RtwrkThemeAuction.auction import launch_auction, launch_auction_rtwrk
@@ -96,6 +98,29 @@ func auctionBidsCount{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_chec
 ) -> (bidsCount: felt) {
     let (bidsCount) = auction_bids_count.read(auctionId);
     return (bidsCount=bidsCount);
+}
+
+// @notice Get the balance of a given colorizer (pxlr)
+// @param pxlId: The id of the PXL NFT to get the balance of
+// @return balance: The current balance that this PXL NFT can withdraw
+
+@view
+func colorizerBalance{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    pxlId: Uint256
+) -> (balance: Uint256) {
+    let (balance) = colorizers_balance.read(pxlId);
+    return (balance=balance);
+}
+
+// @notice Get the balance of the pxls project
+// @return balance: The current balance that the pxls project owner can withdraw
+
+@view
+func pxlsBalance{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() -> (
+    balance: Uint256
+) {
+    let (balance) = pxls_balance.read();
+    return (balance=balance);
 }
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

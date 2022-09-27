@@ -18,6 +18,7 @@ from pxls.RtwrkThemeAuction.storage import (
     current_auction_id,
     auction_timestamp,
     eth_erc20_address,
+    bid_reimbursed_timestamp,
 )
 
 @view
@@ -48,7 +49,7 @@ func test_store_bid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuilt
     assert theme[1] = 'is many felts';
     assert theme[2] = 'exactly 3';
 
-    let bid = Bid(account='account', amount=12, theme_len=3, theme=theme);
+    let bid = Bid(account='account', amount=12, timestamp=1664192254, theme_len=3, theme=theme);
     store_bid(auction_id=2, bid=bid);
 
     let (bids_count) = auction_bids_count.read(2);
@@ -62,12 +63,14 @@ func test_store_bid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuilt
     assert 'My super theme' = stored_bid.theme[0];
     assert 'is many felts' = stored_bid.theme[1];
     assert 'exactly 3' = stored_bid.theme[2];
+    assert 1664192254 = stored_bid.timestamp;
 
     let (unexistent_stored_bid) = read_bid(auction_id=2, bid_id=1);
 
     assert 0 = unexistent_stored_bid.amount;
     assert 0 = unexistent_stored_bid.account;
     assert 0 = unexistent_stored_bid.theme_len;
+    assert 0 = unexistent_stored_bid.timestamp;
 
     return ();
 }
@@ -84,7 +87,7 @@ func test_validate_bid_theme_too_long{
     assert theme[4] = 'bad';
     assert theme[5] = 'fren';
 
-    let bid = Bid(account='account', amount=12, theme_len=6, theme=theme);
+    let bid = Bid(account='account', amount=12, timestamp=1664192254, theme_len=6, theme=theme);
 
     %{ expect_revert(error_message="Theme is too long") %}
     assert_bid_valid(auction_id=2, bid=bid);
@@ -100,7 +103,9 @@ func test_validate_first_bid_amount_too_low{
     let (theme: felt*) = alloc();
     assert theme[0] = 'My super theme';
 
-    let bid = Bid(account='account', amount=2000000000000000, theme_len=1, theme=theme);
+    let bid = Bid(
+        account='account', amount=2000000000000000, timestamp=1664192254, theme_len=1, theme=theme
+    );
 
     %{ expect_revert(error_message="Bid amount must be at least 5000000000000000 since last bid is 0") %}
     assert_bid_valid(auction_id=2, bid=bid);
@@ -116,12 +121,14 @@ func test_validate_second_bid_amount_too_low{
     let (theme: felt*) = alloc();
     assert theme[0] = 'My super theme';
 
-    let bid = Bid(account='account', amount=7000000000000000, theme_len=1, theme=theme);
+    let bid = Bid(
+        account='account', amount=7000000000000000, timestamp=1664192254, theme_len=1, theme=theme
+    );
 
     assert_bid_valid(auction_id=2, bid=bid);
     store_bid(auction_id=2, bid=bid);
 
-    let bid = Bid(account='account', amount=0, theme_len=1, theme=theme);
+    let bid = Bid(account='account', amount=0, timestamp=1664192254, theme_len=1, theme=theme);
 
     %{ expect_revert(error_message="Bid amount must be at least 12000000000000000 since last bid is 7000000000000000") %}
     assert_bid_valid(auction_id=2, bid=bid);
@@ -131,13 +138,20 @@ func test_validate_second_bid_amount_too_low{
 
 @view
 func test_place_bid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
+    alloc_locals;
+
     %{ warp(1664192254) %}
+    %{ stop_prank = start_prank(121212) %}
+
     current_auction_id.write(12);
     auction_timestamp.write(12, 1664192254);
     let eth_erc20_address_value = 'eth_erc20_address';
     eth_erc20_address.write(eth_erc20_address_value);
 
-    let (theme: felt*) = alloc();
+    let (count) = auction_bids_count.read(12);
+    assert 0 = count;
+
+    let (local theme: felt*) = alloc();
     assert theme[0] = 'My super theme';
     assert theme[1] = 'is many felts';
     assert theme[2] = 'exactly 3';
@@ -146,6 +160,48 @@ func test_place_bid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuilt
     %{ stop_mock_erc20 = mock_call(ids.eth_erc20_address_value, "transferFrom", []) %}
 
     place_bid(auction_id=12, bid_amount=5000000000000000, theme_len=3, theme=theme);
+
+    // Verify that new bid was saved
+
+    let (count) = auction_bids_count.read(12);
+    assert 1 = count;
+
+    // Verify data from the new bid
+    let (stored_bid) = read_bid(auction_id=12, bid_id=0);
+    assert 5000000000000000 = stored_bid.amount;
+    assert 121212 = stored_bid.account;
+    assert 1664192254 = stored_bid.timestamp;
+    assert 3 = stored_bid.theme_len;
+    assert 'My super theme' = stored_bid.theme[0];
+    assert 'is many felts' = stored_bid.theme[1];
+    assert 'exactly 3' = stored_bid.theme[2];
+
+    // New bid is not reimbursed
+
+    let (timestamp) = bid_reimbursed_timestamp.read(12, 0);
+    assert 0 = timestamp;
+
+    // Mocking the erc20 transferFrom
+    %{ stop_mock_erc20 = mock_call(ids.eth_erc20_address_value, "transfer", []) %}
+
+    // Place another bid
+
+    place_bid(auction_id=12, bid_amount=12000000000000000, theme_len=3, theme=theme);
+
+    // Verify that it was saved
+
+    let (count) = auction_bids_count.read(12);
+    assert 2 = count;
+
+    // Verify that first one was reimbursed
+
+    let (timestamp) = bid_reimbursed_timestamp.read(12, 0);
+    assert 1664192254 = timestamp;
+
+    // Verify that new one not reimbursed
+
+    let (timestamp) = bid_reimbursed_timestamp.read(12, 1);
+    assert 0 = timestamp;
 
     return ();
 }

@@ -14,6 +14,7 @@ from pxls.RtwrkThemeAuction.storage import (
     bid_theme,
     eth_erc20_address,
     bid_reimbursed_timestamp,
+    bid_timestamp,
 )
 from pxls.RtwrkThemeAuction.variables import THEME_MAX_LENGTH, BID_INCREMENT
 from pxls.interfaces import IEthERC20
@@ -22,6 +23,7 @@ from pxls.RtwrkThemeAuction.auction import assert_running_auction_id
 struct Bid {
     account: felt,
     amount: felt,
+    timestamp: felt,
     theme_len: felt,
     theme: felt*,
 }
@@ -65,6 +67,7 @@ func store_bid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     let (bid_id) = auction_bids_count.read(auction_id);
     bid_account.write(auction_id, bid_id, bid.account);
     bid_amount.write(auction_id, bid_id, bid.amount);
+    bid_timestamp.write(auction_id, bid_id, bid.timestamp);
     store_bid_theme(auction_id, bid_id, 0, bid.theme_len, bid.theme);
     auction_bids_count.write(auction_id, bid_id + 1);
     return ();
@@ -76,7 +79,10 @@ func read_bid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     let (theme_len: felt, theme: felt*) = read_bid_theme(auction_id, bid_id);
     let (account) = bid_account.read(auction_id, bid_id);
     let (amount) = bid_amount.read(auction_id, bid_id);
-    let bid = Bid(account=account, amount=amount, theme_len=theme_len, theme=theme);
+    let (timestamp) = bid_timestamp.read(auction_id, bid_id);
+    let bid = Bid(
+        account=account, amount=amount, timestamp=timestamp, theme_len=theme_len, theme=theme
+    );
     return (bid=bid);
 }
 
@@ -170,7 +176,15 @@ func place_bid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     let (current_bid_count) = auction_bids_count.read(auction_id);
 
     // Create bid object
-    let bid = Bid(account=caller, amount=bid_amount, theme_len=theme_len, theme=theme);
+    let (current_block_timestamp) = get_block_timestamp();
+
+    let bid = Bid(
+        account=caller,
+        amount=bid_amount,
+        timestamp=current_block_timestamp,
+        theme_len=theme_len,
+        theme=theme,
+    );
 
     // First validate the bid
     assert_bid_valid(auction_id, bid);

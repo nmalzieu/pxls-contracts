@@ -36,20 +36,25 @@ func auction_bids_count(auction_id) -> (bids_count: felt) {
 
 // Store the amount of a bid
 @storage_var
-func bid_amount(auction_id, bid_index) -> (amount: felt) {
+func bid_amount(auction_id, bid_id) -> (amount: felt) {
 }
 
 // Store the account that does of a bid
 @storage_var
-func bid_account(auction_id, bid_index) -> (account: felt) {
+func bid_account(auction_id, bid_id) -> (account: felt) {
+}
+
+// Store the timestamp of the bid
+@storage_var
+func bid_timestamp(auction_id, bid_id) -> (timestamp: felt) {
 }
 
 // Store the theme of a bid (may be multiple felts)
 @storage_var
-func bid_theme(auction_id, bid_index, theme_index) -> (theme_component: felt) {
+func bid_theme(auction_id, bid_id, theme_index) -> (theme_component: felt) {
 }
 
 // Store when a bid was reimbursed
 @storage_var
-func bid_reimbursed_timestamp(auction_id, bid_index) -> (timestamp: felt) {
+func bid_reimbursed_timestamp(auction_id, bid_id) -> (timestamp: felt) {
 }

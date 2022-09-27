@@ -65,3 +65,13 @@ func bid_theme(auction_id, bid_id, theme_index) -> (theme_component: felt) {
 @storage_var
 func bid_reimbursement_timestamp(auction_id, bid_id) -> (timestamp: felt) {
 }
+
+// Store the balance owed to each colorizer
+@storage_var
+func colorizers_balance(pxlId: Uint256) -> (balance: Uint256) {
+}
+
+// Store the balance owed to the pxls project
+@storage_var
+func pxls_balance() -> (balance: Uint256) {
+}

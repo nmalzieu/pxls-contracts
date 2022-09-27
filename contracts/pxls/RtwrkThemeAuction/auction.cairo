@@ -19,6 +19,7 @@ from pxls.RtwrkThemeAuction.storage import (
     auction_rtwrk_launch_timestamp,
     auction_bids_count,
 )
+from pxls.RtwrkThemeAuction.payment import settle_auction_payments
 
 func launch_auction{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() {
     assert_no_running_auction();
@@ -101,5 +102,9 @@ func settle_auction{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_
     // Let's mint the rtwrk!
     let (rtwrk_id) = current_rtwrk_id();
     mint_rtwrk(winning_bid.account, rtwrk_id);
+    // After the current rtwrk is minted, launch a new auction
+    launch_auction();
+    // And trigger the payments for the rtwrk participants!
+    settle_auction_payments(rtwrk_id, winning_bid);
     return ();
 }

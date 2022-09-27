@@ -11,3 +11,7 @@ const BID_INCREMENT = 5000000000000000;  // 0.005 ETH = 6.5$
 // The max length for the theme (in # of felts)
 
 const THEME_MAX_LENGTH = 5;
+
+// The divisor of total bid amount that goes to the project (1/10)
+
+const PXLS_BID_AMOUNT_DIVISOR = 10;

@@ -53,7 +53,7 @@ func assert_no_running_rtwrk{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, ran
 
 func launch_rtwrk_for_auction{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     theme_len: felt, theme: felt*
-) -> (launched:felt) {
+) -> (launched: felt) {
     alloc_locals;
     let (running_rtwrk: felt) = is_running_rtwrk();
     with_attr error_message("Cannot call this method while an rtwrk is running") {
@@ -62,4 +62,14 @@ func launch_rtwrk_for_auction{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, ra
     let (contract_address) = rtwrk_drawer_address.read();
     let (launched) = IRtwrkDrawer.launchNewRtwrkIfNecessary(contract_address, theme_len, theme);
     return (launched=launched);
+}
+
+func rtwrk_colorizers{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    rtwrk_id: felt
+) -> (colorizers_len: felt, colorizers: felt*) {
+    let (contract_address) = rtwrk_drawer_address.read();
+    let (colorizers_len, colorizers: felt*) = IRtwrkDrawer.colorizers(
+        contract_address=contract_address, rtwrkId=rtwrk_id, rtwrkStep=0
+    );
+    return (colorizers_len, colorizers);
 }

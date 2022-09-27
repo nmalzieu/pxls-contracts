@@ -13,7 +13,7 @@ from pxls.RtwrkThemeAuction.storage import (
     bid_account,
     bid_theme,
     eth_erc20_address,
-    bid_reimbursed_timestamp,
+    bid_reimbursement_timestamp,
     bid_timestamp,
 )
 from pxls.RtwrkThemeAuction.variables import THEME_MAX_LENGTH, BID_INCREMENT
@@ -24,6 +24,7 @@ struct Bid {
     account: felt,
     amount: felt,
     timestamp: felt,
+    reimbursement_timestamp: felt,
     theme_len: felt,
     theme: felt*,
 }
@@ -68,6 +69,8 @@ func store_bid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     bid_account.write(auction_id, bid_id, bid.account);
     bid_amount.write(auction_id, bid_id, bid.amount);
     bid_timestamp.write(auction_id, bid_id, bid.timestamp);
+    // Not updating the reimbursement timestamp storage even if there is
+    // a value here, this is ONLY done in reimburse_bid
     store_bid_theme(auction_id, bid_id, 0, bid.theme_len, bid.theme);
     auction_bids_count.write(auction_id, bid_id + 1);
     return ();
@@ -80,8 +83,14 @@ func read_bid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     let (account) = bid_account.read(auction_id, bid_id);
     let (amount) = bid_amount.read(auction_id, bid_id);
     let (timestamp) = bid_timestamp.read(auction_id, bid_id);
+    let (reimbursement_timestamp) = bid_reimbursement_timestamp.read(auction_id, bid_id);
     let bid = Bid(
-        account=account, amount=amount, timestamp=timestamp, theme_len=theme_len, theme=theme
+        account=account,
+        amount=amount,
+        timestamp=timestamp,
+        reimbursement_timestamp=reimbursement_timestamp,
+        theme_len=theme_len,
+        theme=theme,
     );
     return (bid=bid);
 }
@@ -145,12 +154,12 @@ func reimburse_bid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_p
     auction_id: felt, bid_id: felt
 ) -> () {
     ReentrancyGuard._start();
-    let (reimbursed_timestamp) = bid_reimbursed_timestamp.read(auction_id, bid_id);
+    let (reimbursement_timestamp) = bid_reimbursement_timestamp.read(auction_id, bid_id);
     with_attr error_message("Bid {bid_id} has already been reimbursed") {
-        assert reimbursed_timestamp = 0;
+        assert reimbursement_timestamp = 0;
     }
     let (current_block_timestamp) = get_block_timestamp();
-    bid_reimbursed_timestamp.write(auction_id, bid_id, current_block_timestamp);
+    bid_reimbursement_timestamp.write(auction_id, bid_id, current_block_timestamp);
     let (bid_to_reimburse: Bid) = read_bid(auction_id, bid_id);
     let (eth_contract_address) = eth_erc20_address.read();
     IEthERC20.transfer(
@@ -182,6 +191,7 @@ func place_bid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
         account=caller,
         amount=bid_amount,
         timestamp=current_block_timestamp,
+        reimbursement_timestamp=0,
         theme_len=theme_len,
         theme=theme,
     );

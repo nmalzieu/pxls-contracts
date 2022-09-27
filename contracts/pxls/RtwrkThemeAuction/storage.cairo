@@ -56,5 +56,5 @@ func bid_theme(auction_id, bid_id, theme_index) -> (theme_component: felt) {
 
 // Store when a bid was reimbursed
 @storage_var
-func bid_reimbursed_timestamp(auction_id, bid_id) -> (timestamp: felt) {
+func bid_reimbursement_timestamp(auction_id, bid_id) -> (timestamp: felt) {
 }

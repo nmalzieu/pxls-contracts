@@ -9,7 +9,7 @@ from pxls.RtwrkThemeAuction.storage import (
     auction_bids_count,
     eth_erc20_address,
 )
-from pxls.RtwrkThemeAuction.bid import Bid, read_bid
+from pxls.RtwrkThemeAuction.bid import Bid, read_bid, place_bid
 from pxls.RtwrkThemeAuction.auction import launch_auction
 
 // @dev The constructor initializing the theme auction contract with important data
@@ -22,7 +22,6 @@ func constructor{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
     rtwrk_drawer_address_value: felt,
     rtwrk_erc721_address_value: felt,
 ) {
-
     eth_erc20_address.write(eth_erc20_address_value);
     rtwrk_drawer_address.write(rtwrk_drawer_address_value);
     rtwrk_erc721_address.write(rtwrk_erc721_address_value);
@@ -42,11 +41,25 @@ func constructor{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
 // @return theme: the bid theme as an array of short strings
 
 @view
-func auctionBid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+func bid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     auctionId: felt, bidId: felt
-) -> (bidAccount: felt, bidAmount: felt, theme_len: felt, theme: felt*) {
+) -> (
+    bidAccount: felt,
+    bidAmount: felt,
+    bidTimestamp: felt,
+    bidReimbursementTimestamp: felt,
+    theme_len: felt,
+    theme: felt*,
+) {
     let (bid: Bid) = read_bid(auctionId, bidId);
-    return (bidAccount=bid.account, bidAmount=bid.amount, theme_len=bid.theme_len, theme=bid.theme);
+    return (
+        bidAccount=bid.account,
+        bidAmount=bid.amount,
+        bidTimestamp=bid.timestamp,
+        bidReimbursementTimestamp=bid.reimbursement_timestamp,
+        theme_len=bid.theme_len,
+        theme=bid.theme,
+    );
 }
 
 // @notice A getter for the current auction id (even if it is finished)
@@ -94,5 +107,18 @@ func auctionBidsCount{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_chec
 @external
 func launchAuction{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() {
     launch_auction();
+    return ();
+}
+
+// @notice Place a bid in the current auction
+// @param auctionId: Id of the auction to place bid in. Must be the current running auction.
+// @param bidAmount: Amount of the bid. Must be >= last bid amount + bid increment
+// @param theme: the bid theme as an array of short strings
+
+@external
+func placeBid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    auctionId, bidAmount, theme_len, theme: felt*
+) {
+    place_bid(auctionId, bidAmount, theme_len, theme);
     return ();
 }

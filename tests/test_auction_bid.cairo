@@ -18,7 +18,7 @@ from pxls.RtwrkThemeAuction.storage import (
     current_auction_id,
     auction_timestamp,
     eth_erc20_address,
-    bid_reimbursed_timestamp,
+    bid_reimbursement_timestamp,
 )
 
 @view
@@ -49,7 +49,14 @@ func test_store_bid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuilt
     assert theme[1] = 'is many felts';
     assert theme[2] = 'exactly 3';
 
-    let bid = Bid(account='account', amount=12, timestamp=1664192254, theme_len=3, theme=theme);
+    let bid = Bid(
+        account='account',
+        amount=12,
+        timestamp=1664192254,
+        reimbursement_timestamp=12,
+        theme_len=3,
+        theme=theme,
+    );
     store_bid(auction_id=2, bid=bid);
 
     let (bids_count) = auction_bids_count.read(2);
@@ -64,6 +71,7 @@ func test_store_bid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuilt
     assert 'is many felts' = stored_bid.theme[1];
     assert 'exactly 3' = stored_bid.theme[2];
     assert 1664192254 = stored_bid.timestamp;
+    assert 0 = stored_bid.reimbursement_timestamp;  // This is not updated via store_bid
 
     let (unexistent_stored_bid) = read_bid(auction_id=2, bid_id=1);
 
@@ -87,7 +95,14 @@ func test_validate_bid_theme_too_long{
     assert theme[4] = 'bad';
     assert theme[5] = 'fren';
 
-    let bid = Bid(account='account', amount=12, timestamp=1664192254, theme_len=6, theme=theme);
+    let bid = Bid(
+        account='account',
+        amount=12,
+        timestamp=1664192254,
+        reimbursement_timestamp=0,
+        theme_len=6,
+        theme=theme,
+    );
 
     %{ expect_revert(error_message="Theme is too long") %}
     assert_bid_valid(auction_id=2, bid=bid);
@@ -104,7 +119,12 @@ func test_validate_first_bid_amount_too_low{
     assert theme[0] = 'My super theme';
 
     let bid = Bid(
-        account='account', amount=2000000000000000, timestamp=1664192254, theme_len=1, theme=theme
+        account='account',
+        amount=2000000000000000,
+        timestamp=1664192254,
+        reimbursement_timestamp=0,
+        theme_len=1,
+        theme=theme,
     );
 
     %{ expect_revert(error_message="Bid amount must be at least 5000000000000000 since last bid is 0") %}
@@ -122,13 +142,25 @@ func test_validate_second_bid_amount_too_low{
     assert theme[0] = 'My super theme';
 
     let bid = Bid(
-        account='account', amount=7000000000000000, timestamp=1664192254, theme_len=1, theme=theme
+        account='account',
+        amount=7000000000000000,
+        timestamp=1664192254,
+        reimbursement_timestamp=0,
+        theme_len=1,
+        theme=theme,
     );
 
     assert_bid_valid(auction_id=2, bid=bid);
     store_bid(auction_id=2, bid=bid);
 
-    let bid = Bid(account='account', amount=0, timestamp=1664192254, theme_len=1, theme=theme);
+    let bid = Bid(
+        account='account',
+        amount=0,
+        timestamp=1664192254,
+        reimbursement_timestamp=0,
+        theme_len=1,
+        theme=theme,
+    );
 
     %{ expect_revert(error_message="Bid amount must be at least 12000000000000000 since last bid is 7000000000000000") %}
     assert_bid_valid(auction_id=2, bid=bid);
@@ -178,7 +210,7 @@ func test_place_bid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuilt
 
     // New bid is not reimbursed
 
-    let (timestamp) = bid_reimbursed_timestamp.read(12, 0);
+    let (timestamp) = bid_reimbursement_timestamp.read(12, 0);
     assert 0 = timestamp;
 
     // Mocking the erc20 transferFrom
@@ -194,14 +226,12 @@ func test_place_bid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuilt
     assert 2 = count;
 
     // Verify that first one was reimbursed
-
-    let (timestamp) = bid_reimbursed_timestamp.read(12, 0);
-    assert 1664192254 = timestamp;
+    let (stored_bid) = read_bid(auction_id=12, bid_id=0);
+    assert 1664192254 = stored_bid.reimbursement_timestamp;
 
     // Verify that new one not reimbursed
-
-    let (timestamp) = bid_reimbursed_timestamp.read(12, 1);
-    assert 0 = timestamp;
+    let (stored_bid) = read_bid(auction_id=12, bid_id=1);
+    assert 0 = stored_bid.reimbursement_timestamp;
 
     return ();
 }

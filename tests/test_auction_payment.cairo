@@ -83,6 +83,10 @@ func test_settle_auction_payment_1_1_eth{
     assert_colorizer_balance(6, 141428571428571428);
     assert_colorizer_balance(18, 141428571428571428);
     assert_colorizer_balance(356, 141428571428571428);
+    assert_colorizer_balance(213, 141428571428571428);
+    assert_colorizer_balance(4, 141428571428571428);
+    assert_colorizer_balance(87, 141428571428571428);
+    assert_colorizer_balance(132, 141428571428571428);
 
     // Real pxls balance is 110000000000000000 (10%) + 4 wei (remainder)
     assert_pxls_balance(110000000000000004);
@@ -112,6 +116,33 @@ func test_settle_auction_payment_wei{
     assert_colorizer_balance(18, 5);
 
     assert_pxls_balance(2);
+
+    return ();
+}
+
+@view
+func test_settle_auction_payment_400_colorizers{
+    syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
+}() {
+    alloc_locals;
+
+    let rtwrk_contract_address = 'rtwrk_contract_address';
+    rtwrk_drawer_address.write(rtwrk_contract_address);
+
+    %{ stop_mock_colorizers = mock_call(ids.rtwrk_contract_address, "colorizers", [400] + list(range(1, 401))) %}
+
+    let bid = get_sample_bid(5000000000000200);  // wei
+    settle_auction_payments(rtwrk_id=1, bid=bid);
+
+    // PXLS new balance = 10% of 5000000000000200 wei = 500000000000020 wei
+    // Colorizers balance = 5000000000000200 - 500000000000020 = 4500000000000180
+    // Share 4500000000000180 wei between 400 colorizers ? 11250000000000,45 wei each => 11250000000000 wei each
+    // Rest = 4500000000000180 - 400 * 11250000000000 = 180 wei more for pxls
+
+    assert_colorizer_balance(6, 11250000000000);
+    assert_colorizer_balance(400, 11250000000000);
+
+    assert_pxls_balance(500000000000020 + 180);
 
     return ();
 }

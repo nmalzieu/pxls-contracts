@@ -11,8 +11,14 @@ from pxls.RtwrkThemeAuction.bid import (
     store_bid,
     read_bid,
     assert_bid_valid,
+    place_bid,
 )
-from pxls.RtwrkThemeAuction.storage import auction_bids_count
+from pxls.RtwrkThemeAuction.storage import (
+    auction_bids_count,
+    current_auction_id,
+    auction_timestamp,
+    eth_erc20_address,
+)
 
 @view
 func test_store_bid_theme{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
@@ -102,7 +108,6 @@ func test_validate_first_bid_amount_too_low{
     return ();
 }
 
-
 @view
 func test_validate_second_bid_amount_too_low{
     syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
@@ -120,6 +125,27 @@ func test_validate_second_bid_amount_too_low{
 
     %{ expect_revert(error_message="Bid amount must be at least 12000000000000000 since last bid is 7000000000000000") %}
     assert_bid_valid(auction_id=2, bid=bid);
+
+    return ();
+}
+
+@view
+func test_place_bid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
+    %{ warp(1664192254) %}
+    current_auction_id.write(12);
+    auction_timestamp.write(12, 1664192254);
+    let eth_erc20_address_value = 'eth_erc20_address';
+    eth_erc20_address.write(eth_erc20_address_value);
+
+    let (theme: felt*) = alloc();
+    assert theme[0] = 'My super theme';
+    assert theme[1] = 'is many felts';
+    assert theme[2] = 'exactly 3';
+
+    // Mocking the erc20 transferFrom
+    %{ stop_mock_erc20 = mock_call(ids.eth_erc20_address_value, "transferFrom", []) %}
+
+    place_bid(auction_id=12, bid_amount=5000000000000000, theme_len=3, theme=theme);
 
     return ();
 }

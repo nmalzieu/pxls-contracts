@@ -17,6 +17,7 @@ from pxls.RtwrkThemeAuction.storage import (
 )
 from pxls.RtwrkThemeAuction.variables import THEME_MAX_LENGTH, BID_INCREMENT
 from pxls.interfaces import IEthERC20
+from pxls.RtwrkThemeAuction.auction import assert_running_auction_id
 
 struct Bid {
     account: felt,
@@ -158,16 +159,32 @@ func reimburse_bid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_p
 func place_bid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     auction_id: felt, bid_amount: felt, theme_len: felt, theme: felt*
 ) -> () {
+    alloc_locals;
+
+    // Check that this auction is, indeed, running!
+    assert_running_auction_id(auction_id);
+
     let (caller) = get_caller_address();
+
+    // Check if we already have a bid on this auction
+    let (current_bid_count) = auction_bids_count.read(auction_id);
+
     // Create bid object
     let bid = Bid(account=caller, amount=bid_amount, theme_len=theme_len, theme=theme);
+
     // First validate the bid
     assert_bid_valid(auction_id, bid);
+
     // Then let's move ETH from bidder's wallet to the smart contract
     transfer_amount_from_bidder(bid);
 
-    // TODO => test
-    // TODO => reimburse previous bidder (if any !)
-    // TODO => if everything worked, store the bid
+    // Then save the bid
+    store_bid(auction_id, bid);
+
+    // Then in the end, reimburse previous bid
+    if (current_bid_count != 0) {
+        let last_bid_id = current_bid_count - 1;
+        reimburse_bid(auction_id, last_bid_id);
+    }
     return ();
 }

@@ -36,6 +36,18 @@ func assert_running_auction{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, rang
     return ();
 }
 
+func assert_running_auction_id{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    auction_id: felt
+) {
+    alloc_locals;
+    let (local  current_id: felt) = current_auction_id.read();
+    with_attr error_message("Current auction is {current_id}, not {auction_id}") {
+        assert current_id = auction_id;
+    }
+    assert_running_auction();
+    return ();
+}
+
 func assert_no_running_auction{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() {
     let (running_auction: felt) = is_running_auction();
     with_attr error_message("Cannot call this method while an auction is running") {

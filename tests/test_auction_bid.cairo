@@ -235,5 +235,28 @@ func test_place_bid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuilt
     let (stored_bid) = read_bid(auction_id=12, bid_id=2);
     assert 0 = stored_bid.reimbursement_timestamp;
 
+    %{
+        expect_events(
+            {
+               "name": "bid_placed",
+               "data": {
+                   "auction_id": 12,
+                   "caller_account_address": 121212,
+                   "amount": 5000000000000000,
+                   "theme": [1571342190246778369990144926510437,8354587042288679035740724425843, 1871795475153644232755]
+               }
+           },
+           {
+               "name": "bid_placed",
+               "data": {
+                   "auction_id": 12,
+                   "caller_account_address": 121212,
+                   "amount": 12000000000000000,
+                   "theme": [1571342190246778369990144926510437,8354587042288679035740724425843, 1871795475153644232755]
+               }
+           }
+        )
+    %}
+
     return ();
 }

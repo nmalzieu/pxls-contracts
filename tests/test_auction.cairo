@@ -74,6 +74,36 @@ func test_launch_auction{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: Hash
 }
 
 @view
+func test_launch_auction_event{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
+    %{ warp(1664192254) %}
+    %{ start_prank(654321) %}
+
+    let rtwrk_contract_address = 'rtwrk_contract_address';
+    rtwrk_drawer_address.write(rtwrk_contract_address);
+
+    let rtwrk_collection_address = 'rtwrk_collection_address';
+    rtwrk_erc721_address.write(rtwrk_collection_address);
+
+    %{ stop_mock_rtwrk_id = mock_call(ids.rtwrk_contract_address, "currentRtwrkId", [1]) %}
+    %{ stop_mock_rtwrk_timestamp = mock_call(ids.rtwrk_contract_address, "rtwrkTimestamp", [1664192254 - 26 * 3600]) %}
+    %{ stop_mock_rtwrk_minted = mock_call(ids.rtwrk_collection_address, "exists", [1]) %}
+
+    %{
+        expect_events({
+               "name": "auction_launched",
+               "data": {
+                   "caller_account_address": 654321,
+                   "auction_id": 1,
+               }
+           })
+    %}
+
+    launch_auction();
+
+    return ();
+}
+
+@view
 func test_launch_auction_rtwrk_running{
     syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
 }() {
@@ -171,7 +201,7 @@ func test_launch_auction_rtwrk_drawer_cant_launch{
     assert theme[0] = 'Theme 1';
 
     // Mocking the erc20 transferFrom
-    %{ stop_mock_erc20 = mock_call(ids.eth_erc20_address_value, "transferFrom", []) %}
+    %{ stop_mock_erc20 = mock_call(ids.eth_erc20_address_value, "transferFrom", [1]) %}
 
     place_bid(auction_id=1, bid_amount=Uint256(5000000000000000, 0), theme_len=1, theme=theme);
 
@@ -194,6 +224,27 @@ func test_launch_auction_rtwrk_cant_launch_twice{
     // Cannot launch rtwrk twice
     %{ expect_revert(error_message="Rtwrk for auction 1 has already been launched at timestamp 1664285854") %}
     launch_auction_rtwrk();
+
+    return ();
+}
+
+@view
+func test_launch_auction_rtwrk{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
+    %{ start_prank(654321) %}
+
+    %{
+        expect_events({
+               "name": "rtwrk_launched",
+               "data": {
+                   "caller_account_address": 654321,
+                   "auction_id": 1,
+                   "rtwrk_id": 1,
+                   "theme": [23758682880024625]
+               }
+           })
+    %}
+
+    launch_auction_and_rtwrk_with_mock();
 
     return ();
 }
@@ -252,23 +303,42 @@ func test_settle_auction_rtwrk_not_finished{
     return ();
 }
 
-@view
-func test_settle_auction_rtwrk_finished{
-    syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
-}() {
-    launch_auction_and_rtwrk_with_mock();
-    // Rtwrk is launched, and should be finished after 26 hours
-    %{ warp(1664192254 + 26*3600 + 26*3600) %}
-    // Mock to say that the current rtwrk token hasn't been minted yet
-    %{ stop_mock_rtwrk_minted() %}
-    let rtwrk_collection_address = 'rtwrk_collection_address';
-    rtwrk_erc721_address.write(rtwrk_collection_address);
-    %{ stop_mock_rtwrk_minted = mock_call(ids.rtwrk_collection_address, "exists", [0]) %}
-    %{ stop_mock_rtwrk_mint = mock_call(ids.rtwrk_collection_address, "mint", []) %}
-    // %{ expect_revert(error_message="Cannot call this method while an rtwrk is running") %}
-    settle_auction();
-    return ();
-}
+// Right now this test doesn't work because we need exists to return false
+// first (current rtwrk must not be minted when we settle) then true
+// (current rtwrk must be minted to launch the next auction)
+// Todo => improve protostar to handle this?
+
+// @view
+// func test_settle_auction_rtwrk_finished{
+//     syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
+// }() {
+//     %{ start_prank(654321) %}
+
+//     launch_auction_and_rtwrk_with_mock();
+//     // Rtwrk is launched, and should be finished after 26 hours
+//     %{ warp(1664192254 + 26*3600 + 26*3600) %}
+//     // Mock to say that the current rtwrk token hasn't been minted yet
+//     %{ stop_mock_rtwrk_minted() %}
+//     let rtwrk_collection_address = 'rtwrk_collection_address';
+//     rtwrk_erc721_address.write(rtwrk_collection_address);
+//     %{ stop_mock_rtwrk_minted = mock_call(ids.rtwrk_collection_address, "exists", [0]) %}
+//     %{ stop_mock_rtwrk_mint = mock_call(ids.rtwrk_collection_address, "mint", []) %}
+
+//     %{
+//         expect_events({
+//                "name": "auction_settled",
+//                "data": {
+//                    "caller_account_address": 654321,
+//                    "winner_account_address": 654321,
+//                    "auction_id": 1,
+//                    "rtwrk_id": 1
+//                }
+//            })
+//     %}
+
+//     settle_auction();
+//     return ();
+// }
 
 func launch_auction_with_mock{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
     %{ warp(1664192254) %}
@@ -294,7 +364,7 @@ func launch_auction_and_bids_with_mock{
     assert theme[0] = 'Theme 1';
 
     // Mocking the erc20 transferFrom
-    %{ stop_mock_erc20 = mock_call(ids.eth_erc20_address_value, "transferFrom", []) %}
+    %{ stop_mock_erc20 = mock_call(ids.eth_erc20_address_value, "transferFrom", [1]) %}
 
     place_bid(auction_id=1, bid_amount=Uint256(5000000000000000, 0), theme_len=1, theme=theme);
 

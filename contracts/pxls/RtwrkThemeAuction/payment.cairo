@@ -2,6 +2,7 @@
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.uint256 import Uint256, assert_uint256_lt
 from starkware.cairo.common.bool import TRUE
+from starkware.starknet.common.syscalls import get_caller_address
 
 from openzeppelin.security.safemath.library import SafeUint256
 from openzeppelin.security.reentrancyguard.library import ReentrancyGuard
@@ -12,6 +13,7 @@ from pxls.RtwrkThemeAuction.variables import PXLS_BID_AMOUNT_DIVISOR
 from pxls.RtwrkThemeAuction.drawer import rtwrk_colorizers
 from pxls.RtwrkThemeAuction.storage import colorizers_balance, pxls_balance, eth_erc20_address
 from pxls.RtwrkThemeAuction.pxls_collection import get_current_owner_of_pxl
+from pxls.RtwrkThemeAuction.events import pxls_balance_withdrawn, colorizer_balance_withdrawn
 
 from pxls.interfaces import IRtwrkDrawer, IEthERC20
 
@@ -83,6 +85,7 @@ func increment_colorizers_balances{syscall_ptr: felt*, pedersen_ptr: HashBuiltin
 }
 
 func withdraw_pxls_balance{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() {
+    alloc_locals;
     ReentrancyGuard._start();
     let (current_pxls_balance: Uint256) = pxls_balance.read();
     with_attr error_message("Trying to witdhraw but balance is 0") {
@@ -94,6 +97,10 @@ func withdraw_pxls_balance{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range
     with_attr error_message("Could not transfer amount to pxls contract owner") {
         assert transfer_success = TRUE;
     }
+    let (caller_account_address) = get_caller_address();
+    pxls_balance_withdrawn.emit(
+        caller_account_address=caller_account_address, amount=current_pxls_balance, recipient=owner
+    );
     ReentrancyGuard._end();
     return ();
 }
@@ -101,6 +108,7 @@ func withdraw_pxls_balance{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range
 func withdraw_colorizer_balance{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     pxl_id: Uint256
 ) {
+    alloc_locals;
     ReentrancyGuard._start();
     let (current_colorizer_balance: Uint256) = colorizers_balance.read(pxl_id);
     with_attr error_message("Trying to witdhraw but balance is 0") {
@@ -113,6 +121,13 @@ func withdraw_colorizer_balance{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, 
     with_attr error_message("Could not transfer amount to colorizer") {
         assert transfer_success = TRUE;
     }
+    let (caller_account_address) = get_caller_address();
+    colorizer_balance_withdrawn.emit(
+        caller_account_address=caller_account_address,
+        amount=current_colorizer_balance,
+        pxl_id=pxl_id,
+        recipient=owner_of_pxl,
+    );
     ReentrancyGuard._end();
     return ();
 }

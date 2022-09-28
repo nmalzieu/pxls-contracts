@@ -1,6 +1,6 @@
 %lang starknet
 from starkware.cairo.common.cairo_builtins import HashBuiltin
-from starkware.starknet.common.syscalls import get_block_timestamp
+from starkware.starknet.common.syscalls import get_block_timestamp, get_caller_address
 from starkware.cairo.common.math_cmp import is_le
 from starkware.cairo.common.bool import TRUE
 from starkware.cairo.common.math import assert_le, assert_lt
@@ -21,6 +21,7 @@ from pxls.RtwrkThemeAuction.storage import (
     auction_bids_count,
 )
 from pxls.RtwrkThemeAuction.payment import settle_auction_payments
+from pxls.RtwrkThemeAuction.events import auction_launched, rtwrk_launched, auction_settled
 
 func launch_auction{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() {
     assert_no_running_auction();
@@ -31,6 +32,8 @@ func launch_auction{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_
     let (block_timestamp) = get_block_timestamp();
     current_auction_id.write(new_auction_id);
     auction_timestamp.write(new_auction_id, block_timestamp);
+    let (caller_address) = get_caller_address();
+    auction_launched.emit(caller_account_address=caller_address, auction_id=new_auction_id);
     return ();
 }
 
@@ -68,11 +71,16 @@ func launch_auction_rtwrk{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_
         assert_le(1, winning_bid.theme_len);
     }
 
-    let (launched) = launch_rtwrk_for_auction(winning_bid.theme_len, winning_bid.theme);
+    let (launched_rtwrk_id) = launch_rtwrk_for_auction(winning_bid.theme_len, winning_bid.theme);
 
-    with_attr error_message("An error occured, the rtwrk could not be launched") {
-        assert launched = TRUE;
-    }
+    let (caller_address) = get_caller_address();
+    rtwrk_launched.emit(
+        caller_account_address=caller_address,
+        auction_id=auction_id,
+        rtwrk_id=launched_rtwrk_id,
+        theme_len=winning_bid.theme_len,
+        theme=winning_bid.theme,
+    );
 
     return ();
 }
@@ -107,5 +115,13 @@ func settle_auction{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_
     launch_auction();
     // And trigger the payments for the rtwrk participants!
     settle_auction_payments(rtwrk_id, winning_bid);
+    // Emit the event
+    let (caller_address) = get_caller_address();
+    auction_settled.emit(
+        caller_account_address=caller_address,
+        winner_account_address=winning_bid.account,
+        auction_id=auction_id,
+        rtwrk_id=rtwrk_id,
+    );
     return ();
 }

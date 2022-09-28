@@ -2,8 +2,11 @@
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.alloc import alloc
 from starkware.cairo.common.math import assert_le
-from starkware.starknet.common.syscalls import get_caller_address, get_contract_address
-from starkware.starknet.common.syscalls import get_block_timestamp
+from starkware.starknet.common.syscalls import (
+    get_caller_address,
+    get_contract_address,
+    get_block_timestamp,
+)
 from starkware.cairo.common.uint256 import Uint256, assert_uint256_le
 from starkware.cairo.common.bool import TRUE
 
@@ -22,6 +25,7 @@ from pxls.RtwrkThemeAuction.bid_struct import Bid
 from pxls.RtwrkThemeAuction.variables import THEME_MAX_LENGTH, BID_INCREMENT
 from pxls.RtwrkThemeAuction.auction_checks import assert_running_auction_id
 from pxls.RtwrkThemeAuction.payment import transfer_eth, transfer_eth_from
+from pxls.RtwrkThemeAuction.events import bid_placed
 
 func store_bid_theme{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     auction_id: felt, bid_id: felt, theme_index: felt, theme_len: felt, theme: felt*
@@ -171,7 +175,7 @@ func place_bid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     // Check that this auction is, indeed, running!
     assert_running_auction_id(auction_id);
 
-    let (caller) = get_caller_address();
+    let (caller_address) = get_caller_address();
 
     // Check if we already have a bid on this auction
     let (last_bid_id) = auction_bids_count.read(auction_id);
@@ -180,7 +184,7 @@ func place_bid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     let (current_block_timestamp) = get_block_timestamp();
 
     let bid = Bid(
-        account=caller,
+        account=caller_address,
         amount=bid_amount,
         timestamp=current_block_timestamp,
         reimbursement_timestamp=0,
@@ -201,5 +205,19 @@ func place_bid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     if (last_bid_id != 0) {
         reimburse_bid(auction_id, last_bid_id);
     }
+
+    tempvar syscall_ptr = syscall_ptr;
+    tempvar pedersen_ptr = pedersen_ptr;
+    tempvar range_check_ptr = range_check_ptr;
+
+    // Emit the event
+    bid_placed.emit(
+        auction_id=auction_id,
+        caller_account_address=caller_address,
+        amount=bid_amount,
+        theme_len=theme_len,
+        theme=theme,
+    );
+
     return ();
 }

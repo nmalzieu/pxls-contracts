@@ -3,6 +3,8 @@ from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.alloc import alloc
 from starkware.cairo.common.uint256 import Uint256, assert_uint256_eq
 
+from openzeppelin.access.ownable.library import Ownable
+
 from pxls.RtwrkThemeAuction.storage import (
     colorizers_balance,
     pxls_balance,
@@ -198,6 +200,9 @@ func test_withdraw_transfer_fail{syscall_ptr: felt*, range_check_ptr, pedersen_p
 func test_withdraw_transfer{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
     alloc_locals;
 
+    %{ start_prank(121212) %}
+    Ownable.initializer(121213);
+
     let rtwrk_contract_address = 'rtwrk_contract_address';
     rtwrk_drawer_address.write(rtwrk_contract_address);
 
@@ -233,6 +238,28 @@ func test_withdraw_transfer{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: H
     assert_colorizer_balance(6, 270000000000000000);
     assert_colorizer_balance(18, 0);
     assert_colorizer_balance(356, 270000000000000000);
+
+    %{
+        expect_events(
+            {
+               "name": "pxls_balance_withdrawn",
+               "data": {
+                   "caller_account_address": 121212,
+                   "amount": 90000000000000000,
+                   "recipient": 121213,
+               }
+           },
+           {
+               "name": "colorizer_balance_withdrawn",
+               "data": {
+                   "caller_account_address": 121212,
+                   "amount": 270000000000000000,
+                   "pxl_id": 18,
+                   "recipient": 123456
+               }
+           }
+        )
+    %}
 
     return ();
 }

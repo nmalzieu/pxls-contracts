@@ -76,6 +76,8 @@ namespace IRtwrkDrawer {
     }
     func rtwrkStepsCount(rtwrkId: felt) -> (steps_count: felt) {
     }
+    func rtwrkTokenUri(rtwrkId: felt, rtwrkStep: felt) -> (tokenUri_len: felt, tokenUri: felt*) {
+    }
 }
 
 @contract_interface

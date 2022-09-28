@@ -1,35 +1,22 @@
 %lang starknet
 
-from starkware.cairo.common.cairo_builtins import HashBuiltin, SignatureBuiltin
-from starkware.cairo.common.uint256 import Uint256, uint256_lt, uint256_eq
-from starkware.cairo.common.bool import TRUE, FALSE
+from starkware.cairo.common.cairo_builtins import HashBuiltin
+from starkware.cairo.common.uint256 import Uint256
 from starkware.starknet.common.syscalls import get_caller_address
 from starkware.cairo.common.alloc import alloc
-from starkware.cairo.common.math_cmp import is_le
+from starkware.cairo.common.math import assert_le
 
 from openzeppelin.access.ownable.library import Ownable
 from openzeppelin.token.erc721.library import ERC721
 from openzeppelin.introspection.erc165.library import ERC165
-from openzeppelin.security.safemath.library import SafeUint256
 
-from pxls.interfaces import IPxlMetadata
-from pxls.PxlERC721.pxls_metadata.pxls_metadata import get_pxl_json_metadata
-
-//
-// Storage
-//
-
-@storage_var
-func contract_uri_hash(index: felt) -> (hash: felt) {
-}
-
-@storage_var
-func rtwrk_drawer_address() -> (address: felt) {
-}
-
-@storage_var
-func rtwrk_theme_auction_address() -> (address: felt) {
-}
+from pxls.RtwrkERC721.storage import (
+    contract_uri_hash,
+    rtwrk_drawer_address,
+    rtwrk_theme_auction_address,
+    rtwrk_chosen_step,
+)
+from pxls.RtwrkERC721.drawer import rtwrk_steps_count, rtwrk_token_uri
 
 //
 // Constructor
@@ -130,19 +117,30 @@ func contractURI{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
 func tokenURI{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     tokenId: Uint256
 ) -> (tokenURI_len: felt, tokenURI: felt*) {
-    alloc_locals;
-
-    // TODO ! Call the drawer contract for
-    // the grid the generate the svg
-    let (tokenURI: felt*) = alloc();
-
-    return (tokenURI_len=0, tokenURI=tokenURI);
+    let (tokenURI_len, tokenURI: felt*) = rtwrk_token_uri(tokenId);
+    return (tokenURI_len, tokenURI);
 }
 
 @view
 func owner{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() -> (owner: felt) {
     let (owner: felt) = Ownable.owner();
     return (owner,);
+}
+
+@view
+func rtwrkThemeAuctionContractAddress{
+    syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
+}() -> (address: felt) {
+    let (address: felt) = rtwrk_theme_auction_address.read();
+    return (address=address);
+}
+
+@view
+func rtwrkStepsCount{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    rtwrkId: Uint256
+) -> (count: felt) {
+    let (count) = rtwrk_steps_count(rtwrkId);
+    return (count=count);
 }
 
 //
@@ -187,7 +185,11 @@ func mint{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(
 ) {
     alloc_locals;
 
-    // TODO => Ensure only the auction contract can mint !
+    let (auction_contract_address) = rtwrk_theme_auction_address.read();
+    let (caller) = get_caller_address();
+    with_attr error_message("Mint can only be called by the auction contract") {
+        assert auction_contract_address = caller;
+    }
 
     ERC721._mint(to, tokenId);
 
@@ -202,6 +204,28 @@ func setContractURIHash{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_ch
     contract_uri_hash.write(0, hash[0]);
     contract_uri_hash.write(1, hash[1]);
     contract_uri_hash.write(2, hash[2]);
+    return ();
+}
+
+@external
+func selectRtwrkStep{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(
+    tokenId: Uint256, step: felt
+) {
+    ERC721.assert_only_token_owner(tokenId);
+    let (max_steps) = rtwrk_steps_count(tokenId);
+    with_attr error_message("Max step for this rtwrk is {max_steps}") {
+        assert_le(step, max_steps);
+    }
+    rtwrk_chosen_step.write(tokenId, step);
+    return ();
+}
+
+@view
+func setRtwrkThemeAuctionContractAddress{
+    syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
+}(address: felt) -> () {
+    Ownable.assert_only_owner();
+    rtwrk_theme_auction_address.write(address);
     return ();
 }
 

@@ -36,6 +36,7 @@ from pxls.RtwrkDrawer.colorization import (
 from pxls.RtwrkDrawer.variables import MAX_PIXEL_COLORIZATIONS_PER_COLORIZER
 from pxls.RtwrkDrawer.grid import get_grid
 from pxls.RtwrkDrawer.original_rtwrks import initialize_original_rtwrks
+from pxls.RtwrkDrawer.token_uri import get_rtwrk_token_uri
 
 // @dev The constructor initializing the drawer with important data
 // @param owner: The owner of this contract
@@ -122,6 +123,22 @@ func rtwrkGrid{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(
         rtwrk_id=rtwrkId, grid_size=max_supply.low, rtwrk_step=rtwrkStep
     );
     return (grid_len=grid_len, grid=grid);
+}
+
+@view
+func rtwrkTokenUri{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(
+    rtwrkId: felt, rtwrkStep: felt
+) -> (tokenUri_len: felt, tokenUri: felt*) {
+    alloc_locals;
+    let (contract_address: felt) = pxl_erc721_address.read();
+    let (max_supply: Uint256) = IPxlERC721.maxSupply(contract_address=contract_address);
+    let (grid_len: felt, grid: felt*) = get_grid(
+        rtwrk_id=rtwrkId, grid_size=max_supply.low, rtwrk_step=rtwrkStep
+    );
+    let (token_uri_len: felt, token_uri: felt*) = get_rtwrk_token_uri(
+        grid_size=max_supply.low, rtwrk_id=rtwrkId, grid_len=grid_len, grid=grid
+    );
+    return (tokenUri_len=token_uri_len, tokenUri=token_uri);
 }
 
 @view

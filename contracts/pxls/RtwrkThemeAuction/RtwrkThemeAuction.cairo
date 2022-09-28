@@ -5,7 +5,7 @@ from starkware.cairo.common.uint256 import Uint256
 from openzeppelin.access.ownable.library import Ownable
 
 from pxls.RtwrkThemeAuction.storage import (
-    pxl_erc721_address,
+    pxls_erc721_address,
     rtwrk_drawer_address,
     rtwrk_erc721_address,
     current_auction_id,
@@ -27,13 +27,13 @@ from pxls.RtwrkThemeAuction.auction import launch_auction, launch_auction_rtwrk
 func constructor{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     owner: felt,
     eth_erc20_address_value: felt,
-    pxl_erc721_address_value: felt,
+    pxls_erc721_address_value: felt,
     rtwrk_drawer_address_value: felt,
     rtwrk_erc721_address_value: felt,
 ) {
     Ownable.initializer(owner);
     eth_erc20_address.write(eth_erc20_address_value);
-    pxl_erc721_address.write(pxl_erc721_address_value);
+    pxls_erc721_address.write(pxls_erc721_address_value);
     rtwrk_drawer_address.write(rtwrk_drawer_address_value);
     rtwrk_erc721_address.write(rtwrk_erc721_address_value);
 

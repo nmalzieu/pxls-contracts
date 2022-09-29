@@ -4,7 +4,7 @@ from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.uint256 import Uint256
 from starkware.starknet.common.syscalls import get_caller_address
 from starkware.cairo.common.alloc import alloc
-from starkware.cairo.common.math import assert_le
+from starkware.cairo.common.math import assert_le, assert_not_zero
 
 from openzeppelin.access.ownable.library import Ownable
 from openzeppelin.token.erc721.library import ERC721
@@ -24,12 +24,23 @@ from pxls.RtwrkERC721.drawer import rtwrk_steps_count, rtwrk_token_uri
 
 @constructor
 func constructor{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    owner: felt, rtwrk_drawer_address_value: felt, rtwrk_theme_auction_address_value: felt
+    owner: felt, rtwrk_drawer_address_value: felt
 ) {
     ERC721.initializer('Rtwrks', 'RTWRKS');
     Ownable.initializer(owner);
     rtwrk_drawer_address.write(rtwrk_drawer_address_value);
-    rtwrk_theme_auction_address.write(rtwrk_theme_auction_address_value);
+
+    // Minting all rtwrks priori to deployment to the owner
+
+    ERC721._mint(owner, Uint256(1, 0));
+    ERC721._mint(owner, Uint256(2, 0));
+    ERC721._mint(owner, Uint256(3, 0));
+    ERC721._mint(owner, Uint256(4, 0));
+    ERC721._mint(owner, Uint256(5, 0));
+    ERC721._mint(owner, Uint256(6, 0));
+    ERC721._mint(owner, Uint256(7, 0));
+    ERC721._mint(owner, Uint256(8, 0));
+
     return ();
 }
 
@@ -186,6 +197,9 @@ func mint{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(
     alloc_locals;
 
     let (auction_contract_address) = rtwrk_theme_auction_address.read();
+    with_attr error_message("Auction contract address has not been set yet in Rtwrk ERC721 contract") {
+        assert_not_zero(auction_contract_address);
+    }
     let (caller) = get_caller_address();
     with_attr error_message("Mint can only be called by the auction contract") {
         assert auction_contract_address = caller;

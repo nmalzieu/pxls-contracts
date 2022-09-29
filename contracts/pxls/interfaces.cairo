@@ -54,7 +54,7 @@ namespace IRtwrkDrawer {
     }
     func currentRtwrkId() -> (rtwrk_id: felt) {
     }
-    func launchNewRtwrkIfNecessary(theme_len: felt, theme: felt*) -> (launched: felt) {
+    func launchNewRtwrk(theme_len: felt, theme: felt*) -> () {
     }
     func rtwrkGrid(rtwrkId: felt, rtwrkStep: felt) -> (grid_len: felt, grid: felt*) {
     }
@@ -77,6 +77,10 @@ namespace IRtwrkDrawer {
     func rtwrkStepsCount(rtwrkId: felt) -> (steps_count: felt) {
     }
     func rtwrkTokenUri(rtwrkId: felt, rtwrkStep: felt) -> (tokenUri_len: felt, tokenUri: felt*) {
+    }
+    func setRtwrkThemeAuctionContractAddress(address: felt) -> () {
+    }
+    func rtwrkThemeAuctionContractAddress() -> (address: felt) {
     }
 }
 
@@ -102,12 +106,45 @@ namespace IRtwrkERC721 {
     }
     func balanceOf(owner: felt) -> (balance: Uint256) {
     }
+    func setRtwrkThemeAuctionContractAddress(address: felt) -> () {
+    }
+    func rtwrkThemeAuctionContractAddress() -> (address: felt) {
+    }
+    func ownerOf(tokenId: Uint256) -> (owner: felt) {
+    }
 }
 
 @contract_interface
-namespace IEthERC20 {
-    func transfer(recipient: felt, amount: Uint256) -> (success: felt) {
+namespace IRtwrkThemeAuction {
+    func launchAuction() -> () {
     }
-    func transferFrom(sender: felt, recipient: felt, amount: Uint256) -> (success: felt) {
+    func placeBid(auctionId, bidAmount: Uint256, theme_len, theme: felt*) -> () {
+    }
+    func launchAuctionRtwrk() -> () {
+    }
+    func bid(auctionId: felt, bidId: felt) -> (
+        bidAccount: felt,
+        bidAmount: Uint256,
+        bidTimestamp: felt,
+        bidReimbursementTimestamp: felt,
+        theme_len: felt,
+        theme: felt*,
+    ) {
+    }
+    func currentAuctionId() -> (currentAuctionId: felt) {
+    }
+    func auctionTimestamp(auctionId) -> (auctionTimestamp: felt) {
+    }
+    func auctionBidsCount(auctionId: felt) -> (bidsCount: felt) {
+    }
+    func colorizerBalance(pxlId: Uint256) -> (balance: Uint256) {
+    }
+    func pxlsBalance() -> (balance: Uint256) {
+    }
+    func settleAuction() -> () {
+    }
+    func withdrawPxlsBalance() {
+    }
+    func withdrawColorizerBalance(pxlId: Uint256) {
     }
 }

@@ -50,8 +50,12 @@ func __setup__{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}(
 
     let (theme: felt*) = alloc();
     assert theme[0] = 'Super theme';
+
+    // Only auction contract can launch an rtwrk, let's fake it
+    %{ store(context.rtwrk_drawer_contract_address, "rtwrk_auction_address", [context.account]) %}
+
     // Launching the initial rtwrk
-    IRtwrkDrawer.launchNewRtwrkIfNecessary(
+    IRtwrkDrawer.launchNewRtwrk(
         contract_address=rtwrk_drawer_contract_address, theme_len=1, theme=theme
     );
 
@@ -100,6 +104,33 @@ func test_rtwrk_drawer_getters{syscall_ptr: felt*, range_check_ptr, pedersen_ptr
     );
     assert 0 = total_colorizations;
 
+    return ();
+}
+
+@view
+func test_rtwrk_drawer_set_auction_address{
+    syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
+}() {
+    tempvar rtwrk_drawer_contract_address;
+    %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
+
+    let (current_auction_address) = IRtwrkDrawer.rtwrkThemeAuctionContractAddress(
+        rtwrk_drawer_contract_address
+    );
+    assert 123456 = current_auction_address;
+
+    %{ stop_prank = start_prank(123456, target_contract_address=ids.rtwrk_drawer_contract_address) %}
+    IRtwrkDrawer.setRtwrkThemeAuctionContractAddress(rtwrk_drawer_contract_address, 12);
+
+    let (new_auction_address) = IRtwrkDrawer.rtwrkThemeAuctionContractAddress(
+        rtwrk_drawer_contract_address
+    );
+    assert 12 = new_auction_address;
+
+    %{ stop_prank() %}
+
+    %{ expect_revert(error_message="Ownable: caller is not the owner") %}
+    IRtwrkDrawer.setRtwrkThemeAuctionContractAddress(rtwrk_drawer_contract_address, 12);
     return ();
 }
 
@@ -291,7 +322,7 @@ func test_rtwrk_drawer_colorize_pixels{
 }
 
 @view
-func test_rtwrk_drawer_launch_new_rtwrk_if_necessary{
+func test_rtwrk_drawer_launch_too_early{
     syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
 }() {
     alloc_locals;
@@ -314,10 +345,28 @@ func test_rtwrk_drawer_launch_new_rtwrk_if_necessary{
     assert theme[0] = 'Ceci est un theme qui fait plus';
     assert theme[1] = 'que 31 characteres';
 
-    let (launched) = IRtwrkDrawer.launchNewRtwrkIfNecessary(
+    %{ expect_revert(error_message="Trying to launch a new rtwrk but there is already one running") %}
+
+    IRtwrkDrawer.launchNewRtwrk(
         contract_address=rtwrk_drawer_contract_address, theme_len=2, theme=theme
     );
-    assert launched = FALSE;
+
+    %{ stop_prank_drawer() %}
+
+    return ();
+}
+
+@view
+func test_rtwrk_drawer_launch_new_rtwrk{
+    syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
+}() {
+    alloc_locals;
+    local rtwrk_drawer_contract_address;
+    %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
+
+    %{ stop_prank_drawer = start_prank(context.account, target_contract_address=ids.rtwrk_drawer_contract_address) %}
+
+    // after calling start() in setup, we're at rtwrk 1
 
     let (rtwrk_id) = IRtwrkDrawer.currentRtwrkId(contract_address=rtwrk_drawer_contract_address);
     assert ORIGINAL_RTWRKS_COUNT + 1 = rtwrk_id;
@@ -327,10 +376,13 @@ func test_rtwrk_drawer_launch_new_rtwrk_if_necessary{
     let new_timestamp = 'start_timestamp' + (26 * 3600 + 136);
     %{ warp(ids.new_timestamp, context.rtwrk_drawer_contract_address) %}
 
-    let (launched) = IRtwrkDrawer.launchNewRtwrkIfNecessary(
+    let (theme: felt*) = alloc();
+    assert theme[0] = 'Ceci est un theme qui fait plus';
+    assert theme[1] = 'que 31 characteres';
+
+    IRtwrkDrawer.launchNewRtwrk(
         contract_address=rtwrk_drawer_contract_address, theme_len=2, theme=theme
     );
-    assert launched = TRUE;
 
     let (rtwrk_id) = IRtwrkDrawer.currentRtwrkId(contract_address=rtwrk_drawer_contract_address);
     assert ORIGINAL_RTWRKS_COUNT + 2 = rtwrk_id;
@@ -421,6 +473,28 @@ func test_rtwrk_drawer_drawing_fails_if_old_rtwrk{
     return ();
 }
 
+
+@view
+func test_original_rtwrks{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
+    tempvar rtwrk_drawer_contract_address;
+    %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
+
+    // Let's verify we have the original rtwrks set
+    let (current_rtwrk_id) = IRtwrkDrawer.currentRtwrkId(rtwrk_drawer_contract_address);
+    assert ORIGINAL_RTWRKS_COUNT + 1 = current_rtwrk_id;
+
+    let (theme_len, theme: felt*) = IRtwrkDrawer.rtwrkTheme(rtwrk_drawer_contract_address, 6);
+    assert 2 = theme_len;
+    assert 'The coolest hat of the third in' = theme[0];
+    assert 'ternet' = theme[1];
+
+    let (timestamp) = IRtwrkDrawer.rtwrkTimestamp(rtwrk_drawer_contract_address, 6);
+    assert 1663344754 = timestamp;
+
+    return ();
+}
+
+
 @view
 func test_rtwrk_drawer_get_grid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
     alloc_locals;
@@ -461,7 +535,7 @@ func test_rtwrk_drawer_get_grid{syscall_ptr: felt*, range_check_ptr, pedersen_pt
     let (theme: felt*) = alloc();
     assert theme[0] = 'Super theme';
 
-    IRtwrkDrawer.launchNewRtwrkIfNecessary(
+    IRtwrkDrawer.launchNewRtwrk(
         contract_address=rtwrk_drawer_contract_address, theme_len=1, theme=theme
     );
 
@@ -605,7 +679,7 @@ func test_rtwrk_drawer_not_everyone_can_launch_new_rtwrk{
     let (theme: felt*) = alloc();
     assert theme[0] = 'Super theme';
 
-    IRtwrkDrawer.launchNewRtwrkIfNecessary(
+    IRtwrkDrawer.launchNewRtwrk(
         contract_address=rtwrk_drawer_contract_address, theme_len=1, theme=theme
     );
 
@@ -617,8 +691,8 @@ func test_rtwrk_drawer_not_everyone_can_launch_new_rtwrk{
     %{ stop_prank_drawer() %}
 
     // Check that non owner cannot update flag
-    %{ expect_revert(error_message="Ownable: caller is not the owner") %}
-    IRtwrkDrawer.launchNewRtwrkIfNecessary(
+    %{ expect_revert(error_message="Only the auction contract can launch a new rtwrk") %}
+    IRtwrkDrawer.launchNewRtwrk(
         contract_address=rtwrk_drawer_contract_address, theme_len=1, theme=theme
     );
 

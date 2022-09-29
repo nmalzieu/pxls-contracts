@@ -4,7 +4,7 @@ from starkware.cairo.common.uint256 import Uint256
 from starkware.cairo.common.bool import FALSE
 from starkware.cairo.common.alloc import alloc
 from starkware.starknet.common.syscalls import get_caller_address
-from starkware.cairo.common.math import assert_le
+from starkware.cairo.common.math import assert_le, assert_not_zero
 
 from openzeppelin.access.ownable.library import Ownable
 
@@ -15,6 +15,7 @@ from pxls.RtwrkDrawer.storage import (
     current_rtwrk_id,
     number_of_pixel_colorizations_per_colorizer,
     number_of_pixel_colorizations_total,
+    rtwrk_auction_address,
 )
 from pxls.RtwrkDrawer.events import pixels_colorized
 from pxls.RtwrkDrawer.rtwrk import (
@@ -132,11 +133,12 @@ func rtwrkTokenUri{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_p
     alloc_locals;
     let (contract_address: felt) = pxl_erc721_address.read();
     let (max_supply: Uint256) = IPxlERC721.maxSupply(contract_address=contract_address);
+    let (grid_size: Uint256) = IPxlERC721.matrixSize(contract_address=contract_address);
     let (grid_len: felt, grid: felt*) = get_grid(
         rtwrk_id=rtwrkId, grid_size=max_supply.low, rtwrk_step=rtwrkStep
     );
     let (token_uri_len: felt, token_uri: felt*) = get_rtwrk_token_uri(
-        grid_size=max_supply.low, rtwrk_id=rtwrkId, grid_len=grid_len, grid=grid
+        grid_size=grid_size.low, rtwrk_id=rtwrkId, grid_len=grid_len, grid=grid
     );
     return (tokenUri_len=token_uri_len, tokenUri=token_uri);
 }
@@ -194,6 +196,14 @@ func maxPixelColorizationsPerColorizer() -> (max: felt) {
     return (max=MAX_PIXEL_COLORIZATIONS_PER_COLORIZER);
 }
 
+@view
+func rtwrkThemeAuctionContractAddress{
+    syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
+}() -> (address: felt) {
+    let (address: felt) = rtwrk_auction_address.read();
+    return (address=address);
+}
+
 //
 // Externals
 //
@@ -223,18 +233,27 @@ func colorizePixels{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_
 }
 
 @external
-func launchNewRtwrkIfNecessary{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(
+func launchNewRtwrk{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(
     theme_len: felt, theme: felt*
-) -> (launched: felt) {
+) -> () {
     alloc_locals;
     with_attr error_message("Theme too long") {
         assert_le(theme_len, 5);
     }
-    // Right now only owner can launch rtwrks. This will change with auctions!
-    Ownable.assert_only_owner();
+    let (auction_contract_address) = rtwrk_auction_address.read();
+
+    with_attr error_message("Auction contract address has not been set yet in drawer contract") {
+        assert_not_zero(auction_contract_address);
+    }
+
+    let (caller) = get_caller_address();
+
+    with_attr error_message("Only the auction contract can launch a new rtwrk") {
+        assert auction_contract_address = caller;
+    }
     // Method to just launch a new rtwrk with drawing a pixel
-    let (launched) = launch_new_rtwrk_if_necessary(theme_len, theme);
-    return (launched=launched);
+    launch_new_rtwrk_if_necessary(theme_len, theme);
+    return ();
 }
 
 @external
@@ -248,5 +267,14 @@ func transferOwnership{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_che
 @external
 func renounceOwnership{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() {
     Ownable.renounce_ownership();
+    return ();
+}
+
+@view
+func setRtwrkThemeAuctionContractAddress{
+    syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
+}(address: felt) -> () {
+    Ownable.assert_only_owner();
+    rtwrk_auction_address.write(address);
     return ();
 }

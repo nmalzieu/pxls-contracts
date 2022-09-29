@@ -17,7 +17,8 @@ from pxls.RtwrkThemeAuction.storage import (
 )
 from pxls.RtwrkThemeAuction.bid import read_bid, place_bid
 from pxls.RtwrkThemeAuction.bid_struct import Bid
-from pxls.RtwrkThemeAuction.auction import launch_auction, launch_auction_rtwrk
+from pxls.RtwrkThemeAuction.auction import launch_auction, launch_auction_rtwrk, settle_auction
+from pxls.RtwrkThemeAuction.payment import withdraw_colorizer_balance, withdraw_pxls_balance
 
 // @dev The constructor initializing the theme auction contract with important data
 // @param rtwrk_drawer_address_value: The address of the Rtwrk Drawer contract
@@ -56,7 +57,7 @@ func bid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     auctionId: felt, bidId: felt
 ) -> (
     bidAccount: felt,
-    bidAmount: felt,
+    bidAmount: Uint256,
     bidTimestamp: felt,
     bidReimbursementTimestamp: felt,
     theme_len: felt,
@@ -182,5 +183,33 @@ func transferOwnership{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_che
     newOwner: felt
 ) {
     Ownable.transfer_ownership(newOwner);
+    return ();
+}
+
+// @notice Settle the auction, mint the NFT to the winner
+// @param newOwner: The new owner
+
+@external
+func settleAuction{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() {
+    settle_auction();
+    return ();
+}
+
+// @notice Withdraw the balance of the pxls project
+
+@external
+func withdrawPxlsBalance{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() {
+    withdraw_pxls_balance();
+    return ();
+}
+
+// @notice Withdraw the balance of a given colorizer (a pxl id)
+// @param pxlId: The id of a given pxl. Its current owner will get the money.
+
+@external
+func withdrawColorizerBalance{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    pxlId: Uint256
+) {
+    withdraw_colorizer_balance(pxlId);
     return ();
 }

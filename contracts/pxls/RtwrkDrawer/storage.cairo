@@ -45,3 +45,10 @@ func current_rtwrk_id() -> (rtwrk_id: felt) {
 @storage_var
 func rtwrk_theme(rtwrk_id: felt, index: felt) -> (short_string: felt) {
 }
+
+
+// Store the address of the auction contract since it's the only
+// address that can launch an rtwrk
+@storage_var
+func rtwrk_auction_address() -> (address: felt) {
+}

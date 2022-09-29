@@ -189,33 +189,6 @@ func test_launch_auction_rtwrk_auction_no_bids{
 }
 
 @view
-func test_launch_auction_rtwrk_drawer_cant_launch{
-    syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
-}() {
-    launch_auction_with_mock();
-
-    let eth_erc20_address_value = 'eth_erc20_address';
-    eth_erc20_address.write(eth_erc20_address_value);
-
-    let (theme: felt*) = alloc();
-    assert theme[0] = 'Theme 1';
-
-    // Mocking the erc20 transferFrom
-    %{ stop_mock_erc20 = mock_call(ids.eth_erc20_address_value, "transferFrom", [1]) %}
-
-    place_bid(auction_id=1, bid_amount=Uint256(5000000000000000, 0), theme_len=1, theme=theme);
-
-    %{ warp(1664192254 + 26*3600) %}
-
-    let rtwrk_contract_address = 'rtwrk_contract_address';
-    %{ stop_mock_rtwrk_launch = mock_call(ids.rtwrk_contract_address, "launchNewRtwrkIfNecessary", [0]) %}
-    %{ expect_revert(error_message="An error occured, the rtwrk could not be launched") %}
-    launch_auction_rtwrk();
-
-    return ();
-}
-
-@view
 func test_launch_auction_rtwrk_cant_launch_twice{
     syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
 }() {
@@ -379,7 +352,7 @@ func launch_auction_and_rtwrk_with_mock{
     %{ warp(1664192254 + 26*3600) %}
 
     let rtwrk_contract_address = 'rtwrk_contract_address';
-    %{ stop_mock_rtwrk_launch = mock_call(ids.rtwrk_contract_address, "launchNewRtwrkIfNecessary", [1]) %}
+    %{ stop_mock_rtwrk_launch = mock_call(ids.rtwrk_contract_address, "launchNewRtwrk", []) %}
     launch_auction_rtwrk();
     %{ stop_mock_rtwrk_id() %}
     %{ stop_mock_rtwrk_timestamp() %}

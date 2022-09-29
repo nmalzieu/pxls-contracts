@@ -55,8 +55,12 @@ func __setup__{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}(
 
     let (theme: felt*) = alloc();
     assert theme[0] = 'Super theme';
+
+    // Only auction contract can launch an rtwrk, let's fake it
+    %{ store(context.rtwrk_drawer_contract_address, "rtwrk_auction_address", [context.account]) %}
+
     // Launching the initial rtwrk
-    IRtwrkDrawer.launchNewRtwrkIfNecessary(
+    IRtwrkDrawer.launchNewRtwrk(
         contract_address=rtwrk_drawer_contract_address, theme_len=1, theme=theme
     );
 

@@ -60,11 +60,7 @@ func launch_rtwrk_for_auction{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, ra
         assert running_rtwrk = FALSE;
     }
     let (contract_address) = rtwrk_drawer_address.read();
-    let (launched) = IRtwrkDrawer.launchNewRtwrkIfNecessary(contract_address, theme_len, theme);
-
-    with_attr error_message("An error occured, the rtwrk could not be launched") {
-        assert launched = TRUE;
-    }
+    IRtwrkDrawer.launchNewRtwrk(contract_address, theme_len, theme);
 
     let (rtwrk_id) = current_rtwrk_id();
     return (launched_rtwrk_id=rtwrk_id);

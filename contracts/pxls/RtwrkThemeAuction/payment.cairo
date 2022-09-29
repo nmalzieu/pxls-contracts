@@ -7,6 +7,7 @@ from starkware.starknet.common.syscalls import get_caller_address
 from openzeppelin.security.safemath.library import SafeUint256
 from openzeppelin.security.reentrancyguard.library import ReentrancyGuard
 from openzeppelin.access.ownable.library import Ownable
+from openzeppelin.token.erc20.IERC20 import IERC20
 
 from pxls.RtwrkThemeAuction.bid_struct import Bid
 from pxls.RtwrkThemeAuction.variables import PXLS_BID_AMOUNT_DIVISOR
@@ -15,7 +16,7 @@ from pxls.RtwrkThemeAuction.storage import colorizers_balance, pxls_balance, eth
 from pxls.RtwrkThemeAuction.pxls_collection import get_current_owner_of_pxl
 from pxls.RtwrkThemeAuction.events import pxls_balance_withdrawn, colorizer_balance_withdrawn
 
-from pxls.interfaces import IRtwrkDrawer, IEthERC20
+from pxls.interfaces import IRtwrkDrawer
 
 func settle_auction_payments{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     rtwrk_id: felt, bid: Bid
@@ -136,7 +137,7 @@ func transfer_eth{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_pt
     recipient: felt, amount: Uint256
 ) -> (success: felt) {
     let (eth_contract_address) = eth_erc20_address.read();
-    let (success) = IEthERC20.transfer(
+    let (success) = IERC20.transfer(
         contract_address=eth_contract_address, recipient=recipient, amount=amount
     );
     return (success=success);
@@ -146,7 +147,7 @@ func transfer_eth_from{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_che
     sender: felt, recipient: felt, amount: Uint256
 ) -> (success: felt) {
     let (eth_contract_address) = eth_erc20_address.read();
-    let (success) = IEthERC20.transferFrom(
+    let (success) = IERC20.transferFrom(
         contract_address=eth_contract_address, sender=sender, recipient=recipient, amount=amount
     );
     return (success=success);

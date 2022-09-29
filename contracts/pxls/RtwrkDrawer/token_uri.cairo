@@ -5,10 +5,8 @@ from starkware.cairo.common.registers import get_label_location
 from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.cairo.common.alloc import alloc
 
-from caistring.str import literal_concat_known_length_dangerous
+from caistring.str import literal_concat_known_length_dangerous, literal_from_number
 
-// TODO => replace with "real" method not limited
-from pxls.utils.numbers_literals import number_to_literal_dangerous
 from pxls.utils.colors import Color
 from pxls.RtwrkDrawer.svg import append_svg_from_pixel_grid
 
@@ -20,8 +18,7 @@ func get_rtwrk_token_uri{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_c
     let (token_uri: felt*) = alloc();
     assert token_uri[0] = 'data:application/json;';
     assert token_uri[1] = 'charset=utf-8,{"name":"%23';  // json start
-    // TODO => replace with "real" method not limited
-    let (pixel_index_literal) = number_to_literal_dangerous(rtwrk_id);
+    let (pixel_index_literal) = literal_from_number(rtwrk_id);
     assert token_uri[2] = pixel_index_literal;
     assert token_uri[3] = '","attributes":[]';  // no attributes for now
     assert token_uri[4] = ',"image":"data:';

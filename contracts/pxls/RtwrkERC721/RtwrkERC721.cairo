@@ -9,6 +9,7 @@ from starkware.cairo.common.math import assert_le, assert_not_zero
 from openzeppelin.access.ownable.library import Ownable
 from openzeppelin.token.erc721.library import ERC721
 from openzeppelin.introspection.erc165.library import ERC165
+from openzeppelin.upgrades.library import Proxy
 
 from pxls.RtwrkERC721.storage import (
     contract_uri_hash,
@@ -19,13 +20,14 @@ from pxls.RtwrkERC721.storage import (
 from pxls.RtwrkERC721.drawer import rtwrk_steps_count, rtwrk_token_uri
 
 //
-// Constructor
+// Initializer
 //
 
-@constructor
-func constructor{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    owner: felt, rtwrk_drawer_address_value: felt
+@external
+func initializer{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    proxy_admin: felt, owner: felt, rtwrk_drawer_address_value: felt
 ) {
+    Proxy.initializer(proxy_admin);
     ERC721.initializer('Rtwrks', 'RTWRKS');
     Ownable.initializer(owner);
     rtwrk_drawer_address.write(rtwrk_drawer_address_value);
@@ -40,6 +42,7 @@ func constructor{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
     ERC721._mint(owner, Uint256(6, 0));
     ERC721._mint(owner, Uint256(7, 0));
     ERC721._mint(owner, Uint256(8, 0));
+    ERC721._mint(owner, Uint256(9, 0));
 
     return ();
 }
@@ -234,7 +237,7 @@ func selectRtwrkStep{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check
     return ();
 }
 
-@view
+@external
 func setRtwrkThemeAuctionContractAddress{
     syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
 }(address: felt) -> () {
@@ -254,5 +257,24 @@ func transferOwnership{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_che
 @external
 func renounceOwnership{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() {
     Ownable.renounce_ownership();
+    return ();
+}
+
+
+// Proxy upgrade
+
+@external
+func upgradeImplementation{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    new_implementation: felt
+) {
+    Proxy.assert_only_admin();
+    Proxy._set_implementation_hash(new_implementation);
+    return ();
+}
+
+@external
+func setProxyAdmin{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(address: felt) {
+    Proxy.assert_only_admin();
+    Proxy._set_admin(address);
     return ();
 }

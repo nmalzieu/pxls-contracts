@@ -141,3 +141,4 @@ cache
 artifacts
 starknet-artifacts
 devnet-state
+private

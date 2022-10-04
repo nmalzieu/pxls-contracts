@@ -8,26 +8,33 @@ from pxls.interfaces import IPxlERC721
 
 @view
 func __setup__{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
-    let name = 'PXLS';
-    let symbol = 'PXLS';
     let account = 123456;
 
     // Data contracts are heavy, deploying just a sample
     %{ context.sample_pxl_metadata_address = deploy_contract("tests/sample_pxl_metadata_contract.cairo", []).contract_address %}
 
     %{
-        context.pxl_erc721_address = deploy_contract("contracts/pxls/PxlERC721/PxlERC721.cairo", [
-               ids.name,
-               ids.symbol,
-               2,
-               0,
-               ids.account,
-               context.sample_pxl_metadata_address,
-               context.sample_pxl_metadata_address,
-               context.sample_pxl_metadata_address,
-               context.sample_pxl_metadata_address,
-               ]).contract_address
+        from starkware.starknet.public.abi import get_selector_from_name
+        # Let's deploy the Pxl ERC721 with proxy pattern
+        pxl_erc721_hash = declare("contracts/pxls/PxlERC721/PxlERC721.cairo").class_hash
+        context.pxl_erc721_address = deploy_contract("contracts/pxls/Proxy.cairo", {
+            "implementation_hash": pxl_erc721_hash,
+            "selector": get_selector_from_name("initializer"),
+            "calldata": [
+                ids.account, # proxy_admin
+                "Pxls", # name
+                "PXLS", # symbol
+                2, # m_size.low
+                0, # m_size.high
+                ids.account, # owner
+                context.sample_pxl_metadata_address, # pxls_1_100_address
+                context.sample_pxl_metadata_address, # pxls_101_200_address
+                context.sample_pxl_metadata_address, # pxls_201_300_address
+                context.sample_pxl_metadata_address  # pxls_301_400_address
+            ]
+        }).contract_address
     %}
+
     return ();
 }
 
@@ -57,8 +64,9 @@ func test_pxl_erc721_getters{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: 
 }
 
 @view
-func test_pxl_erc721_transfer_ownership{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}(
-    ) {
+func test_pxl_erc721_transfer_ownership{
+    syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
+}() {
     tempvar pxl_erc721_address;
     %{ ids.pxl_erc721_address = context.pxl_erc721_address %}
     let (owner: felt) = IPxlERC721.owner(contract_address=pxl_erc721_address);
@@ -78,9 +86,8 @@ func test_pxl_erc721_transfer_ownership{syscall_ptr: felt*, range_check_ptr, ped
 }
 
 @view
-func test_pxl_erc721_contract_uri{
-    syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
-}() {
+func test_pxl_erc721_contract_uri{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}(
+    ) {
     alloc_locals;
 
     local pxl_erc721_address;
@@ -145,8 +152,7 @@ func test_pxl_erc721_mint{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: Has
 }
 
 @view
-func test_pxl_erc721_max_supply{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}(
-    ) {
+func test_pxl_erc721_max_supply{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
     tempvar pxl_erc721_address;
     %{ ids.pxl_erc721_address = context.pxl_erc721_address %}
 
@@ -197,9 +203,7 @@ func test_pxl_erc721_pixels_of_owner{
 
     %{ stop_prank = start_prank(123456, target_contract_address=ids.pxl_erc721_address) %}
 
-    IPxlERC721.transferFrom(
-        pxl_erc721_address, 123456, 123458, Uint256(owned_pxls_123456[0], 0)
-    );
+    IPxlERC721.transferFrom(pxl_erc721_address, 123456, 123458, Uint256(owned_pxls_123456[0], 0));
 
     %{ stop_prank() %}
 
@@ -224,8 +228,7 @@ func test_pxl_erc721_pixels_of_owner{
 }
 
 @view
-func test_pxl_erc721_token_uri{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}(
-    ) {
+func test_pxl_erc721_token_uri{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
     tempvar pxl_erc721_address;
     %{ ids.pxl_erc721_address = context.pxl_erc721_address %}
 
@@ -234,7 +237,7 @@ func test_pxl_erc721_token_uri{syscall_ptr: felt*, range_check_ptr, pedersen_ptr
         contract_address=pxl_erc721_address, tokenId=token_id
     );
 
-    assert 1630 = token_uri_len;
+    assert 1631 = token_uri_len;
     assert 'data:application/json;' = token_uri[0];
     assert 'cyan' = token_uri[5];  // Second felt of cyan attribute
     // Third felt of blue attribute: blue palette is
@@ -247,21 +250,21 @@ func test_pxl_erc721_token_uri{syscall_ptr: felt*, range_check_ptr, pedersen_ptr
         contract_address=pxl_erc721_address, tokenId=token_id
     );
 
-    assert 1630 = token_uri_len;
+    assert 1631 = token_uri_len;
 
     let token_id: Uint256 = Uint256(201, 0);
     let (token_uri_len: felt, token_uri: felt*) = IPxlERC721.tokenURI(
         contract_address=pxl_erc721_address, tokenId=token_id
     );
 
-    assert 1630 = token_uri_len;
+    assert 1631 = token_uri_len;
 
     let token_id: Uint256 = Uint256(301, 0);
     let (token_uri_len: felt, token_uri: felt*) = IPxlERC721.tokenURI(
         contract_address=pxl_erc721_address, tokenId=token_id
     );
 
-    assert 1630 = token_uri_len;
+    assert 1631 = token_uri_len;
 
     return ();
 }

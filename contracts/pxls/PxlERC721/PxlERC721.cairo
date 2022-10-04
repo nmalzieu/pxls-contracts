@@ -12,6 +12,7 @@ from openzeppelin.token.erc721.library import ERC721
 from openzeppelin.token.erc721.enumerable.library import ERC721Enumerable
 from openzeppelin.introspection.erc165.library import ERC165
 from openzeppelin.security.safemath.library import SafeUint256
+from openzeppelin.upgrades.library import Proxy
 
 from pxls.interfaces import IPxlMetadata
 from pxls.PxlERC721.pxls_metadata.pxls_metadata import get_pxl_json_metadata
@@ -55,11 +56,12 @@ func pxls_301_400() -> (address: felt) {
 }
 
 //
-// Constructor
+// Initializer
 //
 
-@constructor
-func constructor{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+@external
+func initializer{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    proxy_admin: felt,
     name: felt,
     symbol: felt,
     m_size: Uint256,
@@ -69,6 +71,7 @@ func constructor{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
     pxls_201_300_address: felt,
     pxls_301_400_address: felt,
 ) {
+    Proxy.initializer(proxy_admin);
     ERC721.initializer(name, symbol);
     ERC721Enumerable.initializer();
     Ownable.initializer(owner);
@@ -234,9 +237,9 @@ func maxSupply{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
 }
 
 @view
-func pxlsOwned{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    owner: felt
-) -> (pxls_len: felt, pxls: felt*) {
+func pxlsOwned{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(owner: felt) -> (
+    pxls_len: felt, pxls: felt*
+) {
     alloc_locals;
     let (pxls: felt*) = alloc();
     let (balance: Uint256) = ERC721.balance_of(owner);
@@ -350,4 +353,22 @@ func get_all_pxls_owned{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_ch
     );
     assert pixels[index] = tokenId.low;
     return get_all_pxls_owned(owner, index + 1, balance, pixels);
+}
+
+// Proxy upgrade
+
+@external
+func upgradeImplementation{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    new_implementation: felt
+) {
+    Proxy.assert_only_admin();
+    Proxy._set_implementation_hash(new_implementation);
+    return ();
+}
+
+@external
+func setProxyAdmin{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(address: felt) {
+    Proxy.assert_only_admin();
+    Proxy._set_admin(address);
+    return ();
 }

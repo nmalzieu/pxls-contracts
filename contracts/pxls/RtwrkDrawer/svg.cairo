@@ -138,7 +138,8 @@ func append_svg_start_from_grid_size{
     let (grid_size_literal_length) = number_literal_length(grid_size);
     let svg_height_literal = '0\" height=\"';  // length 13
     let svg_xmlns_literal = '0\" xmlns=';  // length 10
-    let svg_end_literal = '\"http://www.w3.org/2000/svg\">';
+    let svg_uri_literal = '\"http://www.w3.org/2000/svg\" ';
+    let svg_end_literal = 'shape-rendering=\"crispEdges\">';
 
     let (svg_start_to_height) = literal_concat_known_length_dangerous(
         svg_start_literal, grid_size_literal, grid_size_literal_length
@@ -153,9 +154,10 @@ func append_svg_start_from_grid_size{
 
     assert destination[destination_len] = svg_start_to_height;
     assert destination[destination_len + 1] = grid_size_to_xmlns;
-    assert destination[destination_len + 2] = svg_end_literal;
+    assert destination[destination_len + 2] = svg_uri_literal;
+    assert destination[destination_len + 3] = svg_end_literal;
 
-    return (new_destination_len=destination_len + 3);
+    return (new_destination_len=destination_len + 4);
 }
 
 func append_svg_from_pixel_grid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(

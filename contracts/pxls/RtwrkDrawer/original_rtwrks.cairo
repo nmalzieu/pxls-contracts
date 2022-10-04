@@ -12,7 +12,7 @@ from pxls.RtwrkDrawer.storage import rtwrk_timestamp, current_rtwrk_id, rtwrk_th
 // We call these rtwrks "Original rtwrks".
 
 // Number of rtwrks that were created before making the Drawer contract upgradeable for regenesis
-const ORIGINAL_RTWRKS_COUNT = 8;
+const ORIGINAL_RTWRKS_COUNT = 9;
 
 // @notice Initialize the storage with the timestamps & themes of each rtwrk
 

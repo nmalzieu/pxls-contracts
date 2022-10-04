@@ -5,31 +5,63 @@ protostar_version = "0.4.2"
 libs_path = "contracts"
 
 ["protostar.contracts"]
+proxy = [
+    "./contracts/pxls/Proxy.cairo"
+]
+# pxls_1_100 = [
+#     "./contracts/pxls/PxlERC721/pxls_metadata/pxls_1_100.cairo"
+# ]
+# pxls_101_200 = [
+#     "./contracts/pxls/PxlERC721/pxls_metadata/pxls_101_200.cairo"
+# ]
+# pxls_201_300 = [
+#     "./contracts/pxls/PxlERC721/pxls_metadata/pxls_201_300.cairo"
+# ]
+# pxls_301_400 = [
+#     "./contracts/pxls/PxlERC721/pxls_metadata/pxls_301_400.cairo"
+# ]
 pxl_erc721 = [
     "./contracts/pxls/PxlERC721/PxlERC721.cairo",
 ]
 rtwrk_drawer = [
     "./contracts/pxls/RtwrkDrawer/RtwrkDrawer.cairo"
 ]
-pxls_1_100 = [
-    "./contracts/pxls/PxlERC721/pxls_metadata/pxls_1_100.cairo"
+rtwrk_erc721 = [
+    "./contracts/pxls/RtwrkERC721/RtwrkERC721.cairo"
 ]
-pxls_101_200 = [
-    "./contracts/pxls/PxlERC721/pxls_metadata/pxls_101_200.cairo"
-]
-pxls_201_300 = [
-    "./contracts/pxls/PxlERC721/pxls_metadata/pxls_201_300.cairo"
-]
-pxls_301_400 = [
-    "./contracts/pxls/PxlERC721/pxls_metadata/pxls_301_400.cairo"
+rtwrk_theme_auction = [
+    "./contracts/pxls/RtwrkThemeAuction/RtwrkThemeAuction.cairo"
 ]
 
 [profile.devnet.protostar.deploy]
 gateway_url="http://127.0.0.1:5050/"
 chain_id=1
 
+[profile.devnet.protostar.declare]
+gateway_url="http://127.0.0.1:5050/"
+chain_id=1
+
+[profile.devnet.protostar.migrate]
+gateway_url="http://127.0.0.1:5050/"
+chain_id=1
+account_address="0x47b03d1ba3cc843bf02632974c5eedfea1d617430475924e87dbb3f8a2e529d"
+private_key_path="private/devnet.key"
+
+
 [profile.testnet.protostar.deploy]
 network="testnet"
 
+[profile.testnet.protostar.declare]
+network="testnet"
+
+[profile.testnet.protostar.migrate]
+network="testnet"
+
 [profile.mainnet.protostar.deploy]
+network="mainnet"
+
+[profile.mainnet.protostar.declare]
+network="mainnet"
+
+[profile.mainnet.protostar.migrate]
 network="mainnet"

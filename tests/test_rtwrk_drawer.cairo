@@ -15,25 +15,48 @@ func __setup__{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}(
     let name = 'Pixel';
     let symbol = 'PXL';
 
-    %{ context.account = 123456 %}
+    %{
+        from starkware.starknet.public.abi import get_selector_from_name
+        context.account = 123456
+    %}
 
     // Data contracts are heavy, deploying just a sample
     %{ context.sample_pxl_metadata_address = deploy_contract("tests/sample_pxl_metadata_contract.cairo", []).contract_address %}
 
     %{
-        context.pxl_erc721_contract_address = deploy_contract("contracts/pxls/PxlERC721/PxlERC721.cairo", [
-            ids.name,
-            ids.symbol,
-            20,
-            0,
-            context.account,
-            context.sample_pxl_metadata_address,
-            context.sample_pxl_metadata_address,
-            context.sample_pxl_metadata_address,
-            context.sample_pxl_metadata_address
-        ]).contract_address
+        # Let's deploy the Pxl ERC721 with proxy pattern
+        pxl_erc721_hash = declare("contracts/pxls/PxlERC721/PxlERC721.cairo").class_hash
+        context.pxl_erc721_contract_address = deploy_contract("contracts/pxls/Proxy.cairo", {
+            "implementation_hash": pxl_erc721_hash,
+            "selector": get_selector_from_name("initializer"),
+            "calldata": [
+                context.account, # proxy_admin
+                ids.name, # name
+                ids.symbol, # symbol
+                20, # m_size.low
+                0, # m_size.high
+                context.account, # owner
+                context.sample_pxl_metadata_address, # pxls_1_100_address
+                context.sample_pxl_metadata_address, # pxls_101_200_address
+                context.sample_pxl_metadata_address, # pxls_201_300_address
+                context.sample_pxl_metadata_address  # pxls_301_400_address
+            ]
+        }).contract_address
     %}
-    %{ context.rtwrk_drawer_contract_address = deploy_contract("contracts/pxls/RtwrkDrawer/RtwrkDrawer.cairo", [context.account, context.pxl_erc721_contract_address]).contract_address %}
+
+    %{
+        # Let's deploy the drawer contract with proxy pattern
+        rtwrk_drawer_hash = declare("contracts/pxls/RtwrkDrawer/RtwrkDrawer.cairo").class_hash
+        context.rtwrk_drawer_contract_address = deploy_contract("contracts/pxls/Proxy.cairo", {
+            "implementation_hash": rtwrk_drawer_hash,
+            "selector": get_selector_from_name("initializer"),
+            "calldata": [
+                context.account, # proxy_admin
+                context.account, # owner
+                context.pxl_erc721_contract_address, # pxl_erc721
+            ]
+        }).contract_address
+    %}
 
     %{ stop_prank_pixel = start_prank(context.account, target_contract_address=context.pxl_erc721_contract_address) %}
     %{ stop_prank_drawer = start_prank(context.account, target_contract_address=context.rtwrk_drawer_contract_address) %}

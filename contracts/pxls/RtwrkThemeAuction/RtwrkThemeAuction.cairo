@@ -3,6 +3,7 @@ from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.uint256 import Uint256
 
 from openzeppelin.access.ownable.library import Ownable
+from openzeppelin.upgrades.library import Proxy
 
 from pxls.RtwrkThemeAuction.storage import (
     pxls_erc721_address,
@@ -24,14 +25,16 @@ from pxls.RtwrkThemeAuction.payment import withdraw_colorizer_balance, withdraw_
 // @param rtwrk_drawer_address_value: The address of the Rtwrk Drawer contract
 // @param rtwrk_erc721_address_value: The address of the Rtwrk ERC721 contract
 
-@constructor
-func constructor{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+@external
+func initializer{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    proxy_admin: felt,
     owner: felt,
     eth_erc20_address_value: felt,
     pxls_erc721_address_value: felt,
     rtwrk_drawer_address_value: felt,
     rtwrk_erc721_address_value: felt,
 ) {
+    Proxy.initializer(proxy_admin);
     Ownable.initializer(owner);
     eth_erc20_address.write(eth_erc20_address_value);
     pxls_erc721_address.write(pxls_erc721_address_value);
@@ -211,5 +214,24 @@ func withdrawColorizerBalance{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, ra
     pxlId: Uint256
 ) {
     withdraw_colorizer_balance(pxlId);
+    return ();
+}
+
+
+// Proxy upgrade
+
+@external
+func upgradeImplementation{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    new_implementation: felt
+) {
+    Proxy.assert_only_admin();
+    Proxy._set_implementation_hash(new_implementation);
+    return ();
+}
+
+@external
+func setProxyAdmin{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(address: felt) {
+    Proxy.assert_only_admin();
+    Proxy._set_admin(address);
     return ();
 }

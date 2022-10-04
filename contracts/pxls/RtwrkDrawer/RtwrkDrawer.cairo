@@ -7,6 +7,7 @@ from starkware.starknet.common.syscalls import get_caller_address
 from starkware.cairo.common.math import assert_le, assert_not_zero
 
 from openzeppelin.access.ownable.library import Ownable
+from openzeppelin.upgrades.library import Proxy
 
 from pxls.utils.colors import Color, PixelColor
 from pxls.interfaces import IPxlERC721
@@ -44,10 +45,11 @@ from pxls.RtwrkDrawer.token_uri import get_rtwrk_token_uri
 // @param pxl_erc721_address: The address of the PxlERC721 contract token gating access to the drawer
 // @param max_colorizations: The max # of colorizations a pxlr can do in a given rtwrk
 
-@constructor
-func constructor{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    owner: felt, pxl_erc721: felt
+@external
+func initializer{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    proxy_admin: felt, owner: felt, pxl_erc721: felt
 ) {
+    Proxy.initializer(proxy_admin);
     Ownable.initializer(owner);
     pxl_erc721_address.write(pxl_erc721);
     // Writing the "original rtwrks" that happened before regenesis
@@ -270,11 +272,30 @@ func renounceOwnership{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_che
     return ();
 }
 
-@view
+@external
 func setRtwrkThemeAuctionContractAddress{
     syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
 }(address: felt) -> () {
     Ownable.assert_only_owner();
     rtwrk_auction_address.write(address);
+    return ();
+}
+
+
+// Proxy upgrade
+
+@external
+func upgradeImplementation{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    new_implementation: felt
+) {
+    Proxy.assert_only_admin();
+    Proxy._set_implementation_hash(new_implementation);
+    return ();
+}
+
+@external
+func setProxyAdmin{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(address: felt) {
+    Proxy.assert_only_admin();
+    Proxy._set_admin(address);
     return ();
 }

@@ -145,13 +145,14 @@ func test_append_svg_start_from_grid_size{
     alloc_locals;
     let (svg_start_str: felt*) = alloc();
     let (svg_start_str_len) = append_svg_start_from_grid_size(20, 0, svg_start_str);
-    // Result is <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
-    // in the form of an array of length 3:
+    // Result is <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+    // in the form of an array of length 4:
 
-    assert 3 = svg_start_str_len;
+    assert 4 = svg_start_str_len;
     assert '<svg width=\"200\" height=\"' = svg_start_str[0];
     assert '200\" xmlns=' = svg_start_str[1];
-    assert '\"http://www.w3.org/2000/svg\">' = svg_start_str[2];
+    assert '\"http://www.w3.org/2000/svg\" ' = svg_start_str[2];
+    assert 'shape-rendering=\"crispEdges\">' = svg_start_str[3];
     return ();
 }
 
@@ -174,11 +175,11 @@ func test_append_svg_from_pixel_grid{
         destination=svg_str,
     );
 
-    // 3 start, 400 rects of length 4, 1 end = 1604
-    assert 1604 = svg_str_len;
+    // 4 start, 400 rects of length 4, 1 end = 1604
+    assert 1605 = svg_str_len;
     assert '<svg width=\"200\" height=\"' = svg_str[0];
-    assert '<rect width=\"10\" height=\"10\' = svg_str[7];
-    assert '</svg>' = svg_str[1603];
+    assert '<rect width=\"10\" height=\"10\' = svg_str[8];
+    assert '</svg>' = svg_str[1604];
 
     return ();
 

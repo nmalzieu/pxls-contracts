@@ -36,16 +36,16 @@ func initializer{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
 
     // Minting all rtwrks priori to deployment to the owner
 
-    ERC721._mint(owner, Uint256(1, 0));
-    ERC721._mint(owner, Uint256(2, 0));
-    ERC721._mint(owner, Uint256(3, 0));
-    ERC721._mint(owner, Uint256(4, 0));
-    ERC721._mint(owner, Uint256(5, 0));
-    ERC721._mint(owner, Uint256(6, 0));
-    ERC721._mint(owner, Uint256(7, 0));
-    ERC721._mint(owner, Uint256(8, 0));
-    ERC721._mint(owner, Uint256(9, 0));
-    ERC721._mint(owner, Uint256(10, 0));
+    ERC721Enumerable._mint(owner, Uint256(1, 0));
+    ERC721Enumerable._mint(owner, Uint256(2, 0));
+    ERC721Enumerable._mint(owner, Uint256(3, 0));
+    ERC721Enumerable._mint(owner, Uint256(4, 0));
+    ERC721Enumerable._mint(owner, Uint256(5, 0));
+    ERC721Enumerable._mint(owner, Uint256(6, 0));
+    ERC721Enumerable._mint(owner, Uint256(7, 0));
+    ERC721Enumerable._mint(owner, Uint256(8, 0));
+    ERC721Enumerable._mint(owner, Uint256(9, 0));
+    ERC721Enumerable._mint(owner, Uint256(10, 0));
 
     return ();
 }

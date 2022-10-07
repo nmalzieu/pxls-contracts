@@ -53,6 +53,8 @@ func initializer{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
 // @param bidId: The id of the bid
 // @return bidAccount: the account address of the bidder
 // @return bidAmount: the amount of the bid
+// @return bidTimestamp: the timestamp of the bid
+// @return bidReimbursementTimestamp: the timestamp of the reimbursement of the bid
 // @return theme: the bid theme as an array of short strings
 
 @view
@@ -86,6 +88,52 @@ func currentAuctionId{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_chec
 ) {
     let (auction_id) = current_auction_id.read();
     return (currentAuctionId=auction_id);
+}
+
+// @notice A getter for the last bid id of the current auction
+// @return currentAuctionBidId: The current auction id
+
+@view
+func currentAuctionBidId{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    auctionId: felt
+) -> (currentAuctionBidId: felt) {
+    let (last_bid_id) = auction_bids_count.read(auctionId);
+    return (currentAuctionBidId=last_bid_id);
+}
+
+// @notice Get the last bid from an auction
+// @param auctionId: The id of the auction
+// @return bidId: the id of the last bid
+// @return bidAccount: the account address of the bidder
+// @return bidAmount: the amount of the bid
+// @return bidTimestamp: the timestamp of the bid
+// @return bidReimbursementTimestamp: the timestamp of the reimbursement of the bid
+// @return theme: the bid theme as an array of short strings
+
+@view
+func currentAuctionBid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    auctionId: felt
+) -> (
+    bidId: felt,
+    bidAccount: felt,
+    bidAmount: Uint256,
+    bidTimestamp: felt,
+    bidReimbursementTimestamp: felt,
+    theme_len: felt,
+    theme: felt*,
+) {
+    alloc_locals;
+    let (last_bid_id) = auction_bids_count.read(auctionId);
+    let (bid: Bid) = read_bid(auctionId, last_bid_id);
+    return (
+        bidId=last_bid_id,
+        bidAccount=bid.account,
+        bidAmount=bid.amount,
+        bidTimestamp=bid.timestamp,
+        bidReimbursementTimestamp=bid.reimbursement_timestamp,
+        theme_len=bid.theme_len,
+        theme=bid.theme,
+    );
 }
 
 // @notice A getter for the start timestamp of an auction
@@ -216,7 +264,6 @@ func withdrawColorizerBalance{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, ra
     withdraw_colorizer_balance(pxlId);
     return ();
 }
-
 
 // Proxy upgrade
 

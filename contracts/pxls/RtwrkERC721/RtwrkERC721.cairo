@@ -8,6 +8,7 @@ from starkware.cairo.common.math import assert_le, assert_not_zero
 
 from openzeppelin.access.ownable.library import Ownable
 from openzeppelin.token.erc721.library import ERC721
+from openzeppelin.token.erc721.enumerable.library import ERC721Enumerable
 from openzeppelin.introspection.erc165.library import ERC165
 from openzeppelin.upgrades.library import Proxy
 
@@ -29,6 +30,7 @@ func initializer{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
 ) {
     Proxy.initializer(proxy_admin);
     ERC721.initializer('Rtwrks', 'RTWRKS');
+    ERC721Enumerable.initializer();
     Ownable.initializer(owner);
     rtwrk_drawer_address.write(rtwrk_drawer_address_value);
 
@@ -43,6 +45,7 @@ func initializer{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
     ERC721._mint(owner, Uint256(7, 0));
     ERC721._mint(owner, Uint256(8, 0));
     ERC721._mint(owner, Uint256(9, 0));
+    ERC721._mint(owner, Uint256(10, 0));
 
     return ();
 }
@@ -157,6 +160,14 @@ func rtwrkStepsCount{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check
     return (count=count);
 }
 
+@view
+func totalSupply{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}() -> (
+    totalSupply: Uint256
+) {
+    let (totalSupply: Uint256) = ERC721Enumerable.total_supply();
+    return (totalSupply=totalSupply);
+}
+
 //
 // Externals
 //
@@ -177,11 +188,12 @@ func setApprovalForAll{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_che
     return ();
 }
 
+
 @external
 func transferFrom{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(
     from_: felt, to: felt, tokenId: Uint256
 ) {
-    ERC721.transfer_from(from_, to, tokenId);
+    ERC721Enumerable.transfer_from(from_, to, tokenId);
     return ();
 }
 
@@ -189,7 +201,7 @@ func transferFrom{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_pt
 func safeTransferFrom{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(
     from_: felt, to: felt, tokenId: Uint256, data_len: felt, data: felt*
 ) {
-    ERC721.safe_transfer_from(from_, to, tokenId, data_len, data);
+    ERC721Enumerable.safe_transfer_from(from_, to, tokenId, data_len, data);
     return ();
 }
 
@@ -208,7 +220,7 @@ func mint{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(
         assert auction_contract_address = caller;
     }
 
-    ERC721._mint(to, tokenId);
+    ERC721Enumerable._mint(to, tokenId);
 
     return ();
 }

@@ -35,16 +35,16 @@ rtwrk_theme_auction = [
 
 [profile.devnet.protostar.deploy]
 gateway_url="http://127.0.0.1:5050/"
-chain_id=1
+chain_id=1536727068981429685321
 
 [profile.devnet.protostar.declare]
 gateway_url="http://127.0.0.1:5050/"
-chain_id=1
+chain_id=1536727068981429685321
 
 [profile.devnet.protostar.migrate]
 gateway_url="http://127.0.0.1:5050/"
-chain_id=1
-account_address="0x47b03d1ba3cc843bf02632974c5eedfea1d617430475924e87dbb3f8a2e529d"
+chain_id=1536727068981429685321
+account_address="0x7e00d496e324876bbc8531f2d9a82bf154d1a04a50218ee74cdd372f75a551a"
 private_key_path="private/devnet.key"
 
 

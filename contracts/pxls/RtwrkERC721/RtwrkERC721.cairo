@@ -168,6 +168,30 @@ func totalSupply{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr
     return (totalSupply=totalSupply);
 }
 
+func get_all_rtwrks_owned{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    owner: felt, index: felt, balance: felt, rtwrks: felt*
+) -> () {
+    if (index == balance) {
+        return ();
+    }
+    let (tokenId: Uint256) = ERC721Enumerable.token_of_owner_by_index(
+        owner=owner, index=Uint256(low=index, high=0)
+    );
+    assert rtwrks[index] = tokenId.low;
+    return get_all_rtwrks_owned(owner, index + 1, balance, rtwrks);
+}
+
+@view
+func rtwrksOwned{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(owner: felt) -> (
+    rtwrks_len: felt, rtwrks: felt*
+) {
+    alloc_locals;
+    let (rtwrks: felt*) = alloc();
+    let (balance: Uint256) = ERC721.balance_of(owner);
+    get_all_rtwrks_owned(owner, 0, balance.low, rtwrks);
+    return (rtwrks_len=balance.low, rtwrks=rtwrks);
+}
+
 //
 // Externals
 //
@@ -187,7 +211,6 @@ func setApprovalForAll{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_che
     ERC721.set_approval_for_all(operator, approved);
     return ();
 }
-
 
 @external
 func transferFrom{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(
@@ -212,7 +235,8 @@ func mint{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(
     alloc_locals;
 
     let (auction_contract_address) = rtwrk_theme_auction_address.read();
-    with_attr error_message("Auction contract address has not been set yet in Rtwrk ERC721 contract") {
+    with_attr error_message(
+            "Auction contract address has not been set yet in Rtwrk ERC721 contract") {
         assert_not_zero(auction_contract_address);
     }
     let (caller) = get_caller_address();
@@ -271,7 +295,6 @@ func renounceOwnership{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_che
     Ownable.renounce_ownership();
     return ();
 }
-
 
 // Proxy upgrade
 

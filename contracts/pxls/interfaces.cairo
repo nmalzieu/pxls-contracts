@@ -54,7 +54,9 @@ namespace IRtwrkDrawer {
     }
     func currentRtwrkId() -> (rtwrk_id: felt) {
     }
-    func launchNewRtwrk(theme_len: felt, theme: felt*) -> () {
+    func launchNewRtwrk(
+        theme_len: felt, theme: felt*, auction_winner: felt, auction_bid_amount: Uint256
+    ) -> () {
     }
     func rtwrkGrid(rtwrkId: felt, rtwrkStep: felt) -> (grid_len: felt, grid: felt*) {
     }
@@ -73,6 +75,10 @@ namespace IRtwrkDrawer {
     func colorizers(rtwrkId: felt, rtwrkStep: felt) -> (colorizers_len: felt, colorizers: felt*) {
     }
     func rtwrkTheme(rtwrkId: felt) -> (theme_len: felt, theme: felt*) {
+    }
+    func rtwrkMetadata(rtwrkId: felt) -> (
+        auction_winner: felt, auction_bid_amount: Uint256, theme_len: felt, theme: felt*
+    ) {
     }
     func rtwrkStepsCount(rtwrkId: felt) -> (steps_count: felt) {
     }
@@ -111,6 +117,8 @@ namespace IRtwrkERC721 {
     func rtwrkThemeAuctionContractAddress() -> (address: felt) {
     }
     func ownerOf(tokenId: Uint256) -> (owner: felt) {
+    }
+    func rtwrksOwned(owner: felt) -> (rtwrks_len: felt, rtwrks: felt*) {
     }
 }
 

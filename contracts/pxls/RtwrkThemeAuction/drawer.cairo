@@ -3,6 +3,7 @@ from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.starknet.common.syscalls import get_block_timestamp
 from starkware.cairo.common.math_cmp import is_le
 from starkware.cairo.common.bool import TRUE, FALSE
+from starkware.cairo.common.uint256 import Uint256
 
 from pxls.RtwrkThemeAuction.storage import rtwrk_drawer_address
 from pxls.interfaces import IRtwrkDrawer
@@ -52,7 +53,7 @@ func assert_no_running_rtwrk{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, ran
 }
 
 func launch_rtwrk_for_auction{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    theme_len: felt, theme: felt*
+    theme_len: felt, theme: felt*, account: felt, amount: Uint256
 ) -> (launched_rtwrk_id: felt) {
     alloc_locals;
     let (running_rtwrk: felt) = is_running_rtwrk();
@@ -60,7 +61,7 @@ func launch_rtwrk_for_auction{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, ra
         assert running_rtwrk = FALSE;
     }
     let (contract_address) = rtwrk_drawer_address.read();
-    IRtwrkDrawer.launchNewRtwrk(contract_address, theme_len, theme);
+    IRtwrkDrawer.launchNewRtwrk(contract_address, theme_len, theme, account, amount);
 
     let (rtwrk_id) = current_rtwrk_id();
     return (launched_rtwrk_id=rtwrk_id);

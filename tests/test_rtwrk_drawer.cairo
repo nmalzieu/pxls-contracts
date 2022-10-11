@@ -79,7 +79,11 @@ func __setup__{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}(
 
     // Launching the initial rtwrk
     IRtwrkDrawer.launchNewRtwrk(
-        contract_address=rtwrk_drawer_contract_address, theme_len=1, theme=theme
+        contract_address=rtwrk_drawer_contract_address,
+        theme_len=1,
+        theme=theme,
+        auction_winner=123456,
+        auction_bid_amount=Uint256(5000000000000000, 0),
     );
 
     %{ stop_prank_pixel() %}
@@ -371,7 +375,11 @@ func test_rtwrk_drawer_launch_too_early{
     %{ expect_revert(error_message="Trying to launch a new rtwrk but there is already one running") %}
 
     IRtwrkDrawer.launchNewRtwrk(
-        contract_address=rtwrk_drawer_contract_address, theme_len=2, theme=theme
+        contract_address=rtwrk_drawer_contract_address,
+        theme_len=2,
+        theme=theme,
+        auction_winner=123456,
+        auction_bid_amount=Uint256(5000000000000000, 0),
     );
 
     %{ stop_prank_drawer() %}
@@ -404,7 +412,11 @@ func test_rtwrk_drawer_launch_new_rtwrk{
     assert theme[1] = 'que 31 characteres';
 
     IRtwrkDrawer.launchNewRtwrk(
-        contract_address=rtwrk_drawer_contract_address, theme_len=2, theme=theme
+        contract_address=rtwrk_drawer_contract_address,
+        theme_len=2,
+        theme=theme,
+        auction_winner=123456,
+        auction_bid_amount=Uint256(5000000000000000, 0),
     );
 
     let (rtwrk_id) = IRtwrkDrawer.currentRtwrkId(contract_address=rtwrk_drawer_contract_address);
@@ -426,6 +438,17 @@ func test_rtwrk_drawer_launch_new_rtwrk{
     let (theme_len: felt, theme: felt*) = IRtwrkDrawer.rtwrkTheme(
         rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 2
     );
+    assert 2 = theme_len;
+    assert 'Ceci est un theme qui fait plus' = theme[0];
+    assert 'que 31 characteres' = theme[1];
+
+    // Getting whole metadata
+    let (auction_winner: felt, auction_bid_amount: Uint256, theme_len: felt, theme: felt*) = IRtwrkDrawer.rtwrkMetadata(
+        rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 2
+    );
+    assert 123456 = auction_winner;
+    assert 5000000000000000 = auction_bid_amount.low;
+    assert 0 = auction_bid_amount.high;
     assert 2 = theme_len;
     assert 'Ceci est un theme qui fait plus' = theme[0];
     assert 'que 31 characteres' = theme[1];
@@ -496,7 +519,6 @@ func test_rtwrk_drawer_drawing_fails_if_old_rtwrk{
     return ();
 }
 
-
 @view
 func test_original_rtwrks{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
     tempvar rtwrk_drawer_contract_address;
@@ -516,7 +538,6 @@ func test_original_rtwrks{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: Has
 
     return ();
 }
-
 
 @view
 func test_rtwrk_drawer_get_grid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
@@ -559,7 +580,11 @@ func test_rtwrk_drawer_get_grid{syscall_ptr: felt*, range_check_ptr, pedersen_pt
     assert theme[0] = 'Super theme';
 
     IRtwrkDrawer.launchNewRtwrk(
-        contract_address=rtwrk_drawer_contract_address, theme_len=1, theme=theme
+        contract_address=rtwrk_drawer_contract_address,
+        theme_len=1,
+        theme=theme,
+        auction_winner=123456,
+        auction_bid_amount=Uint256(5000000000000000, 0),
     );
 
     let (rtwrk_id) = IRtwrkDrawer.currentRtwrkId(contract_address=rtwrk_drawer_contract_address);
@@ -703,7 +728,11 @@ func test_rtwrk_drawer_not_everyone_can_launch_new_rtwrk{
     assert theme[0] = 'Super theme';
 
     IRtwrkDrawer.launchNewRtwrk(
-        contract_address=rtwrk_drawer_contract_address, theme_len=1, theme=theme
+        contract_address=rtwrk_drawer_contract_address,
+        theme_len=1,
+        theme=theme,
+        auction_winner=123456,
+        auction_bid_amount=Uint256(5000000000000000, 0),
     );
 
     let (rtwrk_id) = IRtwrkDrawer.currentRtwrkId(contract_address=rtwrk_drawer_contract_address);
@@ -716,7 +745,11 @@ func test_rtwrk_drawer_not_everyone_can_launch_new_rtwrk{
     // Check that non owner cannot update flag
     %{ expect_revert(error_message="Only the auction contract can launch a new rtwrk") %}
     IRtwrkDrawer.launchNewRtwrk(
-        contract_address=rtwrk_drawer_contract_address, theme_len=1, theme=theme
+        contract_address=rtwrk_drawer_contract_address,
+        theme_len=1,
+        theme=theme,
+        auction_winner=123456,
+        auction_bid_amount=Uint256(5000000000000000, 0),
     );
 
     return ();

@@ -40,12 +40,21 @@ func rtwrk_timestamp(rtwrk_id: felt) -> (timestamp: felt) {
 func current_rtwrk_id() -> (rtwrk_id: felt) {
 }
 
+// Each rtwrk has been ordered by someone's auction bid
+@storage_var
+func rtwrk_auction_winner(rtwrk_id: felt) -> (winner: felt) {
+}
+
+// Each rtwrk has been ordered by an auction bid with amount
+@storage_var
+func rtwrk_auction_bid_amount(rtwrk_id: felt) -> (amount: Uint256) {
+}
+
 // Each rtwrk can have a theme that is an array
 // of short strings
 @storage_var
 func rtwrk_theme(rtwrk_id: felt, index: felt) -> (short_string: felt) {
 }
-
 
 // Store the address of the auction contract since it's the only
 // address that can launch an rtwrk

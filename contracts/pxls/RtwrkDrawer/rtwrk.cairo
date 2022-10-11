@@ -1,11 +1,18 @@
 %lang starknet
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.math_cmp import is_le
+from starkware.cairo.common.uint256 import Uint256
 from starkware.cairo.common.alloc import alloc
 from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.starknet.common.syscalls import get_block_timestamp
 
-from pxls.RtwrkDrawer.storage import current_rtwrk_id, rtwrk_timestamp, rtwrk_theme
+from pxls.RtwrkDrawer.storage import (
+    current_rtwrk_id,
+    rtwrk_timestamp,
+    rtwrk_theme,
+    rtwrk_auction_winner,
+    rtwrk_auction_bid_amount,
+)
 from pxls.RtwrkDrawer.variables import BLOCK_TIME_BUFFER
 
 // 1 full day in seconds (get_block_timestamp returns timestamp in seconds)
@@ -52,7 +59,7 @@ func should_launch_new_rtwrk{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, ran
 }
 
 func launch_new_rtwrk{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    theme_len: felt, theme: felt*
+    theme_len: felt, theme: felt*, auction_winner: felt, auction_bid_amount: Uint256
 ) {
     alloc_locals;
     let (current_rtwrk_id_value) = current_rtwrk_id.read();
@@ -60,8 +67,9 @@ func launch_new_rtwrk{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_chec
     current_rtwrk_id.write(new_rtwrk_id);
     let (block_timestamp) = get_block_timestamp();
     rtwrk_timestamp.write(new_rtwrk_id, block_timestamp);
-
     store_theme(new_rtwrk_id, 0, theme_len, theme);
+    rtwrk_auction_winner.write(new_rtwrk_id, auction_winner);
+    rtwrk_auction_bid_amount.write(new_rtwrk_id, auction_bid_amount);
 
     return ();
 }
@@ -99,13 +107,13 @@ func _read_theme{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
 }
 
 func launch_new_rtwrk_if_necessary{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    theme_len: felt, theme: felt*
+    theme_len: felt, theme: felt*, auction_winner: felt, auction_bid_amount: Uint256
 ) -> () {
     let (should_launch) = should_launch_new_rtwrk();
     with_attr error_message("Trying to launch a new rtwrk but there is already one running") {
         assert should_launch = TRUE;
     }
-    launch_new_rtwrk(theme_len, theme);
+    launch_new_rtwrk(theme_len, theme, auction_winner, auction_bid_amount);
     return ();
 }
 

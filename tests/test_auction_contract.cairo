@@ -757,6 +757,13 @@ func test_settle_auction{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: Hash
     assert '</svg>' = token_uri[token_uri_len - 2];
     assert '"}' = token_uri[token_uri_len - 1];
 
+    // Let's verify we can get the list of rtwrks owned by the user
+    let (owned_rtwrks_len, owned_rtwrks: felt*) = IRtwrkERC721.rtwrksOwned(
+        rtwrk_erc721_contract_address, owner_address
+    );
+    assert 1 = owned_rtwrks_len;
+    assert ORIGINAL_RTWRKS_COUNT + 1 = owned_rtwrks[0];
+
     return ();
 }
 

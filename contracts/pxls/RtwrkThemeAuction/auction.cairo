@@ -71,7 +71,9 @@ func launch_auction_rtwrk{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_
         assert_le(1, winning_bid.theme_len);
     }
 
-    let (launched_rtwrk_id) = launch_rtwrk_for_auction(winning_bid.theme_len, winning_bid.theme);
+    let (launched_rtwrk_id) = launch_rtwrk_for_auction(
+        winning_bid.theme_len, winning_bid.theme, winning_bid.account, winning_bid.amount
+    );
 
     let (caller_address) = get_caller_address();
     rtwrk_launched.emit(

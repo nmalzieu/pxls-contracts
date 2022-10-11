@@ -17,6 +17,8 @@ from pxls.RtwrkDrawer.storage import (
     number_of_pixel_colorizations_per_colorizer,
     number_of_pixel_colorizations_total,
     rtwrk_auction_address,
+    rtwrk_auction_winner,
+    rtwrk_auction_bid_amount,
 )
 from pxls.RtwrkDrawer.events import pixels_colorized
 from pxls.RtwrkDrawer.rtwrk import (
@@ -186,6 +188,17 @@ func rtwrkTheme{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}
 }
 
 @view
+func rtwrkMetadata{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    rtwrkId: felt
+) -> (auction_winner: felt, auction_bid_amount: Uint256, timestamp: felt, theme_len: felt, theme: felt*) {
+    let (theme_len: felt, theme: felt*) = read_theme(rtwrkId);
+    let (auction_winner: felt) = rtwrk_auction_winner.read(rtwrkId);
+    let (auction_bid_amount: Uint256) = rtwrk_auction_bid_amount.read(rtwrkId);
+    let (timestamp: felt) = get_rtwrk_timestamp(rtwrkId);
+    return (auction_winner, auction_bid_amount, timestamp, theme_len, theme);
+}
+
+@view
 func rtwrkStepsCount{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     rtwrkId: felt
 ) -> (steps_count: felt) {
@@ -236,7 +249,7 @@ func colorizePixels{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_
 
 @external
 func launchNewRtwrk{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(
-    theme_len: felt, theme: felt*
+    theme_len: felt, theme: felt*, auction_winner: felt, auction_bid_amount: Uint256
 ) -> () {
     alloc_locals;
     with_attr error_message("Theme too long") {
@@ -254,7 +267,7 @@ func launchNewRtwrk{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_
         assert auction_contract_address = caller;
     }
     // Method to just launch a new rtwrk with drawing a pixel
-    launch_new_rtwrk_if_necessary(theme_len, theme);
+    launch_new_rtwrk_if_necessary(theme_len, theme, auction_winner, auction_bid_amount);
     return ();
 }
 
@@ -280,7 +293,6 @@ func setRtwrkThemeAuctionContractAddress{
     rtwrk_auction_address.write(address);
     return ();
 }
-
 
 // Proxy upgrade
 

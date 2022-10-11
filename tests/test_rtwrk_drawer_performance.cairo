@@ -17,7 +17,7 @@ func __setup__{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}(
     let name = 'Pixel';
     let symbol = 'PXL';
 
-    %{ 
+    %{
         from starkware.starknet.public.abi import get_selector_from_name
         context.account = 123456
     %}
@@ -84,7 +84,11 @@ func __setup__{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}(
 
     // Launching the initial rtwrk
     IRtwrkDrawer.launchNewRtwrk(
-        contract_address=rtwrk_drawer_contract_address, theme_len=1, theme=theme
+        contract_address=rtwrk_drawer_contract_address,
+        theme_len=1,
+        theme=theme,
+        auction_winner=123456,
+        auction_bid_amount=Uint256(5000000000000000, 0),
     );
 
     %{ stop_prank_pixel() %}

@@ -8,6 +8,7 @@ func up() {
 
         devnet_admin = 0x03bc4F3912468951b3be911b9476177CC208dAe52Ae4F880540F4d24d3c61847
         devnet_eth_erc20 = 0x62230ea046a9a5fbc261ac77d03c8d41e5d442db2284587570ab46455fd2488
+        auction_bid_increment = 10000000000000000
 
         old_pixel_erc721_address = deploy_contract("./build/pixel_erc721.json", {
             "name": "Pxls",
@@ -75,7 +76,8 @@ func up() {
                 devnet_eth_erc20, # eth_erc20_address_value
                 old_pixel_erc721_address, #pxls_erc721_address_value
                 rtwrk_drawer_proxy_address, # rtwrk_drawer_address_value
-                rtwrk_erc721_proxy_address # rtwrk_erc721_address_value
+                rtwrk_erc721_proxy_address, # rtwrk_erc721_address_value
+                auction_bid_increment, # bid_increment_value
             ]
         }, config={"wait_for_acceptance": True}).contract_address
 

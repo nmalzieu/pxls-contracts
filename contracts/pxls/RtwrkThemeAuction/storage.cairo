@@ -80,3 +80,8 @@ func colorizers_balance(pxlId: Uint256) -> (balance: Uint256) {
 @storage_var
 func pxls_balance() -> (balance: Uint256) {
 }
+
+// Store the minimal bid increment in wei
+@storage_var
+func bid_increment() -> (increment: felt) {
+}

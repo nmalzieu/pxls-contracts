@@ -10,8 +10,8 @@ from caistring.str import literal_from_number
 
 from pxls.interfaces import IRtwrkERC721, IRtwrkDrawer, IRtwrkThemeAuction
 from pxls.RtwrkDrawer.original_rtwrks import ORIGINAL_RTWRKS_COUNT
-from pxls.RtwrkThemeAuction.variables import BID_INCREMENT
 from pxls.RtwrkDrawer.colorization import PixelColorization
+from pxls.RtwrkThemeAuction.storage import bid_increment
 
 @view
 func __setup__{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
@@ -97,7 +97,8 @@ func __setup__{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}(
                 context.eth_erc_20_contract_address, # eth_erc20_address_value
                 context.pxl_erc721_contract_address, #pxls_erc721_address_value
                 context.rtwrk_drawer_contract_address, # rtwrk_drawer_address_value
-                context.rtwrk_erc721_contract_address # rtwrk_erc721_address_value
+                context.rtwrk_erc721_contract_address, # rtwrk_erc721_address_value
+                5000000000000000 # bid_increment_value
             ]
         }).contract_address
     %}
@@ -133,29 +134,16 @@ func __setup__{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}(
 }
 
 @view
-func test_rtwrk_erc721_getters{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
-    tempvar rtwrk_erc721_contract_address;
-    %{ ids.rtwrk_erc721_contract_address = context.rtwrk_erc721_contract_address %}
-
+func test_rtwrk_auction_getters{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
     tempvar auction_contract_address;
     %{ ids.auction_contract_address = context.auction_contract_address %}
 
-    let (exists) = IRtwrkERC721.exists(rtwrk_erc721_contract_address, Uint256(1, 0));
-    assert TRUE = exists;
-
-    // First NFTs are minted to the owner
-    let (ownerOfToken) = IRtwrkERC721.ownerOf(
-        rtwrk_erc721_contract_address, Uint256(ORIGINAL_RTWRKS_COUNT, 0)
-    );
-    assert 123456 = ownerOfToken;
-
-    let (auction_contract_address_in_rtwrk_erc721) = IRtwrkERC721.rtwrkThemeAuctionContractAddress(
-        rtwrk_erc721_contract_address
-    );
-    assert auction_contract_address = auction_contract_address_in_rtwrk_erc721;
+    let (increment: felt) = IRtwrkThemeAuction.bidIncrement(auction_contract_address);
+    assert 5000000000000000 = increment;
 
     return ();
 }
+
 @view
 func test_rtwrk_erc721_contract_uri{
     syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
@@ -410,7 +398,7 @@ func test_place_bid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuilt
     assert 100000000000000000000 = balance.low;
     assert 0 = balance.high;
 
-    %{ expect_revert(error_message="Bid amount must be at least the last bid amount + BID_INCREMENT") %}
+    %{ expect_revert(error_message="Bid amount must be at least the last bid amount + bid_increment") %}
 
     // Trying a third bid but not enough money
     place_bid(

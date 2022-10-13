@@ -20,9 +20,10 @@ from pxls.RtwrkThemeAuction.storage import (
     bid_theme,
     bid_reimbursement_timestamp,
     bid_timestamp,
+    bid_increment
 )
 from pxls.RtwrkThemeAuction.bid_struct import Bid
-from pxls.RtwrkThemeAuction.variables import THEME_MAX_LENGTH, BID_INCREMENT
+from pxls.RtwrkThemeAuction.variables import THEME_MAX_LENGTH
 from pxls.RtwrkThemeAuction.auction_checks import assert_running_auction_id
 from pxls.RtwrkThemeAuction.payment import transfer_eth, transfer_eth_from
 from pxls.RtwrkThemeAuction.events import bid_placed
@@ -112,16 +113,17 @@ func assert_bid_amount_valid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, ran
 ) -> () {
     // Let's make sure the amount of the bid is more than last bid + increment
     let (last_bid_id) = auction_bids_count.read(auction_id);
-    let bid_increment = Uint256(BID_INCREMENT, 0);
+    let (increment) = bid_increment.read();
+    let increment_uint256 = Uint256(increment, 0);
     if (last_bid_id == 0) {
-        with_attr error_message("Bid amount must be at least BID_INCREMENT since last bid is 0") {
-            assert_uint256_le(bid_increment, bid.amount);
+        with_attr error_message("Bid amount must be at least bid_increment since last bid is 0") {
+            assert_uint256_le(increment_uint256, bid.amount);
         }
         return ();
     } else {
         let (last_bid_amount) = bid_amount.read(auction_id, last_bid_id);
-        let (minimum_new_bid_amount) = SafeUint256.add(last_bid_amount, bid_increment);
-        with_attr error_message("Bid amount must be at least the last bid amount + BID_INCREMENT") {
+        let (minimum_new_bid_amount) = SafeUint256.add(last_bid_amount, increment_uint256);
+        with_attr error_message("Bid amount must be at least the last bid amount + bid_increment") {
             assert_uint256_le(minimum_new_bid_amount, bid.amount);
         }
         return ();

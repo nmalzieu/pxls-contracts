@@ -126,6 +126,8 @@ namespace IRtwrkERC721 {
     }
     func rtwrkStep(tokenId: Uint256) -> (step: felt) {
     }
+    func selectRtwrkStep(tokenId: Uint256, step: felt) -> () {
+    }
 }
 
 @contract_interface
@@ -160,5 +162,7 @@ namespace IRtwrkThemeAuction {
     func withdrawPxlsBalance() {
     }
     func withdrawColorizerBalance(pxlId: Uint256) {
+    }
+    func bidIncrement() -> (increment: felt) {
     }
 }

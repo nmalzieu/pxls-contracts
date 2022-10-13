@@ -15,6 +15,7 @@ from pxls.RtwrkThemeAuction.storage import (
     eth_erc20_address,
     colorizers_balance,
     pxls_balance,
+    bid_increment,
 )
 from pxls.RtwrkThemeAuction.bid import read_bid, place_bid
 from pxls.RtwrkThemeAuction.bid_struct import Bid
@@ -33,6 +34,7 @@ func initializer{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
     pxls_erc721_address_value: felt,
     rtwrk_drawer_address_value: felt,
     rtwrk_erc721_address_value: felt,
+    bid_increment_value: felt,
 ) {
     Proxy.initializer(proxy_admin);
     Ownable.initializer(owner);
@@ -40,6 +42,7 @@ func initializer{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
     pxls_erc721_address.write(pxls_erc721_address_value);
     rtwrk_drawer_address.write(rtwrk_drawer_address_value);
     rtwrk_erc721_address.write(rtwrk_erc721_address_value);
+    bid_increment.write(bid_increment_value);
 
     return ();
 }
@@ -190,6 +193,18 @@ func pxlsBalance{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
 func owner{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() -> (owner: felt) {
     let (owner: felt) = Ownable.owner();
     return (owner,);
+}
+
+
+// @notice A getter for the minimal bid increment
+// @return increment: The minimal bid increment
+
+@view
+func bidIncrement{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() -> (
+    increment: felt
+) {
+    let (increment) = bid_increment.read();
+    return (increment=increment);
 }
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

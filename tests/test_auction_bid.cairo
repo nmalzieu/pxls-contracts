@@ -21,6 +21,7 @@ from pxls.RtwrkThemeAuction.storage import (
     auction_timestamp,
     eth_erc20_address,
     bid_reimbursement_timestamp,
+    bid_increment,
 )
 
 @view
@@ -103,6 +104,7 @@ func test_validate_first_bid_amount_too_low{
     syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
 }() {
     alloc_locals;
+    bid_increment.write(5000000000000000);
     let (theme: felt*) = alloc();
     assert theme[0] = 'My super theme';
 
@@ -115,7 +117,7 @@ func test_validate_first_bid_amount_too_low{
         theme=theme,
     );
 
-    %{ expect_revert(error_message="Bid amount must be at least BID_INCREMENT since last bid is 0") %}
+    %{ expect_revert(error_message="Bid amount must be at least bid_increment since last bid is 0") %}
     assert_bid_amount_valid(auction_id=2, bid=bid);
 
     return ();
@@ -126,6 +128,7 @@ func test_validate_second_bid_amount_too_low{
     syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
 }() {
     alloc_locals;
+    bid_increment.write(5000000000000000);
     let (theme_len, theme) = get_unpacked_theme();
 
     let bid = Bid(
@@ -149,7 +152,7 @@ func test_validate_second_bid_amount_too_low{
         theme=theme,
     );
 
-    %{ expect_revert(error_message="Bid amount must be at least the last bid amount + BID_INCREMENT") %}
+    %{ expect_revert(error_message="Bid amount must be at least the last bid amount + bid_increment") %}
     assert_bid_amount_valid(auction_id=2, bid=bid);
 
     return ();

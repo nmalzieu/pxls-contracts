@@ -93,4 +93,4 @@ Current IPFS CID : `QmQvfChVRwfmzsjnHvm27R3c4UYqUod8fzzYrvLNuRhAHK`
 The `@view` method `contractURI` returns an IPFS link to a JSON file containing the collection metadata.
 The hash is a list of short strings, it can be updated via the `setContractURIHash` method.
 
-Current IPFS CID : `QmQvfChVRwfmzsjnHvm27R3c4UYqUod8fzzYrvLNuRhAHK`
+Current IPFS CID : `QmZ9rSfDK4LXFYxP9X2Ziw3jYcuSzrALAiAowFMfV6d9EZ`

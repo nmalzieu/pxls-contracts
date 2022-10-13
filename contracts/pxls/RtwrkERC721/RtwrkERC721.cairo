@@ -29,12 +29,12 @@ func initializer{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
     proxy_admin: felt, owner: felt, rtwrk_drawer_address_value: felt
 ) {
     Proxy.initializer(proxy_admin);
-    ERC721.initializer('Rtwrks', 'RTWRKS');
+    ERC721.initializer('Pxls Rtwrks', 'RTWRKS');
     ERC721Enumerable.initializer();
     Ownable.initializer(owner);
     rtwrk_drawer_address.write(rtwrk_drawer_address_value);
 
-    // Minting all rtwrks priori to deployment to the owner
+    // Minting all rtwrks prior to deployment to the owner
 
     ERC721Enumerable._mint(owner, Uint256(1, 0));
     ERC721Enumerable._mint(owner, Uint256(2, 0));
@@ -46,6 +46,7 @@ func initializer{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
     ERC721Enumerable._mint(owner, Uint256(8, 0));
     ERC721Enumerable._mint(owner, Uint256(9, 0));
     ERC721Enumerable._mint(owner, Uint256(10, 0));
+    ERC721Enumerable._mint(owner, Uint256(11, 0));
 
     return ();
 }
@@ -190,6 +191,14 @@ func rtwrksOwned{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
     let (balance: Uint256) = ERC721.balance_of(owner);
     get_all_rtwrks_owned(owner, 0, balance.low, rtwrks);
     return (rtwrks_len=balance.low, rtwrks=rtwrks);
+}
+
+@view
+func rtwrkStep{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(
+    tokenId: Uint256
+) -> (step: felt) {
+    let (step: felt) = rtwrk_chosen_step.read(tokenId);
+    return (step=step);
 }
 
 //

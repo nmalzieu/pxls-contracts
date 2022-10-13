@@ -11,7 +11,7 @@ func up() {
         pxl_erc721_address = 0x07ffe4bd0b457e10674a2842164b91fea646ed4027d3b606a0fcbf056a4c8827
 
         # Let's deploy the drawer contract with proxy pattern
-        rtwrk_drawer_hash = declare("./build/rtwrk_drawer.json").class_hash
+        rtwrk_drawer_hash = declare("./build/rtwrk_drawer.json", config={"wait_for_acceptance": False, "max_fee": "auto",}).class_hash
         rtwrk_drawer_proxy_address = deploy_contract("./build/proxy.json", {
             "implementation_hash": rtwrk_drawer_hash,
             "selector": get_selector_from_name("initializer"),
@@ -20,10 +20,10 @@ func up() {
                 testnet_admin, # owner
                 pxl_erc721_address, # pxl_erc721
             ]
-        }).contract_address
+        }, config={"wait_for_acceptance": False}).contract_address
 
         # Let's deploy the rtwrk ERC721 contract with proxy pattern
-        rtwrk_erc721_hash = declare("./build/rtwrk_erc721.json").class_hash
+        rtwrk_erc721_hash = declare("./build/rtwrk_erc721.json", config={"wait_for_acceptance": False, "max_fee": "auto",}).class_hash
         rtwrk_erc721_proxy_address = deploy_contract("./build/proxy.json", {
             "implementation_hash": rtwrk_erc721_hash,
             "selector": get_selector_from_name("initializer"),
@@ -32,10 +32,10 @@ func up() {
                 testnet_admin, # owner
                 rtwrk_drawer_proxy_address, # rtwrk_drawer_address_value
             ]
-        }).contract_address
+        }, config={"wait_for_acceptance": False}).contract_address
 
         # Let's deploy the rtwrk auction contract with proxy pattern
-        rtwrk_theme_auction_hash = declare("./build/rtwrk_theme_auction.json").class_hash
+        rtwrk_theme_auction_hash = declare("./build/rtwrk_theme_auction.json", config={"wait_for_acceptance": False, "max_fee": "auto",}).class_hash
         rtwrk_theme_auction_proxy_address = deploy_contract("./build/proxy.json", {
             "implementation_hash": rtwrk_theme_auction_hash,
             "selector": get_selector_from_name("initializer"),
@@ -47,7 +47,7 @@ func up() {
                 rtwrk_drawer_proxy_address, # rtwrk_drawer_address_value
                 rtwrk_erc721_proxy_address # rtwrk_erc721_address_value
             ]
-        }).contract_address
+        }, config={"wait_for_acceptance": False}).contract_address
 
         # TO DO MANUALLY (can't use invoke here I don't know why)
         # call setRtwrkThemeAuctionContractAddress on

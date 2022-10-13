@@ -443,9 +443,13 @@ func test_rtwrk_drawer_launch_new_rtwrk{
     assert 'que 31 characteres' = theme[1];
 
     // Getting whole metadata
-    let (auction_winner: felt, auction_bid_amount: Uint256, theme_len: felt, theme: felt*) = IRtwrkDrawer.rtwrkMetadata(
-        rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 2
-    );
+    let (
+        auction_winner: felt,
+        auction_bid_amount: Uint256,
+        timestamp: felt,
+        theme_len: felt,
+        theme: felt*,
+    ) = IRtwrkDrawer.rtwrkMetadata(rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 2);
     assert 123456 = auction_winner;
     assert 5000000000000000 = auction_bid_amount.low;
     assert 0 = auction_bid_amount.high;

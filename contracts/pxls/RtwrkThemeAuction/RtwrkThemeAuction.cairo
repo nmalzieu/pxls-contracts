@@ -265,6 +265,18 @@ func withdrawColorizerBalance{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, ra
     return ();
 }
 
+// @notice Upgrade the pxl ERC721 contract address
+// @param address: The address of the pxl ERC721 Contract
+
+@external
+func setPxlERC721ContractAddress{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    address: felt
+) -> () {
+    Ownable.assert_only_owner();
+    pxls_erc721_address.write(address);
+    return ();
+}
+
 // Proxy upgrade
 
 @external

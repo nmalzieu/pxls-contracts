@@ -86,3 +86,11 @@ Current IPFS CID : `QmQvfChVRwfmzsjnHvm27R3c4UYqUod8fzzYrvLNuRhAHK`
 | Contract name | Goerli Address | Mainnet Address |
 |--|--|--|
 | PXL Drawer Contract | [0x01e6ed1dc5b447087f7363a771cd2718f4ca71b701cc62ef68766768095b47a7](https://goerli.voyager.online/contract/0x01e6ed1dc5b447087f7363a771cd2718f4ca71b701cc62ef68766768095b47a7) | [0x01ecc7d613273e6190444ce95ee1459645127104f78b669f04062d8f93d398e8](https://voyager.online/contract/0x01ecc7d613273e6190444ce95ee1459645127104f78b669f04062d8f93d398e8) |
+
+
+### RTWRK NFT Collection Metadata
+
+The `@view` method `contractURI` returns an IPFS link to a JSON file containing the collection metadata.
+The hash is a list of short strings, it can be updated via the `setContractURIHash` method.
+
+Current IPFS CID : `QmQvfChVRwfmzsjnHvm27R3c4UYqUod8fzzYrvLNuRhAHK`

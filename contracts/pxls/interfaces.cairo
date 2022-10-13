@@ -77,7 +77,11 @@ namespace IRtwrkDrawer {
     func rtwrkTheme(rtwrkId: felt) -> (theme_len: felt, theme: felt*) {
     }
     func rtwrkMetadata(rtwrkId: felt) -> (
-        auction_winner: felt, auction_bid_amount: Uint256, theme_len: felt, theme: felt*
+        auction_winner: felt,
+        auction_bid_amount: Uint256,
+        timestamp: felt,
+        theme_len: felt,
+        theme: felt*,
     ) {
     }
     func rtwrkStepsCount(rtwrkId: felt) -> (steps_count: felt) {
@@ -119,6 +123,8 @@ namespace IRtwrkERC721 {
     func ownerOf(tokenId: Uint256) -> (owner: felt) {
     }
     func rtwrksOwned(owner: felt) -> (rtwrks_len: felt, rtwrks: felt*) {
+    }
+    func rtwrkStep(tokenId: Uint256) -> (step: felt) {
     }
 }
 

@@ -190,7 +190,13 @@ func rtwrkTheme{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}
 @view
 func rtwrkMetadata{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     rtwrkId: felt
-) -> (auction_winner: felt, auction_bid_amount: Uint256, timestamp: felt, theme_len: felt, theme: felt*) {
+) -> (
+    auction_winner: felt,
+    auction_bid_amount: Uint256,
+    timestamp: felt,
+    theme_len: felt,
+    theme: felt*,
+) {
     let (theme_len: felt, theme: felt*) = read_theme(rtwrkId);
     let (auction_winner: felt) = rtwrk_auction_winner.read(rtwrkId);
     let (auction_bid_amount: Uint256) = rtwrk_auction_bid_amount.read(rtwrkId);
@@ -291,6 +297,15 @@ func setRtwrkThemeAuctionContractAddress{
 }(address: felt) -> () {
     Ownable.assert_only_owner();
     rtwrk_auction_address.write(address);
+    return ();
+}
+
+@external
+func setPxlERC721ContractAddress{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    address: felt
+) -> () {
+    Ownable.assert_only_owner();
+    pxl_erc721_address.write(address);
     return ();
 }
 

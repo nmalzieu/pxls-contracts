@@ -26,6 +26,7 @@ from pxls.RtwrkThemeAuction.variables import THEME_MAX_LENGTH, BID_INCREMENT
 from pxls.RtwrkThemeAuction.auction_checks import assert_running_auction_id
 from pxls.RtwrkThemeAuction.payment import transfer_eth, transfer_eth_from
 from pxls.RtwrkThemeAuction.events import bid_placed
+from pxls.RtwrkThemeAuction.theme import assert_theme_valid_and_pack
 
 func store_bid_theme{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     auction_id: felt, bid_id: felt, theme_index: felt, theme_len: felt, theme: felt*
@@ -94,13 +95,16 @@ func read_bid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     return (bid=bid);
 }
 
-func assert_bid_theme_valid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    bid: Bid
-) -> () {
+func assert_bid_theme_valid_and_pack{
+    syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
+}(theme_len, theme: felt*) -> (theme_len: felt, theme: felt*) {
     with_attr error_message("Theme is too long") {
-        assert_le(bid.theme_len, THEME_MAX_LENGTH);
+        assert_le(theme_len, THEME_MAX_LENGTH);
     }
-    return ();
+    // Theme has to be sent character by character so we can validate. Then we pack
+    // it in 31 character long felts through packing so it uses less storage
+    let (theme_len, theme: felt*) = assert_theme_valid_and_pack(theme_len, theme);
+    return (theme_len, theme);
 }
 
 func assert_bid_amount_valid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
@@ -122,14 +126,6 @@ func assert_bid_amount_valid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, ran
         }
         return ();
     }
-}
-
-func assert_bid_valid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    auction_id: felt, bid: Bid
-) -> () {
-    assert_bid_theme_valid(bid);
-    assert_bid_amount_valid(auction_id, bid);
-    return ();
 }
 
 func transfer_amount_from_bidder{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
@@ -183,17 +179,20 @@ func place_bid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     // Create bid object
     let (current_block_timestamp) = get_block_timestamp();
 
+    // Validate theme length + verify whitelisted characters + pack
+    let (packed_theme_len, packed_theme) = assert_bid_theme_valid_and_pack(theme_len, theme);
+
     let bid = Bid(
         account=caller_address,
         amount=bid_amount,
         timestamp=current_block_timestamp,
         reimbursement_timestamp=0,
-        theme_len=theme_len,
-        theme=theme,
+        theme_len=packed_theme_len,
+        theme=packed_theme,
     );
 
     // First validate the bid
-    assert_bid_valid(auction_id, bid);
+    assert_bid_amount_valid(auction_id, bid);
 
     // Then let's move ETH from bidder's wallet to the smart contract
     transfer_amount_from_bidder(bid);
@@ -214,9 +213,9 @@ func place_bid{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     bid_placed.emit(
         auction_id=auction_id,
         caller_account_address=caller_address,
-        amount=bid_amount,
-        theme_len=theme_len,
-        theme=theme,
+        amount=bid.amount,
+        theme_len=bid.theme_len,
+        theme=bid.theme,
     );
 
     return ();

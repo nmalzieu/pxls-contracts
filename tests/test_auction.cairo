@@ -212,7 +212,7 @@ func test_launch_auction_rtwrk{syscall_ptr: felt*, range_check_ptr, pedersen_ptr
                    "caller_account_address": 654321,
                    "auction_id": 1,
                    "rtwrk_id": 1,
-                   "theme": [23758682880024625]
+                   "theme": [84]
                }
            })
     %}
@@ -334,7 +334,7 @@ func launch_auction_and_bids_with_mock{
     eth_erc20_address.write(eth_erc20_address_value);
 
     let (theme: felt*) = alloc();
-    assert theme[0] = 'Theme 1';
+    assert theme[0] = 'T';
 
     // Mocking the erc20 transferFrom
     %{ stop_mock_erc20 = mock_call(ids.eth_erc20_address_value, "transferFrom", [1]) %}

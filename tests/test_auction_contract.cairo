@@ -132,515 +132,497 @@ func __setup__{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}(
     return ();
 }
 
-// @view
-// func test_rtwrk_erc721_getters{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
-//     tempvar rtwrk_erc721_contract_address;
-//     %{ ids.rtwrk_erc721_contract_address = context.rtwrk_erc721_contract_address %}
-
-//     tempvar auction_contract_address;
-//     %{ ids.auction_contract_address = context.auction_contract_address %}
-
-//     let (exists) = IRtwrkERC721.exists(rtwrk_erc721_contract_address, Uint256(1, 0));
-//     assert TRUE = exists;
-
-//     // First NFTs are minted to the owner
-//     let (ownerOfToken) = IRtwrkERC721.ownerOf(
-//         rtwrk_erc721_contract_address, Uint256(ORIGINAL_RTWRKS_COUNT, 0)
-//     );
-//     assert 123456 = ownerOfToken;
-
-//     let (auction_contract_address_in_rtwrk_erc721) = IRtwrkERC721.rtwrkThemeAuctionContractAddress(
-//         rtwrk_erc721_contract_address
-//     );
-//     assert auction_contract_address = auction_contract_address_in_rtwrk_erc721;
-
-//     return ();
-// }
-// @view
-// func test_rtwrk_erc721_contract_uri{
-//     syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
-// }() {
-//     alloc_locals;
-
-//     local rtwrk_erc721_contract_address;
-//     %{ ids.rtwrk_erc721_contract_address = context.rtwrk_erc721_contract_address %}
-
-//     let (contract_uri_len: felt, contract_uri: felt*) = IRtwrkERC721.contractURI(
-//         contract_address=rtwrk_erc721_contract_address
-//     );
-//     assert 4 = contract_uri_len;
-//     assert 'ipfs://' = contract_uri[0];
-//     assert 0 = contract_uri[1];
-//     assert 0 = contract_uri[2];
-//     assert 0 = contract_uri[3];
-
-//     let (hash: felt*) = alloc();
-//     assert hash[0] = 'vez2qw8z6poiozzgjqnbapzcekb4h8j';
-//     assert hash[1] = 'hsiuxvjaqqb4e6p0synfwnxobnes6m7';
-//     assert hash[2] = 'j66w';
-
-//     %{ stop_prank_rtwrk_erc721 = start_prank(context.account, target_contract_address=context.rtwrk_erc721_contract_address) %}
-
-//     IRtwrkERC721.setContractURIHash(
-//         contract_address=rtwrk_erc721_contract_address, hash_len=3, hash=hash
-//     );
-//     let (contract_uri_len: felt, contract_uri: felt*) = IRtwrkERC721.contractURI(
-//         contract_address=rtwrk_erc721_contract_address
-//     );
-//     assert 4 = contract_uri_len;
-//     assert 'ipfs://' = contract_uri[0];
-//     assert 'vez2qw8z6poiozzgjqnbapzcekb4h8j' = contract_uri[1];
-//     assert 'hsiuxvjaqqb4e6p0synfwnxobnes6m7' = contract_uri[2];
-//     assert 'j66w' = contract_uri[3];
-
-//     %{ stop_prank_rtwrk_erc721() %}
-
-//     // Verify that only owner can set contract uri hash
-//     %{ expect_revert(error_message="Ownable: caller is not the owner") %}
-//     IRtwrkERC721.setContractURIHash(
-//         contract_address=rtwrk_erc721_contract_address, hash_len=3, hash=hash
-//     );
-
-//     return ();
-// }
-
-// @view
-// func test_rtwrk_erc721_set_auction_address{
-//     syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
-// }() {
-//     tempvar auction_contract_address;
-//     %{ ids.auction_contract_address = context.auction_contract_address %}
-
-//     tempvar rtwrk_erc721_contract_address;
-//     %{ ids.rtwrk_erc721_contract_address = context.rtwrk_erc721_contract_address %}
-
-//     let (current_auction_address) = IRtwrkERC721.rtwrkThemeAuctionContractAddress(
-//         rtwrk_erc721_contract_address
-//     );
-//     assert auction_contract_address = current_auction_address;
-
-//     %{ stop_prank = start_prank(context.account, target_contract_address=context.rtwrk_erc721_contract_address) %}
-//     IRtwrkERC721.setRtwrkThemeAuctionContractAddress(rtwrk_erc721_contract_address, 12);
-
-//     let (new_auction_address) = IRtwrkERC721.rtwrkThemeAuctionContractAddress(
-//         rtwrk_erc721_contract_address
-//     );
-//     assert 12 = new_auction_address;
-
-//     %{ stop_prank() %}
-
-//     %{ expect_revert(error_message="Ownable: caller is not the owner") %}
-//     IRtwrkERC721.setRtwrkThemeAuctionContractAddress(rtwrk_erc721_contract_address, 12);
-//     return ();
-// }
+@view
+func test_rtwrk_erc721_getters{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
+    tempvar rtwrk_erc721_contract_address;
+    %{ ids.rtwrk_erc721_contract_address = context.rtwrk_erc721_contract_address %}
+
+    tempvar auction_contract_address;
+    %{ ids.auction_contract_address = context.auction_contract_address %}
+
+    let (exists) = IRtwrkERC721.exists(rtwrk_erc721_contract_address, Uint256(1, 0));
+    assert TRUE = exists;
+
+    // First NFTs are minted to the owner
+    let (ownerOfToken) = IRtwrkERC721.ownerOf(
+        rtwrk_erc721_contract_address, Uint256(ORIGINAL_RTWRKS_COUNT, 0)
+    );
+    assert 123456 = ownerOfToken;
+
+    let (auction_contract_address_in_rtwrk_erc721) = IRtwrkERC721.rtwrkThemeAuctionContractAddress(
+        rtwrk_erc721_contract_address
+    );
+    assert auction_contract_address = auction_contract_address_in_rtwrk_erc721;
+
+    return ();
+}
+@view
+func test_rtwrk_erc721_contract_uri{
+    syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
+}() {
+    alloc_locals;
+
+    local rtwrk_erc721_contract_address;
+    %{ ids.rtwrk_erc721_contract_address = context.rtwrk_erc721_contract_address %}
+
+    let (contract_uri_len: felt, contract_uri: felt*) = IRtwrkERC721.contractURI(
+        contract_address=rtwrk_erc721_contract_address
+    );
+    assert 4 = contract_uri_len;
+    assert 'ipfs://' = contract_uri[0];
+    assert 0 = contract_uri[1];
+    assert 0 = contract_uri[2];
+    assert 0 = contract_uri[3];
+
+    let (hash: felt*) = alloc();
+    assert hash[0] = 'vez2qw8z6poiozzgjqnbapzcekb4h8j';
+    assert hash[1] = 'hsiuxvjaqqb4e6p0synfwnxobnes6m7';
+    assert hash[2] = 'j66w';
+
+    %{ stop_prank_rtwrk_erc721 = start_prank(context.account, target_contract_address=context.rtwrk_erc721_contract_address) %}
+
+    IRtwrkERC721.setContractURIHash(
+        contract_address=rtwrk_erc721_contract_address, hash_len=3, hash=hash
+    );
+    let (contract_uri_len: felt, contract_uri: felt*) = IRtwrkERC721.contractURI(
+        contract_address=rtwrk_erc721_contract_address
+    );
+    assert 4 = contract_uri_len;
+    assert 'ipfs://' = contract_uri[0];
+    assert 'vez2qw8z6poiozzgjqnbapzcekb4h8j' = contract_uri[1];
+    assert 'hsiuxvjaqqb4e6p0synfwnxobnes6m7' = contract_uri[2];
+    assert 'j66w' = contract_uri[3];
+
+    %{ stop_prank_rtwrk_erc721() %}
+
+    // Verify that only owner can set contract uri hash
+    %{ expect_revert(error_message="Ownable: caller is not the owner") %}
+    IRtwrkERC721.setContractURIHash(
+        contract_address=rtwrk_erc721_contract_address, hash_len=3, hash=hash
+    );
+
+    return ();
+}
+
+@view
+func test_rtwrk_erc721_set_auction_address{
+    syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
+}() {
+    tempvar auction_contract_address;
+    %{ ids.auction_contract_address = context.auction_contract_address %}
+
+    tempvar rtwrk_erc721_contract_address;
+    %{ ids.rtwrk_erc721_contract_address = context.rtwrk_erc721_contract_address %}
+
+    let (current_auction_address) = IRtwrkERC721.rtwrkThemeAuctionContractAddress(
+        rtwrk_erc721_contract_address
+    );
+    assert auction_contract_address = current_auction_address;
+
+    %{ stop_prank = start_prank(context.account, target_contract_address=context.rtwrk_erc721_contract_address) %}
+    IRtwrkERC721.setRtwrkThemeAuctionContractAddress(rtwrk_erc721_contract_address, 12);
+
+    let (new_auction_address) = IRtwrkERC721.rtwrkThemeAuctionContractAddress(
+        rtwrk_erc721_contract_address
+    );
+    assert 12 = new_auction_address;
+
+    %{ stop_prank() %}
+
+    %{ expect_revert(error_message="Ownable: caller is not the owner") %}
+    IRtwrkERC721.setRtwrkThemeAuctionContractAddress(rtwrk_erc721_contract_address, 12);
+    return ();
+}
 
-// @view
-// func test_launch_auction{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
-//     alloc_locals;
-//     local rtwrk_drawer_contract_address;
-//     %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
+@view
+func test_launch_auction{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
+    alloc_locals;
+    local rtwrk_drawer_contract_address;
+    %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
 
-//     local auction_contract_address;
-//     %{ ids.auction_contract_address = context.auction_contract_address %}
+    local auction_contract_address;
+    %{ ids.auction_contract_address = context.auction_contract_address %}
 
-//     // Verify no auction at beginning
-//     let (current_auction_id) = IRtwrkThemeAuction.currentAuctionId(auction_contract_address);
-//     assert 0 = current_auction_id;
+    // Verify no auction at beginning
+    let (current_auction_id) = IRtwrkThemeAuction.currentAuctionId(auction_contract_address);
+    assert 0 = current_auction_id;
 
-//     // Let's launch an auction
-//     launch_auction(1667048630);
+    // Let's launch an auction
+    launch_auction(1667048630);
 
-//     let (current_auction_id) = IRtwrkThemeAuction.currentAuctionId(auction_contract_address);
-//     assert 1 = current_auction_id;
+    let (current_auction_id) = IRtwrkThemeAuction.currentAuctionId(auction_contract_address);
+    assert 1 = current_auction_id;
 
-//     let (current_auction_timestamp) = IRtwrkThemeAuction.auctionTimestamp(
-//         auction_contract_address, 1
-//     );
-//     assert 1667048630 = current_auction_timestamp;
-
-//     %{ expect_revert(error_message="Cannot call this method while an auction is running"); %}
-//     launch_auction(1667048635);
-
-//     return ();
-// }
-
-// @view
-// func test_place_bid_no_money{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
-//     alloc_locals;
-//     local rtwrk_drawer_contract_address;
-//     %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
-
-//     local auction_contract_address;
-//     %{ ids.auction_contract_address = context.auction_contract_address %}
-
-//     launch_auction(1667048630);
-
-//     // Verify no bids at first
-//     let (bids_count) = IRtwrkThemeAuction.auctionBidsCount(auction_contract_address, 1);
-//     assert 0 = bids_count;
-
-//     // We haven't allowed the auction contract to get money from us
-
-//     %{ expect_revert(error_message="ERC20: transfer amount exceeds balance") %}
-
-//     let (bid_theme_1: felt*) = alloc();
-//     assert bid_theme_1[0] = 'Super theme';
-//     assert bid_theme_1[1] = 'is this theme';
-
-//     place_bid(
-//         auction_id=1,
-//         account=1515,
-//         amount=5000000000000000,
-//         timestamp=1667048632,
-//         theme_len=2,
-//         theme=bid_theme_1,
-//     );
-
-//     return ();
-// }
-
-// @view
-// func test_place_bid_after_auction{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}(
-//     ) {
-//     alloc_locals;
-//     local rtwrk_drawer_contract_address;
-//     %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
-
-//     local auction_contract_address;
-//     %{ ids.auction_contract_address = context.auction_contract_address %}
-
-//     local eth_erc_20_contract_address;
-//     %{ ids.eth_erc_20_contract_address = context.eth_erc_20_contract_address %}
-
-//     launch_auction(1667048630);
-
-//     let (bid_theme_1: felt*) = alloc();
-//     assert bid_theme_1[0] = 'Super theme';
-//     assert bid_theme_1[1] = 'is this theme';
-
-//     %{ expect_revert(error_message="There is currently no running auction") %}
-
-//     place_bid(
-//         auction_id=1,
-//         account=1212,
-//         amount=5000000000000000,
-//         timestamp=1667048632 + 26 * 3600,
-//         theme_len=2,
-//         theme=bid_theme_1,
-//     );
-
-//     return ();
-// }
-
-// @view
-// func test_place_bid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
-//     alloc_locals;
-//     local rtwrk_drawer_contract_address;
-//     %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
-
-//     local auction_contract_address;
-//     %{ ids.auction_contract_address = context.auction_contract_address %}
-
-//     local eth_erc_20_contract_address;
-//     %{ ids.eth_erc_20_contract_address = context.eth_erc_20_contract_address %}
-
-//     launch_auction(1667048630);
-
-//     // Verify no bids at first
-//     let (bids_count) = IRtwrkThemeAuction.auctionBidsCount(auction_contract_address, 1);
-//     assert 0 = bids_count;
-
-//     let (bid_theme_1: felt*) = alloc();
-//     assert bid_theme_1[0] = 'Super theme';
-//     assert bid_theme_1[1] = 'is this theme';
-//     place_bid(
-//         auction_id=1,
-//         account=1212,
-//         amount=5000000000000000,
-//         timestamp=1667048632,
-//         theme_len=2,
-//         theme=bid_theme_1,
-//     );
-
-//     // Verify it worked
-//     let (bids_count) = IRtwrkThemeAuction.auctionBidsCount(auction_contract_address, 1);
-//     assert 1 = bids_count;
-
-//     // Verify the first bidder balance has decreased
-//     let (balance) = IERC20.balanceOf(eth_erc_20_contract_address, 1212);
-//     assert (100000000000000000000 - 5000000000000000) = balance.low;
-//     assert 0 = balance.high;
-
-//     // Get back the bid
-//     let (
-//         bidAccount: felt,
-//         bidAmount: Uint256,
-//         bidTimestamp: felt,
-//         bidReimbursementTimestamp: felt,
-//         theme_len: felt,
-//         theme: felt*,
-//     ) = IRtwrkThemeAuction.bid(auction_contract_address, 1, 1);
-
-//     assert 1212 = bidAccount;
-//     assert 5000000000000000 = bidAmount.low;
-//     assert 0 = bidAmount.high;
-//     assert 1667048632 = bidTimestamp;
-//     assert 2 = theme_len;
-//     assert 'Super theme' = theme[0];
-//     assert 'is this theme' = theme[1];
-
-//     // Place a second bid : second bidder needs some money first
-
-//     %{ store(context.eth_erc_20_contract_address, "ERC20_balances", [25000000000000000], key=[1313]) %}
-
-//     let (bid_theme_2: felt*) = alloc();
-//     assert bid_theme_2[0] = 'Second theme';
-
-//     place_bid(
-//         auction_id=1,
-//         account=1313,
-//         amount=15000000000000000,
-//         timestamp=1667048634,
-//         theme_len=1,
-//         theme=bid_theme_2,
-//     );
-
-//     // Verify it worked
-//     let (bids_count) = IRtwrkThemeAuction.auctionBidsCount(auction_contract_address, 1);
-//     assert 2 = bids_count;
-
-//     // Verify the second bidder balance has decreased
-//     let (balance) = IERC20.balanceOf(eth_erc_20_contract_address, 1313);
-//     assert 10000000000000000 = balance.low;
-//     assert 0 = balance.high;
-
-//     // Verify the first bidder balance has increased
-//     let (balance) = IERC20.balanceOf(eth_erc_20_contract_address, 1212);
-//     assert 100000000000000000000 = balance.low;
-//     assert 0 = balance.high;
-
-//     %{ expect_revert(error_message="Bid amount must be at least the last bid amount + BID_INCREMENT") %}
-
-//     // Trying a third bid but not enough money
-//     place_bid(
-//         auction_id=1,
-//         account=1313,
-//         amount=17000000000000000,
-//         timestamp=1667048636,
-//         theme_len=1,
-//         theme=bid_theme_2,
-//     );
-
-//     return ();
-// }
-
-// @view
-// func test_launch_rtwrk_too_soon{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
-//     alloc_locals;
-//     local rtwrk_drawer_contract_address;
-//     %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
-
-//     local auction_contract_address;
-//     %{ ids.auction_contract_address = context.auction_contract_address %}
-
-//     local eth_erc_20_contract_address;
-//     %{ ids.eth_erc_20_contract_address = context.eth_erc_20_contract_address %}
-
-//     launch_auction(1667048630);
-
-//     let (bid_theme_1: felt*) = alloc();
-//     assert bid_theme_1[0] = 'Super theme';
-//     assert bid_theme_1[1] = 'is this theme';
-//     place_bid(
-//         auction_id=1,
-//         account=1212,
-//         amount=5000000000000000,
-//         timestamp=1667048632,
-//         theme_len=2,
-//         theme=bid_theme_1,
-//     );
-
-//     // Now launch rtwrk
-//     %{ expect_revert(error_message="Cannot call this method while an auction is running") %}
-//     launch_rtwrk(1667048634);
-
-//     return ();
-// }
-
-// @view
-// func test_launch_rtwrk_no_bid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
-//     alloc_locals;
-//     local rtwrk_drawer_contract_address;
-//     %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
-
-//     local auction_contract_address;
-//     %{ ids.auction_contract_address = context.auction_contract_address %}
-
-//     local eth_erc_20_contract_address;
-//     %{ ids.eth_erc_20_contract_address = context.eth_erc_20_contract_address %}
-
-//     launch_auction(1667048630);
-
-//     %{ expect_revert(error_message="Auction 1 has no bids") %}
-
-//     launch_rtwrk(1667048634 + 26 * 3600);
-
-//     return ();
-// }
-
-// @view
-// func test_launch_second_auction_if_no_bid{
-//     syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
-// }() {
-//     alloc_locals;
-//     local rtwrk_drawer_contract_address;
-//     %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
-
-//     local auction_contract_address;
-//     %{ ids.auction_contract_address = context.auction_contract_address %}
-
-//     local eth_erc_20_contract_address;
-//     %{ ids.eth_erc_20_contract_address = context.eth_erc_20_contract_address %}
-
-//     let (current_auction_id) = IRtwrkThemeAuction.currentAuctionId(auction_contract_address);
-//     assert 0 = current_auction_id;
-
-//     launch_auction(1667048630);
-
-//     let (current_auction_id) = IRtwrkThemeAuction.currentAuctionId(auction_contract_address);
-//     assert 1 = current_auction_id;
-
-//     launch_auction(1667048634 + 26 * 3600);
-
-//     let (current_auction_id) = IRtwrkThemeAuction.currentAuctionId(auction_contract_address);
-//     assert 2 = current_auction_id;
-
-//     return ();
-// }
-
-// @view
-// func test_launch_rtwrk{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
-//     alloc_locals;
-//     local rtwrk_drawer_contract_address;
-//     %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
-
-//     launch_auction(1667048630);
-
-//     let (bid_theme_1: felt*) = alloc();
-//     assert bid_theme_1[0] = 'Super theme';
-//     assert bid_theme_1[1] = 'is this theme';
-//     place_bid(
-//         auction_id=1,
-//         account=1212,
-//         amount=5000000000000000,
-//         timestamp=1667048632,
-//         theme_len=2,
-//         theme=bid_theme_1,
-//     );
-
-//     // Place a second bid : second bidder needs some money first
-
-//     %{ store(context.eth_erc_20_contract_address, "ERC20_balances", [25000000000000000], key=[1313]) %}
-
-//     let (bid_theme_2: felt*) = alloc();
-//     assert bid_theme_2[0] = 'Second theme';
-
-//     place_bid(
-//         auction_id=1,
-//         account=1313,
-//         amount=15000000000000000,
-//         timestamp=1667048634,
-//         theme_len=1,
-//         theme=bid_theme_2,
-//     );
-
-//     let (rtwrk_id) = IRtwrkDrawer.currentRtwrkId(contract_address=rtwrk_drawer_contract_address);
-//     assert ORIGINAL_RTWRKS_COUNT = rtwrk_id;
-
-//     // Now launch rtwrk
-//     launch_rtwrk(1667048634 + 26 * 3600);
-
-//     let (rtwrk_id) = IRtwrkDrawer.currentRtwrkId(contract_address=rtwrk_drawer_contract_address);
-//     assert ORIGINAL_RTWRKS_COUNT + 1 = rtwrk_id;
-
-//     // Second bid must have won!
-
-//     let (rtwrk_theme_len, rtwrk_theme: felt*) = IRtwrkDrawer.rtwrkTheme(
-//         rtwrk_drawer_contract_address, rtwrk_id
-//     );
-//     assert 1 = rtwrk_theme_len;
-//     assert 'Second theme' = rtwrk_theme[0];
-
-//     // Can't launch rtwrk a second time!
-
-//     %{ expect_revert(error_message="Rtwrk for auction 1 has already been launched at timestamp 1667142234") %}
-//     launch_rtwrk(1667048634 + 26 * 3600);
-
-//     return ();
-// }
-
-// @view
-// func test_settle_auction_too_soon{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}(
-//     ) {
-//     launch_auction(1667048630);
-
-//     let (bid_theme_1: felt*) = alloc();
-//     assert bid_theme_1[0] = 'Super theme';
-//     assert bid_theme_1[1] = 'is this theme';
-//     place_bid(
-//         auction_id=1,
-//         account=1212,
-//         amount=5000000000000000,
-//         timestamp=1667048632,
-//         theme_len=2,
-//         theme=bid_theme_1,
-//     );
-
-//     %{ expect_revert(error_message="Cannot call this method while an auction is running") %}
-
-//     settle_auction(1667048632 + 10);
-//     return ();
-// }
-
-// @view
-// func test_settle_auction_no_bids{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}(
-//     ) {
-//     launch_auction(1667048630);
-
-//     %{ expect_revert(error_message="Auction 1 has no bids") %}
-//     settle_auction(1667048630 + 27 * 3600);
-//     return ();
-// }
-
-// @view
-// func test_settle_auction_rtwrk_not_finished{
-//     syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
-// }() {
-//     launch_auction(1667048630);
-
-//     let (bid_theme_1: felt*) = alloc();
-//     assert bid_theme_1[0] = 'Super theme';
-//     assert bid_theme_1[1] = 'is this theme';
-//     place_bid(
-//         auction_id=1,
-//         account=1212,
-//         amount=5000000000000000,
-//         timestamp=1667048632,
-//         theme_len=2,
-//         theme=bid_theme_1,
-//     );
-
-//     // Launch rtwrk
-//     launch_rtwrk(1667048634 + 26 * 3600);
-
-//     // Draw something in this rtwrk!
-//     colorize_pixels(1, 1667048634 + 26 * 3600 + 5);
-
-//     // Settle the auction
-//     %{ expect_revert(error_message="Cannot call this method while an rtwrk is running") %}
-//     settle_auction(1667048634 + 26 * 3600 + 24 * 3600);
-//     return ();
-// }
+    let (current_auction_timestamp) = IRtwrkThemeAuction.auctionTimestamp(
+        auction_contract_address, 1
+    );
+    assert 1667048630 = current_auction_timestamp;
+
+    %{ expect_revert(error_message="Cannot call this method while an auction is running"); %}
+    launch_auction(1667048635);
+
+    return ();
+}
+
+@view
+func test_place_bid_no_money{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
+    alloc_locals;
+    local rtwrk_drawer_contract_address;
+    %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
+
+    local auction_contract_address;
+    %{ ids.auction_contract_address = context.auction_contract_address %}
+
+    launch_auction(1667048630);
+
+    // Verify no bids at first
+    let (bids_count) = IRtwrkThemeAuction.auctionBidsCount(auction_contract_address, 1);
+    assert 0 = bids_count;
+
+    // We haven't allowed the auction contract to get money from us
+
+    %{ expect_revert(error_message="ERC20: transfer amount exceeds balance") %}
+
+    let (bid_theme_1_len, bid_theme_1) = get_unpacked_theme();
+
+    place_bid(
+        auction_id=1,
+        account=1515,
+        amount=5000000000000000,
+        timestamp=1667048632,
+        theme_len=bid_theme_1_len,
+        theme=bid_theme_1,
+    );
+
+    return ();
+}
+
+@view
+func test_place_bid_after_auction{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}(
+    ) {
+    alloc_locals;
+    local rtwrk_drawer_contract_address;
+    %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
+
+    local auction_contract_address;
+    %{ ids.auction_contract_address = context.auction_contract_address %}
+
+    local eth_erc_20_contract_address;
+    %{ ids.eth_erc_20_contract_address = context.eth_erc_20_contract_address %}
+
+    launch_auction(1667048630);
+
+    let (bid_theme_1_len, bid_theme_1) = get_unpacked_theme();
+
+    %{ expect_revert(error_message="There is currently no running auction") %}
+
+    place_bid(
+        auction_id=1,
+        account=1212,
+        amount=5000000000000000,
+        timestamp=1667048632 + 26 * 3600,
+        theme_len=bid_theme_1_len,
+        theme=bid_theme_1,
+    );
+
+    return ();
+}
+
+@view
+func test_place_bid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
+    alloc_locals;
+    local rtwrk_drawer_contract_address;
+    %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
+
+    local auction_contract_address;
+    %{ ids.auction_contract_address = context.auction_contract_address %}
+
+    local eth_erc_20_contract_address;
+    %{ ids.eth_erc_20_contract_address = context.eth_erc_20_contract_address %}
+
+    launch_auction(1667048630);
+
+    // Verify no bids at first
+    let (bids_count) = IRtwrkThemeAuction.auctionBidsCount(auction_contract_address, 1);
+    assert 0 = bids_count;
+
+    let (bid_theme_1_len, bid_theme_1) = get_unpacked_theme();
+
+    place_bid(
+        auction_id=1,
+        account=1212,
+        amount=5000000000000000,
+        timestamp=1667048632,
+        theme_len=bid_theme_1_len,
+        theme=bid_theme_1,
+    );
+
+    // Verify it worked
+    let (bids_count) = IRtwrkThemeAuction.auctionBidsCount(auction_contract_address, 1);
+    assert 1 = bids_count;
+
+    // Verify the first bidder balance has decreased
+    let (balance) = IERC20.balanceOf(eth_erc_20_contract_address, 1212);
+    assert (100000000000000000000 - 5000000000000000) = balance.low;
+    assert 0 = balance.high;
+
+    // Get back the bid
+    let (
+        bidAccount: felt,
+        bidAmount: Uint256,
+        bidTimestamp: felt,
+        bidReimbursementTimestamp: felt,
+        theme_len: felt,
+        theme: felt*,
+    ) = IRtwrkThemeAuction.bid(auction_contract_address, 1, 1);
+
+    assert 1212 = bidAccount;
+    assert 5000000000000000 = bidAmount.low;
+    assert 0 = bidAmount.high;
+    assert 1667048632 = bidTimestamp;
+    assert 1 = theme_len;
+    assert 'Hello+World' = theme[0];
+
+    // Place a second bid : second bidder needs some money first
+
+    %{ store(context.eth_erc_20_contract_address, "ERC20_balances", [25000000000000000], key=[1313]) %}
+
+    place_bid(
+        auction_id=1,
+        account=1313,
+        amount=15000000000000000,
+        timestamp=1667048634,
+        theme_len=bid_theme_1_len,
+        theme=bid_theme_1,
+    );
+
+    // Verify it worked
+    let (bids_count) = IRtwrkThemeAuction.auctionBidsCount(auction_contract_address, 1);
+    assert 2 = bids_count;
+
+    // Verify the second bidder balance has decreased
+    let (balance) = IERC20.balanceOf(eth_erc_20_contract_address, 1313);
+    assert 10000000000000000 = balance.low;
+    assert 0 = balance.high;
+
+    // Verify the first bidder balance has increased
+    let (balance) = IERC20.balanceOf(eth_erc_20_contract_address, 1212);
+    assert 100000000000000000000 = balance.low;
+    assert 0 = balance.high;
+
+    %{ expect_revert(error_message="Bid amount must be at least the last bid amount + BID_INCREMENT") %}
+
+    // Trying a third bid but not enough money
+    place_bid(
+        auction_id=1,
+        account=1313,
+        amount=17000000000000000,
+        timestamp=1667048636,
+        theme_len=bid_theme_1_len,
+        theme=bid_theme_1,
+    );
+
+    return ();
+}
+
+@view
+func test_launch_rtwrk_too_soon{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
+    alloc_locals;
+    local rtwrk_drawer_contract_address;
+    %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
+
+    local auction_contract_address;
+    %{ ids.auction_contract_address = context.auction_contract_address %}
+
+    local eth_erc_20_contract_address;
+    %{ ids.eth_erc_20_contract_address = context.eth_erc_20_contract_address %}
+
+    launch_auction(1667048630);
+
+    let (bid_theme_1_len, bid_theme_1) = get_unpacked_theme();
+    place_bid(
+        auction_id=1,
+        account=1212,
+        amount=5000000000000000,
+        timestamp=1667048632,
+        theme_len=bid_theme_1_len,
+        theme=bid_theme_1,
+    );
+
+    // Now launch rtwrk
+    %{ expect_revert(error_message="Cannot call this method while an auction is running") %}
+    launch_rtwrk(1667048634);
+
+    return ();
+}
+
+@view
+func test_launch_rtwrk_no_bid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
+    alloc_locals;
+    local rtwrk_drawer_contract_address;
+    %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
+
+    local auction_contract_address;
+    %{ ids.auction_contract_address = context.auction_contract_address %}
+
+    local eth_erc_20_contract_address;
+    %{ ids.eth_erc_20_contract_address = context.eth_erc_20_contract_address %}
+
+    launch_auction(1667048630);
+
+    %{ expect_revert(error_message="Auction 1 has no bids") %}
+
+    launch_rtwrk(1667048634 + 26 * 3600);
+
+    return ();
+}
+
+@view
+func test_launch_second_auction_if_no_bid{
+    syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
+}() {
+    alloc_locals;
+    local rtwrk_drawer_contract_address;
+    %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
+
+    local auction_contract_address;
+    %{ ids.auction_contract_address = context.auction_contract_address %}
+
+    local eth_erc_20_contract_address;
+    %{ ids.eth_erc_20_contract_address = context.eth_erc_20_contract_address %}
+
+    let (current_auction_id) = IRtwrkThemeAuction.currentAuctionId(auction_contract_address);
+    assert 0 = current_auction_id;
+
+    launch_auction(1667048630);
+
+    let (current_auction_id) = IRtwrkThemeAuction.currentAuctionId(auction_contract_address);
+    assert 1 = current_auction_id;
+
+    launch_auction(1667048634 + 26 * 3600);
+
+    let (current_auction_id) = IRtwrkThemeAuction.currentAuctionId(auction_contract_address);
+    assert 2 = current_auction_id;
+
+    return ();
+}
+
+@view
+func test_launch_rtwrk{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
+    alloc_locals;
+    local rtwrk_drawer_contract_address;
+    %{ ids.rtwrk_drawer_contract_address = context.rtwrk_drawer_contract_address %}
+
+    launch_auction(1667048630);
+
+    let (bid_theme_1_len, bid_theme_1) = get_unpacked_theme();
+    place_bid(
+        auction_id=1,
+        account=1212,
+        amount=5000000000000000,
+        timestamp=1667048632,
+        theme_len=bid_theme_1_len,
+        theme=bid_theme_1,
+    );
+
+    // Place a second bid : second bidder needs some money first
+
+    %{ store(context.eth_erc_20_contract_address, "ERC20_balances", [25000000000000000], key=[1313]) %}
+
+    assert bid_theme_1[bid_theme_1_len] = '!';
+
+    place_bid(
+        auction_id=1,
+        account=1313,
+        amount=15000000000000000,
+        timestamp=1667048634,
+        theme_len=bid_theme_1_len + 1,
+        theme=bid_theme_1,
+    );
+
+    let (rtwrk_id) = IRtwrkDrawer.currentRtwrkId(contract_address=rtwrk_drawer_contract_address);
+    assert ORIGINAL_RTWRKS_COUNT = rtwrk_id;
+
+    // Now launch rtwrk
+    launch_rtwrk(1667048634 + 26 * 3600);
+
+    let (rtwrk_id) = IRtwrkDrawer.currentRtwrkId(contract_address=rtwrk_drawer_contract_address);
+    assert ORIGINAL_RTWRKS_COUNT + 1 = rtwrk_id;
+
+    // Second bid must have won!
+
+    let (rtwrk_theme_len, rtwrk_theme: felt*) = IRtwrkDrawer.rtwrkTheme(
+        rtwrk_drawer_contract_address, rtwrk_id
+    );
+    assert 1 = rtwrk_theme_len;
+    assert 'Hello+World!' = rtwrk_theme[0];
+
+    // Can't launch rtwrk a second time!
+
+    %{ expect_revert(error_message="Rtwrk for auction 1 has already been launched at timestamp 1667142234") %}
+    launch_rtwrk(1667048634 + 26 * 3600);
+
+    return ();
+}
+
+@view
+func test_settle_auction_too_soon{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}(
+    ) {
+    launch_auction(1667048630);
+
+    let (bid_theme_1_len, bid_theme_1) = get_unpacked_theme();
+    place_bid(
+        auction_id=1,
+        account=1212,
+        amount=5000000000000000,
+        timestamp=1667048632,
+        theme_len=bid_theme_1_len,
+        theme=bid_theme_1,
+    );
+
+    %{ expect_revert(error_message="Cannot call this method while an auction is running") %}
+
+    settle_auction(1667048632 + 10);
+    return ();
+}
+
+@view
+func test_settle_auction_no_bids{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}(
+    ) {
+    launch_auction(1667048630);
+
+    %{ expect_revert(error_message="Auction 1 has no bids") %}
+    settle_auction(1667048630 + 27 * 3600);
+    return ();
+}
+
+@view
+func test_settle_auction_rtwrk_not_finished{
+    syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
+}() {
+    launch_auction(1667048630);
+
+    let (bid_theme_1_len, bid_theme_1) = get_unpacked_theme();
+    place_bid(
+        auction_id=1,
+        account=1212,
+        amount=5000000000000000,
+        timestamp=1667048632,
+        theme_len=bid_theme_1_len,
+        theme=bid_theme_1,
+    );
+
+    // Launch rtwrk
+    launch_rtwrk(1667048634 + 26 * 3600);
+
+    // Draw something in this rtwrk!
+    colorize_pixels(1, 1667048634 + 26 * 3600 + 5);
+
+    // Settle the auction
+    %{ expect_revert(error_message="Cannot call this method while an rtwrk is running") %}
+    settle_auction(1667048634 + 26 * 3600 + 24 * 3600);
+    return ();
+}
 
 @view
 func test_settle_auction{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
@@ -657,10 +639,7 @@ func test_settle_auction{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: Hash
 
     launch_auction(1667048630);
 
-    let (bid_theme_1: felt*) = alloc();
-
-    assert bid_theme_1[0] = 'Super theme';
-    assert bid_theme_1[1] = 'is this theme';
+    let (bid_theme_1_len, bid_theme_1) = get_unpacked_theme();
 
     // 5 ETH !
     place_bid(
@@ -668,7 +647,7 @@ func test_settle_auction{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: Hash
         account=1212,
         amount=5000000000000000000,
         timestamp=1667048632,
-        theme_len=2,
+        theme_len=bid_theme_1_len,
         theme=bid_theme_1,
     );
 
@@ -752,26 +731,23 @@ func test_settle_auction{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: Hash
         rtwrk_erc721_contract_address, Uint256(ORIGINAL_RTWRKS_COUNT + 1, 0)
     );
 
-    %{
-        result = ''
-        for i in range(0, ids.token_uri_len):
-            result = f'{result}{memory[ids.token_uri + i]},'
-        print(result)
-    %}
+    assert 'data:application/json;charset' = token_uri[0];
+    let (rtwrk_id_literal) = literal_from_number(ORIGINAL_RTWRKS_COUNT + 1);
+    assert rtwrk_id_literal = token_uri[2];
+    assert '{"trait_type":"Colorizers",' = token_uri[12];
+    let (colorizers_count_literal) = literal_from_number(3);
+    assert colorizers_count_literal = token_uri[14];
 
-    // assert 'data:application/json;' = token_uri[0];
-    // let (rtwrk_id_literal) = literal_from_number(ORIGINAL_RTWRKS_COUNT + 1);
-    // assert rtwrk_id_literal = token_uri[2];
-    // assert '0\" fill=\"rgb(100,181,246' = token_uri[13];  // First pixel is colorized with color 28 = 100,181,246
-    // assert '</svg>' = token_uri[token_uri_len - 2];
-    // assert '"}' = token_uri[token_uri_len - 1];
+    assert '0\" fill=\"rgb(100,181,246' = token_uri[25];  // First pixel is colorized with color 28 = 100,181,246
+    assert '</svg>' = token_uri[token_uri_len - 2];
+    assert '"}' = token_uri[token_uri_len - 1];
 
-    // // Let's verify we can get the list of rtwrks owned by the user
-    // let (owned_rtwrks_len, owned_rtwrks: felt*) = IRtwrkERC721.rtwrksOwned(
-    //     rtwrk_erc721_contract_address, owner_address
-    // );
-    // assert 1 = owned_rtwrks_len;
-    // assert ORIGINAL_RTWRKS_COUNT + 1 = owned_rtwrks[0];
+    // Let's verify we can get the list of rtwrks owned by the user
+    let (owned_rtwrks_len, owned_rtwrks: felt*) = IRtwrkERC721.rtwrksOwned(
+        rtwrk_erc721_contract_address, owner_address
+    );
+    assert 1 = owned_rtwrks_len;
+    assert ORIGINAL_RTWRKS_COUNT + 1 = owned_rtwrks[0];
 
     return ();
 }
@@ -872,4 +848,23 @@ func settle_auction{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuilt
 
     IRtwrkThemeAuction.settleAuction(auction_contract_address);
     return ();
+}
+
+func get_unpacked_theme{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() -> (
+    theme_len: felt, theme: felt*
+) {
+    let (theme: felt*) = alloc();
+    assert theme[0] = 'H';
+    assert theme[1] = 'e';
+    assert theme[2] = 'l';
+    assert theme[3] = 'l';
+    assert theme[4] = 'o';
+    assert theme[5] = '+';
+    assert theme[6] = 'W';
+    assert theme[7] = 'o';
+    assert theme[8] = 'r';
+    assert theme[9] = 'l';
+    assert theme[10] = 'd';
+
+    return (11, theme);
 }

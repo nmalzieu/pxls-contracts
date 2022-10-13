@@ -9,7 +9,7 @@ func up() {
         testnet_admin = 0x03bc4F3912468951b3be911b9476177CC208dAe52Ae4F880540F4d24d3c61847
         testnet_eth_erc20 = 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
         pxl_erc721_address = 0x07ffe4bd0b457e10674a2842164b91fea646ed4027d3b606a0fcbf056a4c8827
-        auction_bid_increment = 10000000000000000
+        auction_bid_increment = 100000000000 # On testnet, lower bid increment
 
         # Let's deploy the drawer contract with proxy pattern
         rtwrk_drawer_hash = declare("./build/rtwrk_drawer.json", config={"wait_for_acceptance": False, "max_fee": "auto",}).class_hash

@@ -4,7 +4,12 @@ from starkware.cairo.common.registers import get_label_location
 from starkware.cairo.common.math_cmp import is_nn_le
 from starkware.cairo.common.bool import TRUE
 
-from pxls.RtwrkDrawer.storage import rtwrk_timestamp, current_rtwrk_id, rtwrk_theme
+from pxls.RtwrkDrawer.storage import (
+    rtwrk_timestamp,
+    current_rtwrk_id,
+    rtwrk_theme,
+    number_of_pixel_colorizations_total,
+)
 
 // This contract contains the data of all the rtwrks that were drawn before October 2022. Indeed, with regenesis
 // coming in Q1 2023, it's better for contracts to follow a proxy pattern so they don't lose their data. But old
@@ -21,38 +26,49 @@ func initialize_original_rtwrks{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, 
     ) -> () {
     rtwrk_timestamp.write(1, 1659011914);
     rtwrk_theme.write(1, 0, 'FIRST EVER WTF ???');
+    number_of_pixel_colorizations_total.write(1, 237);
 
     rtwrk_timestamp.write(2, 1661326576);
     rtwrk_theme.write(2, 0, 'STARKNET LOGO WITH ITS BLUE AND');
     rtwrk_theme.write(2, 1, ' ORANGE COLORS');
+    number_of_pixel_colorizations_total.write(2, 2000);
 
     rtwrk_timestamp.write(3, 1661758038);
     rtwrk_theme.write(3, 0, 'A Shiba Inu floating in space');
+    number_of_pixel_colorizations_total.write(3, 1609);
 
     rtwrk_timestamp.write(4, 1662378037);
     rtwrk_theme.write(4, 0, 'ANGRY NYAN CAT');
+    number_of_pixel_colorizations_total.write(4, 989);
 
     rtwrk_timestamp.write(5, 1663246691);
     rtwrk_theme.write(5, 0, 'The merge');
+    number_of_pixel_colorizations_total.write(5, 1283);
 
     rtwrk_timestamp.write(6, 1663344754);
     rtwrk_theme.write(6, 0, 'The coolest hat of the third in');
     rtwrk_theme.write(6, 1, 'ternet');
+    number_of_pixel_colorizations_total.write(6, 1252);
 
     rtwrk_timestamp.write(7, 1663751756);
     rtwrk_theme.write(7, 0, 'Satoshi');
+    number_of_pixel_colorizations_total.write(7, 709);
 
     rtwrk_timestamp.write(8, 1664014776);
     rtwrk_theme.write(8, 0, 'Chaos');
+    number_of_pixel_colorizations_total.write(8, 885);
 
     rtwrk_timestamp.write(9, 1664444421);
     rtwrk_theme.write(9, 0, 'FROG');
+    number_of_pixel_colorizations_total.write(9, 1048);
 
     rtwrk_timestamp.write(10, 1664959908);
     rtwrk_theme.write(10, 0, 'Cairo');
+    number_of_pixel_colorizations_total.write(10, 1014);
 
     rtwrk_timestamp.write(11, 1665493080);
     rtwrk_theme.write(11, 0, 'PFP');
+    number_of_pixel_colorizations_total.write(11, 933);
 
     current_rtwrk_id.write(ORIGINAL_RTWRKS_COUNT);
     return ();

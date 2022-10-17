@@ -127,30 +127,28 @@ func __setup__{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}(
     return ();
 }
 
-// @view
-// func test_rtwrk_erc721_getters{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
-//     tempvar rtwrk_erc721_contract_address;
-//     %{ ids.rtwrk_erc721_contract_address = context.rtwrk_erc721_contract_address %}
+@view
+func test_rtwrk_erc721_getters{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
+    tempvar rtwrk_erc721_contract_address;
+    %{ ids.rtwrk_erc721_contract_address = context.rtwrk_erc721_contract_address %}
 
-// tempvar auction_contract_address;
-//     %{ ids.auction_contract_address = context.auction_contract_address %}
+    tempvar auction_contract_address;
+    %{ ids.auction_contract_address = context.auction_contract_address %}
 
-// let (exists) = IRtwrkERC721.exists(rtwrk_erc721_contract_address, Uint256(1, 0));
-//     assert TRUE = exists;
+    let (exists) = IRtwrkERC721.exists(rtwrk_erc721_contract_address, Uint256(1, 0));
+    assert TRUE = exists;
 
-// // First NFTs are minted to the owner
-//     let (ownerOfToken) = IRtwrkERC721.ownerOf(
-//         rtwrk_erc721_contract_address, Uint256(ORIGINAL_RTWRKS_COUNT, 0)
-//     );
-//     assert 123456 = ownerOfToken;
+    // First NFTs are minted to the owner
+    let (ownerOfToken) = IRtwrkERC721.ownerOf(rtwrk_erc721_contract_address, Uint256(11, 0));
+    assert 123456 = ownerOfToken;
 
-// let (auction_contract_address_in_rtwrk_erc721) = IRtwrkERC721.rtwrkThemeAuctionContractAddress(
-//         rtwrk_erc721_contract_address
-//     );
-//     assert auction_contract_address = auction_contract_address_in_rtwrk_erc721;
+    let (auction_contract_address_in_rtwrk_erc721) = IRtwrkERC721.rtwrkThemeAuctionContractAddress(
+        rtwrk_erc721_contract_address
+    );
+    assert auction_contract_address = auction_contract_address_in_rtwrk_erc721;
 
-// return ();
-// }
+    return ();
+}
 
 @view
 func test_rtwrk_erc721_token_uri_no_select_step{
@@ -164,10 +162,10 @@ func test_rtwrk_erc721_token_uri_no_select_step{
     // Default step is 0 = last
 
     let (local token_uri_len, local token_uri: felt*) = IRtwrkERC721.tokenURI(
-        rtwrk_erc721_contract_address, Uint256(ORIGINAL_RTWRKS_COUNT, 0)
+        rtwrk_erc721_contract_address, Uint256(11, 0)
     );
 
-    assert '0\" fill=\"rgb(13,71,161' = token_uri[25];
+    assert '0\" fill=\"rgb(255,241,118' = token_uri[26];
 
     return ();
 }
@@ -182,23 +180,19 @@ func test_rtwrk_erc721_select_step{syscall_ptr: felt*, range_check_ptr, pedersen
 
     %{ stop_prank_rtwrk_erc721 = start_prank(context.account, target_contract_address=context.rtwrk_erc721_contract_address) %}
 
-    IRtwrkERC721.selectRtwrkStep(
-        rtwrk_erc721_contract_address, Uint256(ORIGINAL_RTWRKS_COUNT, 0), 2
-    );
+    IRtwrkERC721.selectRtwrkStep(rtwrk_erc721_contract_address, Uint256(11, 0), 2);
 
     %{ stop_prank_rtwrk_erc721() %}
 
     let (local token_uri_len, local token_uri: felt*) = IRtwrkERC721.tokenURI(
-        rtwrk_erc721_contract_address, Uint256(ORIGINAL_RTWRKS_COUNT, 0)
+        rtwrk_erc721_contract_address, Uint256(11, 0)
     );
 
-    assert '0\" fill=\"rgb(150,150,150' = token_uri[25];
+    assert '0\" fill=\"rgb(150,150,150' = token_uri[26];
 
     %{ expect_revert(error_message="ERC721: caller is not the token owner") %}
 
-    IRtwrkERC721.selectRtwrkStep(
-        rtwrk_erc721_contract_address, Uint256(ORIGINAL_RTWRKS_COUNT, 0), 50
-    );
+    IRtwrkERC721.selectRtwrkStep(rtwrk_erc721_contract_address, Uint256(11, 0), 50);
 
     return ();
 }

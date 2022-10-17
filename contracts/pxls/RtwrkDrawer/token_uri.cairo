@@ -26,18 +26,14 @@ func get_rtwrk_token_uri{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_c
     let (pixel_index_literal) = literal_from_number(rtwrk_id);
     assert token_uri[2] = pixel_index_literal;
 
-    assert token_uri[3] = '","attributes":[';
-
-    assert token_uri[4] = '{"trait_type":"Theme",';
-    assert token_uri[5] = '"value": "';
+    assert token_uri[3] = '","description":"';
 
     let (theme_len, theme: felt*) = read_theme(rtwrk_id);
+    memcpy(dst=token_uri + 4, src=theme, len=theme_len);
 
-    memcpy(dst=token_uri + 6, src=theme, len=theme_len);
+    let current_len = 4 + theme_len;
 
-    let current_len = 6 + theme_len;
-
-    assert token_uri[current_len] = '"},';
+    assert token_uri[current_len] = '","attributes":[';
     assert token_uri[current_len + 1] = '{"trait_type":"Colorizations",';
     assert token_uri[current_len + 2] = '"value": "';
 
@@ -54,17 +50,16 @@ func get_rtwrk_token_uri{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_c
     let (colorizers_string: felt) = literal_from_number(colorizers_len);
     assert token_uri[current_len + 7] = colorizers_string;
 
-    assert token_uri[current_len + 8] = '"}';
+    assert token_uri[current_len + 8] = '"}],"image":"data:';
 
-    assert token_uri[current_len + 9] = '],"image":"data:';
-    assert token_uri[current_len + 10] = 'image/svg+xml,<?xml version=';
-    assert token_uri[current_len + 11] = '\"1.0\" encoding=\"UTF-8\"?>';
+    assert token_uri[current_len + 9] = 'image/svg+xml,<?xml version=';
+    assert token_uri[current_len + 10] = '\"1.0\" encoding=\"UTF-8\"?>';
 
     let (token_uri_len) = append_svg_from_pixel_grid(
         grid_size=grid_size,
         grid_array_len=grid_len,
         grid_array=grid,
-        destination_len=current_len + 12,
+        destination_len=current_len + 11,
         destination=token_uri,
     );
 

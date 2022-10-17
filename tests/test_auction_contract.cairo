@@ -722,11 +722,11 @@ func test_settle_auction{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: Hash
     assert 'data:application/json;charset' = token_uri[0];
     let (rtwrk_id_literal) = literal_from_number(ORIGINAL_RTWRKS_COUNT + 1);
     assert rtwrk_id_literal = token_uri[2];
-    assert '{"trait_type":"Colorizers",' = token_uri[12];
+    assert '{"trait_type":"Colorizers",' = token_uri[10];
     let (colorizers_count_literal) = literal_from_number(3);
-    assert colorizers_count_literal = token_uri[14];
+    assert colorizers_count_literal = token_uri[12];
 
-    assert '0\" fill=\"rgb(100,181,246' = token_uri[25];  // First pixel is colorized with color 28 = 100,181,246
+    assert '0\" fill=\"rgb(100,181,246' = token_uri[22];  // First pixel is colorized with color 28 = 100,181,246
     assert '</svg>' = token_uri[token_uri_len - 2];
     assert '"}' = token_uri[token_uri_len - 1];
 

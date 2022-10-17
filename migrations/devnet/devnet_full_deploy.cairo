@@ -81,7 +81,7 @@ func up() {
             ]
         }, config={"wait_for_acceptance": True}).contract_address
 
-        # TO DO MANUALLY (can't use invoke here I don't know why)
+        # TO DO MANUALLY (can't use invoke here for now with proxy)
         # call setRtwrkThemeAuctionContractAddress on
         # rtwrk_drawer_proxy_address and rtwrk_erc721_proxy_address
 

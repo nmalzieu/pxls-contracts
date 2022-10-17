@@ -292,6 +292,15 @@ func setRtwrkThemeAuctionContractAddress{
 }
 
 @external
+func setRtwrkDrawerContractAddress{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    address: felt
+) -> () {
+    Ownable.assert_only_owner();
+    rtwrk_drawer_address.write(address);
+    return ();
+}
+
+@external
 func transferOwnership{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     newOwner: felt
 ) {

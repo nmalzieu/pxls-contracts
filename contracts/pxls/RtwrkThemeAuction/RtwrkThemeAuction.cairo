@@ -292,6 +292,18 @@ func setPxlERC721ContractAddress{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*,
     return ();
 }
 
+// @notice Upgrade the Rtwrk Drawer contract address
+// @param address: The address of the Rwrk Drawer Contract
+
+@external
+func setRtwrkDrawerContractAddress{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    address: felt
+) -> () {
+    Ownable.assert_only_owner();
+    rtwrk_drawer_address.write(address);
+    return ();
+}
+
 // Proxy upgrade
 
 @external

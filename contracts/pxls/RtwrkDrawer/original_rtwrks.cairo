@@ -25,7 +25,7 @@ const ORIGINAL_RTWRKS_COUNT = 11;
 func initialize_original_rtwrks{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     ) -> () {
     rtwrk_timestamp.write(1, 1659011914);
-    rtwrk_theme.write(1, 0, 'FIRST EVER WTF ???');
+    rtwrk_theme.write(1, 0, 'FIRST EVER WTF');
     number_of_pixel_colorizations_total.write(1, 237);
 
     rtwrk_timestamp.write(2, 1661326576);

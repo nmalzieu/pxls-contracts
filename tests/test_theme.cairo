@@ -55,7 +55,9 @@ func test_assert_assert_theme_string_valid{
 }
 
 @view
-func test_assert_theme_valid_and_pack{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}() {
+func test_assert_theme_valid_and_pack{
+    syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
+}() {
     alloc_locals;
     let (theme_to_validate: felt*) = alloc();
     assert theme_to_validate[0] = 'S';
@@ -113,5 +115,20 @@ func test_assert_theme_valid_and_pack{syscall_ptr: felt*, range_check_ptr, peder
     %{ expect_revert(error_message="Could not find 37 in whitelisted characters") %}
     assert_theme_valid_and_pack(33, theme_to_validate);
 
+    return ();
+}
+
+@view
+func test_assert_assert_theme_spaces_encoded{
+    syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*
+}() {
+    let (t: felt*) = alloc();
+    assert t[0] = 'S';
+    assert t[1] = ' ';
+    assert t[2] = 'p';
+
+    let (theme_len, theme: felt*) = assert_theme_valid_and_pack(3, t);
+    assert theme_len = 1;
+    assert 'S%20p' = theme[0];
     return ();
 }

@@ -12,9 +12,14 @@ func assert_theme_valid_and_pack{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*,
     alloc_locals;
     // First validate the theme i.e. array of single whitelisted characters
     assert_whitelisted_characters(characters_array_len, characters_array);
+    let (encoded_characters_array_len, encoded_characters_array: felt*) = encode_spaces(
+        characters_array_len, characters_array
+    );
     // At this point we know we only have single chars in the array so we can pack them by 31
     let (theme: felt*) = alloc();
-    let (theme_len) = pack_theme(characters_array_len, characters_array, 0, 0, 0, theme);
+    let (theme_len) = pack_theme(
+        encoded_characters_array_len, encoded_characters_array, 0, 0, 0, theme
+    );
     return (theme_len=theme_len, theme=theme);
 }
 
@@ -163,8 +168,49 @@ func assert_whitelisted_character{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*
     dw '(';
     dw ')';
     dw '*';
-    dw '+';
+    dw ' ';
     dw ',';
     dw ';';
     dw '=';
+}
+
+func encode_spaces{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    characters_array_len: felt, characters_array: felt*
+) -> (encoded_characters_array_len: felt, encoded_characters_array: felt*) {
+    let (encoded_characters_array: felt*) = alloc();
+    return _encode_spaces(characters_array_len, characters_array, 0, encoded_characters_array);
+}
+
+func _encode_spaces{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    characters_array_len: felt,
+    characters_array: felt*,
+    encoded_characters_array_len,
+    encoded_characters_array: felt*,
+) -> (encoded_characters_array_len: felt, encoded_characters_array: felt*) {
+    if (characters_array_len == 0) {
+        return (
+            encoded_characters_array_len=encoded_characters_array_len,
+            encoded_characters_array=encoded_characters_array,
+        );
+    }
+    let character = characters_array[0];
+    if (character == ' ') {
+        assert encoded_characters_array[encoded_characters_array_len] = '%';
+        assert encoded_characters_array[encoded_characters_array_len + 1] = '2';
+        assert encoded_characters_array[encoded_characters_array_len + 2] = '0';
+        return _encode_spaces(
+            characters_array_len - 1,
+            characters_array + 1,
+            encoded_characters_array_len + 3,
+            encoded_characters_array,
+        );
+    } else {
+        assert encoded_characters_array[encoded_characters_array_len] = character;
+        return _encode_spaces(
+            characters_array_len - 1,
+            characters_array + 1,
+            encoded_characters_array_len + 1,
+            encoded_characters_array,
+        );
+    }
 }

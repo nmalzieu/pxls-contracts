@@ -225,7 +225,7 @@ func original_rtwrk_colorizations{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*
     if (rtwrk_id == 13) {
         let is_valid_index = is_nn_le(index, 179);
         if (is_valid_index == TRUE) {
-            return (colorization_packed=original_rtwrk_12[index]);
+            return (colorization_packed=original_rtwrk_13[index]);
         } else {
             return (colorization_packed=0);
         }

@@ -193,8 +193,8 @@ func test_place_bid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuilt
     assert 121212 = stored_bid.account;
     assert 1664192254 = stored_bid.timestamp;
     assert 2 = stored_bid.theme_len;
-    assert 'My+super+theme+is+many+felts+ex' = stored_bid.theme[0];
-    assert 'actly+2' = stored_bid.theme[1];
+    assert 'My%20super%20theme%20is%20many%' = stored_bid.theme[0];
+    assert '20felts%20exactly%202' = stored_bid.theme[1];
 
     // New bid is not reimbursed
 
@@ -206,7 +206,9 @@ func test_place_bid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuilt
 
     // Place another bid
 
-    place_bid(auction_id=12, bid_amount=Uint256(12000000000000000, 0), theme_len=theme_len, theme=theme);
+    place_bid(
+        auction_id=12, bid_amount=Uint256(12000000000000000, 0), theme_len=theme_len, theme=theme
+    );
 
     // Verify that it was saved
 
@@ -229,7 +231,7 @@ func test_place_bid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuilt
                    "auction_id": 12,
                    "caller_account_address": 121212,
                    "amount": 5000000000000000,
-                   "theme": [136883506732829103107092713290711344076018938498406411881685150130246477176, 27412424428170034]
+                   "theme": [136883338099470109337521141380459493097782837447808109611662397518455404837, 73351396934801103382229457705989400964608753283122]
                }
            },
            {
@@ -238,7 +240,7 @@ func test_place_bid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuilt
                    "auction_id": 12,
                    "caller_account_address": 121212,
                    "amount": 12000000000000000,
-                   "theme": [136883506732829103107092713290711344076018938498406411881685150130246477176, 27412424428170034]
+                   "theme": [136883338099470109337521141380459493097782837447808109611662397518455404837, 73351396934801103382229457705989400964608753283122]
                }
            }
         )
@@ -253,33 +255,33 @@ func get_unpacked_theme{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashB
     let (theme: felt*) = alloc();
     assert theme[0] = 'M';
     assert theme[1] = 'y';
-    assert theme[2] = '+';
+    assert theme[2] = ' ';
     assert theme[3] = 's';
     assert theme[4] = 'u';
     assert theme[5] = 'p';
     assert theme[6] = 'e';
     assert theme[7] = 'r';
-    assert theme[8] = '+';
+    assert theme[8] = ' ';
     assert theme[9] = 't';
     assert theme[10] = 'h';
     assert theme[11] = 'e';
     assert theme[12] = 'm';
     assert theme[13] = 'e';
-    assert theme[14] = '+';
+    assert theme[14] = ' ';
     assert theme[15] = 'i';
     assert theme[16] = 's';
-    assert theme[17] = '+';
+    assert theme[17] = ' ';
     assert theme[18] = 'm';
     assert theme[19] = 'a';
     assert theme[20] = 'n';
     assert theme[21] = 'y';
-    assert theme[22] = '+';
+    assert theme[22] = ' ';
     assert theme[23] = 'f';
     assert theme[24] = 'e';
     assert theme[25] = 'l';
     assert theme[26] = 't';
     assert theme[27] = 's';
-    assert theme[28] = '+';
+    assert theme[28] = ' ';
     assert theme[29] = 'e';
     assert theme[30] = 'x';
     assert theme[31] = 'a';
@@ -287,7 +289,7 @@ func get_unpacked_theme{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashB
     assert theme[33] = 't';
     assert theme[34] = 'l';
     assert theme[35] = 'y';
-    assert theme[36] = '+';
+    assert theme[36] = ' ';
     assert theme[37] = '2';
 
     return (38, theme);

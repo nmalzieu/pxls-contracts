@@ -369,7 +369,7 @@ func test_place_bid{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuilt
     assert 0 = bidAmount.high;
     assert 1667048632 = bidTimestamp;
     assert 1 = theme_len;
-    assert 'Hello+World' = theme[0];
+    assert 'Hello%20World' = theme[0];
 
     // Place a second bid : second bidder needs some money first
 
@@ -543,7 +543,7 @@ func test_launch_rtwrk{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBu
         rtwrk_drawer_contract_address, rtwrk_id
     );
     assert 1 = rtwrk_theme_len;
-    assert 'Hello+World!' = rtwrk_theme[0];
+    assert 'Hello%20World!' = rtwrk_theme[0];
 
     // Can't launch rtwrk a second time!
 
@@ -847,7 +847,7 @@ func get_unpacked_theme{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashB
     assert theme[2] = 'l';
     assert theme[3] = 'l';
     assert theme[4] = 'o';
-    assert theme[5] = '+';
+    assert theme[5] = ' ';
     assert theme[6] = 'W';
     assert theme[7] = 'o';
     assert theme[8] = 'r';

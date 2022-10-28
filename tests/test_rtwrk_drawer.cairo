@@ -127,7 +127,7 @@ func test_rtwrk_drawer_getters{syscall_ptr: felt*, range_check_ptr, pedersen_ptr
 
     // Get total number of colorizations
     let (total_colorizations) = IRtwrkDrawer.totalNumberOfPixelColorizations(
-        rtwrk_drawer_contract_address, 1
+        rtwrk_drawer_contract_address, ORIGINAL_RTWRKS_COUNT + 1
     );
     assert 0 = total_colorizations;
 

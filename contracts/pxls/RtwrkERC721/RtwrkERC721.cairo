@@ -47,6 +47,8 @@ func initializer{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
     ERC721Enumerable._mint(owner, Uint256(9, 0));
     ERC721Enumerable._mint(owner, Uint256(10, 0));
     ERC721Enumerable._mint(owner, Uint256(11, 0));
+    ERC721Enumerable._mint(owner, Uint256(12, 0));
+    ERC721Enumerable._mint(owner, Uint256(13, 0));
 
     return ();
 }

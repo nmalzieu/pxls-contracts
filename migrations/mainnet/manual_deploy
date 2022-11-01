@@ -1,0 +1,23 @@
+DECLARE proxy
+
+starknet --network alpha-mainnet declare --contract ./build/proxy.json --no_wallet --sender 0x01028cB54B6A7DCf8D12bfE8aA0DFBe7A98D9c34BfacC71220193b62610F7623 --max_fee 12 --token 0x1fc3870edf5509dd500bac6128c721660d2afbe803b2a355c8021928b578f10
+
+DEPLOY drawer
+
+starknet --network alpha-mainnet deploy --token 0x1fc3870edf5509dd500bac6128c721660d2afbe803b2a355c8021928b578f10 --class_hash 0x6f5b276eb2f1bbb942eaa07c50c3ce2543c8aa6c2dc895cb748641ab73e6f92 --wallet "starkware.starknet.wallets.open_zeppelin.OpenZeppelinAccount" --inputs "0x1207b18aa48e12458bf3575a0988dda38a945cfcd15a20f6d7dbb09b35e7fba" "0x2dd76e7ad84dbed81c314ffe5e7a7cacfb8f4836f01af4e913f275f89a3de1a" 3 "0x01028cB54B6A7DCf8D12bfE8aA0DFBe7A98D9c34BfacC71220193b62610F7623" "0x01028cB54B6A7DCf8D12bfE8aA0DFBe7A98D9c34BfacC71220193b62610F7623" "0x045963ea13d95f22b58a5f0662ed172278e6b420cded736f846ca9bde8ea476a" --max_fee 3000000000000000
+
+DEPLOY RTWRK ERC721
+
+starknet --network alpha-mainnet deploy --token 0x1fc3870edf5509dd500bac6128c721660d2afbe803b2a355c8021928b578f10 --class_hash 0x6f5b276eb2f1bbb942eaa07c50c3ce2543c8aa6c2dc895cb748641ab73e6f92 --wallet "starkware.starknet.wallets.open_zeppelin.OpenZeppelinAccount" --inputs "0x6164fc74e4d466a60438279b6be51f725e5768853247ff7845f7a27f38fc7c6" "0x2dd76e7ad84dbed81c314ffe5e7a7cacfb8f4836f01af4e913f275f89a3de1a" 3 "0x01028cB54B6A7DCf8D12bfE8aA0DFBe7A98D9c34BfacC71220193b62610F7623" "0x01028cB54B6A7DCf8D12bfE8aA0DFBe7A98D9c34BfacC71220193b62610F7623" "0x0035345c560052c8d14dcbde85114c123fc3c65b7b5fab2d045fb3a7e57df453" --max_fee 4000000000000000
+
+
+> Prix             2997200306794738
+> Nouveau prix     4000000000000000
+
+DEPLOY RTWRK THEME AUCTION
+
+starknet --network alpha-mainnet deploy --token 0x1fc3870edf5509dd500bac6128c721660d2afbe803b2a355c8021928b578f10 --class_hash 0x6f5b276eb2f1bbb942eaa07c50c3ce2543c8aa6c2dc895cb748641ab73e6f92 --wallet "starkware.starknet.wallets.open_zeppelin.OpenZeppelinAccount" --inputs "0x2707bea391a3822cdc5770be96fa3e4974f629ae89a062d88a722ce3dac9a25" "0x2dd76e7ad84dbed81c314ffe5e7a7cacfb8f4836f01af4e913f275f89a3de1a" 7 "0x01028cB54B6A7DCf8D12bfE8aA0DFBe7A98D9c34BfacC71220193b62610F7623" "0x01028cB54B6A7DCf8D12bfE8aA0DFBe7A98D9c34BfacC71220193b62610F7623" "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7" "0x045963ea13d95f22b58a5f0662ed172278e6b420cded736f846ca9bde8ea476a" "0x0035345c560052c8d14dcbde85114c123fc3c65b7b5fab2d045fb3a7e57df453" "0x0044bac3f28118ea1946963a1bc1dc6e3752e2ed1b355c0113fd8087d2db6b66" 10000000000000000 --max_fee 600000000000000
+
+> Prix          463376643132267
+> Nouveau prix  600000000000000
+                3194586930471997

@@ -1,10 +1,10 @@
-["protostar.config"]
-protostar_version = "0.4.2"
+[project]
+protostar-version = "0.8.1"
 
-["protostar.project"]
-libs_path = "contracts"
+lib-path = "contracts"
+cairo-path = ["contracts"]
 
-["protostar.contracts"]
+[contracts]
 proxy = [
     "./contracts/pxls/Proxy.cairo"
 ]
@@ -33,38 +33,15 @@ rtwrk_theme_auction = [
     "./contracts/pxls/RtwrkThemeAuction/RtwrkThemeAuction.cairo"
 ]
 
-[profile.devnet.protostar.deploy]
-gateway_url="http://127.0.0.1:5050/"
-chain_id=1536727068981429685321
+[profile.devnet.project]
+gateway-url="http://127.0.0.1:5050/"
+chain-id=1536727068981429685321
 
-[profile.devnet.protostar.declare]
-gateway_url="http://127.0.0.1:5050/"
-chain_id=1536727068981429685321
-
-[profile.devnet.protostar.migrate]
-gateway_url="http://127.0.0.1:5050/"
-chain_id=1536727068981429685321
-account_address="0x7e00d496e324876bbc8531f2d9a82bf154d1a04a50218ee74cdd372f75a551a"
-private_key_path="private/devnet.key"
-
-
-[profile.testnet.protostar.deploy]
-network="testnet"
-
-[profile.testnet.protostar.declare]
-network="testnet"
-
-[profile.testnet.protostar.migrate]
+[profile.testnet.project]
 network="testnet"
 # Can't sign right now because argent wallet don't have the declare validate method yet
 # account_address="0x03bc4F3912468951b3be911b9476177CC208dAe52Ae4F880540F4d24d3c61847"
 # private_key_path="private/testnet.key"
 
-[profile.mainnet.protostar.deploy]
-network="mainnet"
-
-[profile.mainnet.protostar.declare]
-network="mainnet"
-
-[profile.mainnet.protostar.migrate]
+[profile.mainnet.project]
 network="mainnet"

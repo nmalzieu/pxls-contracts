@@ -125,7 +125,13 @@ func unpack_colorization{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_c
     let (
         pixel_colorizations_len: felt, pixel_colorizations: PixelColorization*
     ) = unpack_pixel_colorizations(rest_packed);
-    return (Colorization(Uint256(pxl_id_low, 0), pixel_colorizations_len, pixel_colorizations),);
+    if (pxl_id_low == 0) {
+        // Error in the code, Pxl #400 is unpacked as pxl #0. Rather than recalculating
+        // all the packed values in storage which would be very heavy, we fix it with this line of code
+        return (Colorization(Uint256(400, 0), pixel_colorizations_len, pixel_colorizations),);
+    } else {
+        return (Colorization(Uint256(pxl_id_low, 0), pixel_colorizations_len, pixel_colorizations),);
+    }
 }
 
 func get_all_rtwrk_colorizations{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(

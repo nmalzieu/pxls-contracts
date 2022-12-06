@@ -165,4 +165,6 @@ namespace IRtwrkThemeAuction {
     }
     func bidIncrement() -> (increment: felt) {
     }
+    func fixPxl400BalanceBug() -> () {
+    }
 }

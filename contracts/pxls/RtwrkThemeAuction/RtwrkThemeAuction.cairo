@@ -22,6 +22,8 @@ from pxls.RtwrkThemeAuction.bid_struct import Bid
 from pxls.RtwrkThemeAuction.auction import launch_auction, launch_auction_rtwrk, settle_auction
 from pxls.RtwrkThemeAuction.payment import withdraw_colorizer_balance, withdraw_pxls_balance
 
+from pxls.RtwrkThemeAuction.hotfix import fix_pxl_400_balance
+
 // @dev The constructor initializing the theme auction contract with important data
 // @param rtwrk_drawer_address_value: The address of the Rtwrk Drawer contract
 // @param rtwrk_erc721_address_value: The address of the Rtwrk ERC721 contract
@@ -195,7 +197,6 @@ func owner{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() ->
     return (owner,);
 }
 
-
 // @notice A getter for the minimal bid increment
 // @return increment: The minimal bid increment
 
@@ -301,6 +302,14 @@ func setRtwrkDrawerContractAddress{syscall_ptr: felt*, pedersen_ptr: HashBuiltin
 ) -> () {
     Ownable.assert_only_owner();
     rtwrk_drawer_address.write(address);
+    return ();
+}
+
+// @notice Hotfix because pxl 400 balance was saved in pxl 0 balance which does not exist
+@external
+func fixPxl400BalanceBug{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() -> () {
+    Ownable.assert_only_owner();
+    fix_pxl_400_balance();
     return ();
 }
 

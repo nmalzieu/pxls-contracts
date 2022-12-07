@@ -28,7 +28,8 @@ func up() {
                 pxls_1_100_address, # pxls_1_100_address
                 pxls_101_200_address, # pxls_101_200_address
                 pxls_201_300_address, # pxls_201_300_address
-                pxls_301_400_address  # pxls_301_400_address
+                pxls_301_400_address,  # pxls_301_400_address
+                0  # original_pixel_erc721_address
             ]
         }).contract_address
 

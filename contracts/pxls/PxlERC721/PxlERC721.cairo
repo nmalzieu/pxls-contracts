@@ -5,7 +5,7 @@ from starkware.cairo.common.uint256 import Uint256, uint256_lt, uint256_eq
 from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.starknet.common.syscalls import get_caller_address
 from starkware.cairo.common.alloc import alloc
-from starkware.cairo.common.math_cmp import is_le
+from starkware.cairo.common.math_cmp import is_le, is_not_zero
 
 from openzeppelin.access.ownable.library import Ownable
 from openzeppelin.token.erc721.library import ERC721
@@ -14,7 +14,7 @@ from openzeppelin.introspection.erc165.library import ERC165
 from openzeppelin.security.safemath.library import SafeUint256
 from openzeppelin.upgrades.library import Proxy
 
-from pxls.interfaces import IPxlMetadata
+from pxls.interfaces import IPxlMetadata, IOriginalPixelERC721
 from pxls.PxlERC721.pxls_metadata.pxls_metadata import get_pxl_json_metadata
 
 //
@@ -55,6 +55,14 @@ func pxls_201_300() -> (address: felt) {
 func pxls_301_400() -> (address: felt) {
 }
 
+// Storing the address of the old, pre-regenesis
+// contract address which was non upgradeable so
+// we can proceed to a burn & mint on the new one
+
+@storage_var
+func original_pixel_erc721() -> (address: felt) {
+}
+
 //
 // Initializer
 //
@@ -70,6 +78,7 @@ func initializer{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
     pxls_101_200_address: felt,
     pxls_201_300_address: felt,
     pxls_301_400_address: felt,
+    original_pixel_erc721_address: felt,
 ) {
     Proxy.initializer(proxy_admin);
     ERC721.initializer(name, symbol);
@@ -80,6 +89,7 @@ func initializer{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
     pxls_101_200.write(pxls_101_200_address);
     pxls_201_300.write(pxls_201_300_address);
     pxls_301_400.write(pxls_301_400_address);
+    original_pixel_erc721.write(original_pixel_erc721_address);
     return ();
 }
 
@@ -289,9 +299,18 @@ func safeTransferFrom{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_chec
     return ();
 }
 
+// @notice This is a legacy method that will not be called anymore because
+// we will deploy this contract with a original_pixel_erc721 so it will only
+// accept burnAndMint. However we keep it if someone else wants to deploy
+// and for our testing framework
 @external
 func mint{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(to: felt) {
     alloc_locals;
+    let (original_pixel_erc721_address: felt) = original_pixel_erc721.read();
+
+    with_attr error_message("This method cannot be called if original_pixel_erc721 is set") {
+        assert original_pixel_erc721_address = 0;
+    }
 
     // Ensures a pixel holder cannot mint
     let (local balance: Uint256) = balanceOf(to);
@@ -313,6 +332,47 @@ func mint{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(to: f
 
     minted_count.write(newTokenId);
     ERC721Enumerable._mint(to, newTokenId);
+
+    return ();
+}
+
+@external
+func burnAndMint{pedersen_ptr: HashBuiltin*, syscall_ptr: felt*, range_check_ptr}(
+    tokenId: Uint256
+) {
+    alloc_locals;
+    let (original_pixel_erc721_address: felt) = original_pixel_erc721.read();
+
+    with_attr error_message("This method cannot be called if original_pixel_erc721 is set") {
+        assert is_not_zero(original_pixel_erc721_address) = TRUE;
+    }
+
+    let (caller) = get_caller_address();
+
+    // Let's verify that the sender owns the pxl NFT
+    let (owner) = IOriginalPixelERC721.ownerOf(
+        contract_address=original_pixel_erc721_address, tokenId=tokenId
+    );
+
+    with_attr error_message("You don't own this original PXL NFT") {
+        assert caller = owner;
+    }
+
+    // Let's first burn the original pxl by sending it to 0x000000000000000000000000000000000000dEaD
+    // (can't send to the zero address and no burn feature on the original Pxl NFT contract)
+    IOriginalPixelERC721.transferFrom(
+        contract_address=original_pixel_erc721_address,
+        from_=owner,
+        to=0x000000000000000000000000000000000000dEaD,
+        tokenId=tokenId,
+    );
+
+    let (current_minted_count) = minted_count.read();
+    let (new_minted_count) = SafeUint256.add(current_minted_count, Uint256(1, 0));
+
+    // Now let's mint the new token with same id to the owner
+    minted_count.write(new_minted_count);
+    ERC721Enumerable._mint(owner, tokenId);
 
     return ();
 }

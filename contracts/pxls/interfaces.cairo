@@ -20,6 +20,8 @@ namespace IPxlERC721 {
     }
     func mint(to: felt) {
     }
+    func burnAndMint(tokenId: Uint256) {
+    }
     func pxlsOwned(owner: felt) -> (pxls_len: felt, pxls: felt*) {
     }
     func transferFrom(from_: felt, to: felt, tokenId: Uint256) {
@@ -37,6 +39,18 @@ namespace IPxlERC721 {
     func balanceOf(owner: felt) -> (balance: Uint256) {
     }
     func ownerOf(tokenId: Uint256) -> (owner: felt) {
+    }
+}
+
+@contract_interface
+namespace IOriginalPixelERC721 {
+    func ownerOf(tokenId: Uint256) -> (owner: felt) {
+    }
+    func transferFrom(from_: felt, to: felt, tokenId: Uint256) {
+    }
+    func mint(to: felt, tokenId: Uint256){
+    }
+    func approve(to: felt, tokenId: Uint256){
     }
 }
 

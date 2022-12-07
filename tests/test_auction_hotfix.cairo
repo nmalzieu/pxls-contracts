@@ -48,7 +48,8 @@ func __setup__{syscall_ptr: felt*, range_check_ptr, pedersen_ptr: HashBuiltin*}(
                 0x00, # pxls_1_100_address
                 0x00, # pxls_101_200_address
                 0x00, # pxls_201_300_address
-                0x00  # pxls_301_400_address
+                0x00, # pxls_301_400_address
+                0x00 # original_pixel_erc721_address
             ]
         }).contract_address
     %}

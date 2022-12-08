@@ -8,18 +8,18 @@ cairo-path = ["contracts"]
 proxy = [
     "./contracts/pxls/Proxy.cairo"
 ]
-# pxls_1_100 = [
-#     "./contracts/pxls/PxlERC721/pxls_metadata/pxls_1_100.cairo"
-# ]
-# pxls_101_200 = [
-#     "./contracts/pxls/PxlERC721/pxls_metadata/pxls_101_200.cairo"
-# ]
-# pxls_201_300 = [
-#     "./contracts/pxls/PxlERC721/pxls_metadata/pxls_201_300.cairo"
-# ]
-# pxls_301_400 = [
-#     "./contracts/pxls/PxlERC721/pxls_metadata/pxls_301_400.cairo"
-# ]
+pxls_1_100 = [
+    "./contracts/pxls/PxlERC721/pxls_metadata/pxls_1_100.cairo"
+]
+pxls_101_200 = [
+    "./contracts/pxls/PxlERC721/pxls_metadata/pxls_101_200.cairo"
+]
+pxls_201_300 = [
+    "./contracts/pxls/PxlERC721/pxls_metadata/pxls_201_300.cairo"
+]
+pxls_301_400 = [
+    "./contracts/pxls/PxlERC721/pxls_metadata/pxls_301_400.cairo"
+]
 pxl_erc721 = [
     "./contracts/pxls/PxlERC721/PxlERC721.cairo",
 ]
@@ -36,6 +36,8 @@ rtwrk_theme_auction = [
 [profile.devnet.project]
 gateway-url="http://127.0.0.1:5050/"
 chain-id=1536727068981429685321
+account-address="0x04309BC130903CA23a0C540B1d9fe6453dAfC031a587704d0573C11EA4388714"
+private-key-path="private/devnet.key"
 
 [profile.testnet.project]
 network="testnet"

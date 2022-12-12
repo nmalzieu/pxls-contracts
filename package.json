@@ -1,0 +1,12 @@
+{
+  "name": "smart-contracts",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:nmalzieu/pxls-contracts.git",
+  "author": "nmalzieu <noe.malzieu@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "starknet": "^4.15.1"
+  },
+  "type": "module"
+}

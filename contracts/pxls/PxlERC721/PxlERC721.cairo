@@ -415,6 +415,21 @@ func get_all_pxls_owned{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_ch
     return get_all_pxls_owned(owner, index + 1, balance, pixels);
 }
 
+@external
+func setPxlsDataAddresses{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    pxls_1_100_address: felt,
+    pxls_101_200_address: felt,
+    pxls_201_300_address: felt,
+    pxls_301_400_address: felt,
+) {
+    Ownable.assert_only_owner();
+    pxls_1_100.write(pxls_1_100_address);
+    pxls_101_200.write(pxls_101_200_address);
+    pxls_201_300.write(pxls_201_300_address);
+    pxls_301_400.write(pxls_301_400_address);
+    return ();
+}
+
 // Proxy upgrade
 
 @external

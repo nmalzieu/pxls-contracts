@@ -41,9 +41,8 @@ private-key-path="private/devnet.key"
 
 [profile.testnet.project]
 network="testnet"
-# Can't sign right now because argent wallet don't have the declare validate method yet
-# account_address="0x03bc4F3912468951b3be911b9476177CC208dAe52Ae4F880540F4d24d3c61847"
-# private_key_path="private/testnet.key"
+account-address="0x03bc4F3912468951b3be911b9476177CC208dAe52Ae4F880540F4d24d3c61847"
+private-key-path="private/testnet.key"
 
 [profile.mainnet.project]
 network="mainnet"

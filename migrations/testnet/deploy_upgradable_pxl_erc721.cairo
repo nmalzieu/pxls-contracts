@@ -6,34 +6,39 @@ func up() {
         import json
         from starkware.starknet.public.abi import get_selector_from_name
 
-        devnet_admin = 0x007d87450edc95e1753675ad0c944155cfa66a31e247f5b74ad5dba23331feb3
-        devnet_eth_erc20 = 0x62230ea046a9a5fbc261ac77d03c8d41e5d442db2284587570ab46455fd2488
-        pxls_1_100_address = 0x00
-        pxls_101_200_address = 0x00
-        pxls_201_300_address = 0x00
-        pxls_301_400_address = 0x00
+        testnet_admin = 0x03bc4F3912468951b3be911b9476177CC208dAe52Ae4F880540F4d24d3c61847
+        testnet_original_pixel_erc21_address = 0x07ffe4bd0b457e10674a2842164b91fea646ed4027d3b606a0fcbf056a4c8827
+
+        pxls_1_100_address = pxl_erc721_proxy_address = deploy_contract("./build/pxls_1_100.json").contract_address
+        pxls_101_200_address = pxl_erc721_proxy_address = deploy_contract("./build/pxls_101_200.json").contract_address
+        pxls_201_300_address = pxl_erc721_proxy_address = deploy_contract("./build/pxls_201_300.json").contract_address
+        pxls_301_400_address = pxl_erc721_proxy_address = deploy_contract("./build/pxls_301_400.json").contract_address
 
         # Let's deploy the Pxl ERC721 with proxy pattern
-        pxl_erc721_hash = declare("./build/pxl_erc721.json").class_hash
+        pxl_erc721_hash = declare("./build/pxl_erc721.json", config={"wait_for_acceptance": True}).class_hash
         pxl_erc721_proxy_address = deploy_contract("./build/proxy.json", {
             "implementation_hash": pxl_erc721_hash,
             "selector": get_selector_from_name("initializer"),
             "calldata": [
-                devnet_admin, # proxy_admin
+                testnet_admin, # proxy_admin
                 "Pxls", # name
                 "PXLS", # symbol
                 20, # m_size.low
                 0, # m_size.high
-                devnet_admin, # owner
+                testnet_admin, # owner
                 pxls_1_100_address, # pxls_1_100_address
                 pxls_101_200_address, # pxls_101_200_address
                 pxls_201_300_address, # pxls_201_300_address
                 pxls_301_400_address,  # pxls_301_400_address
-                0  # original_pixel_erc721_address
+                testnet_original_pixel_erc21_address  # original_pixel_erc721_address
             ]
-        }).contract_address
+        }, config={"wait_for_acceptance": True}).contract_address
 
         print(json.dumps({
+            "pxls_1_100_address": hex(pxls_1_100_address),
+            "pxls_101_200_address": hex(pxls_101_200_address),
+            "pxls_201_300_address": hex(pxls_201_300_address),
+            "pxls_301_400_address": hex(pxls_301_400_address),
             "pxl_erc721_hash": hex(pxl_erc721_hash),
             "pxl_erc721_proxy_address": hex(pxl_erc721_proxy_address),
         }, indent=4))

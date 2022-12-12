@@ -1,6 +1,6 @@
 DECLARE proxy
 
-starknet --network alpha-mainnet declare --contract ./build/proxy.json --no_wallet --sender 0x01028cB54B6A7DCf8D12bfE8aA0DFBe7A98D9c34BfacC71220193b62610F7623 --max_fee 12 --token 0x1fc3870edf5509dd500bac6128c721660d2afbe803b2a355c8021928b578f10
+starknet --network alpha-mainnet declare --contract ./build/proxy.json --no_wallet --sender 0x01028cB54B6A7DCf8D12bfE8aA0DFBe7A98D9c34BfacC71220193b62610F7623 --max_fee 10000000000000000 --token 0x1fc3870edf5509dd500bac6128c721660d2afbe803b2a355c8021928b578f10
 
 DEPLOY drawer
 

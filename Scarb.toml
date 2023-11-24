@@ -1,0 +1,17 @@
+[package]
+name = "pxls_contracts"
+version = "0.1.0"
+
+# See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest.html
+
+[dependencies]
+openzeppelin = {  git = "https://github.com/OpenZeppelin/cairo-contracts.git" }
+# foo = { path = "vendor/foo" }
+
+[[target.starknet-contract]]
+sierra = true
+casm = true
+allowed-libfuncs-list.name = "experimental"
+
+[cairo]
+sierra-replace-ids = true

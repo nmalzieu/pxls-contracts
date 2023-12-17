@@ -48,7 +48,7 @@ protostar -p testnet deploy ./build/pxls_301_400.json
 
 and keep track of the address to which they are deployed.
 
-| --- | --- | --- |
+
 
 ## PXL ERC721 Contract
 
@@ -58,7 +58,7 @@ This contract is not using the Proxy pattern yet so its address will change an a
 protostar -p testnet deploy ./build/pxl_erc721.json --inputs 1350069363 1347963987 20 0 "<owner_account_address>" "<pxls_1_100_address>" "<pxls_101_200_address>" "<pxls_201_300_address>" "<pxls_301_400_address>"
 ```
 
-| --- | --- | --- |
+
 
 ### PXL NFT Collection Metadata
 
@@ -78,8 +78,10 @@ protostar -p testnet migrate migrations/testnet/deploy_all_except_pxl_erc721.cai
 
 ## RTWRK Drawer Contract
 
+|  | Goerli | Mainnet |
 | --- | --- | --- |
 | RtwrkDrawer proxy address | 0xfad1d3c6c54aed8ea64a0c81231b5c2d1cae2aef347cbef9028648aeae0e2 | 0x0035345c560052c8d14dcbde85114c123fc3c65b7b5fab2d045fb3a7e57df453 |
+
 
 ## RTWRK Theme Auction Contract
 

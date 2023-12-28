@@ -1,5 +1,7 @@
 mod pxls{
-    mod pxls_erc721;
+    mod pxls_erc721{
+        mod pxls_erc721;
+    }
 }
 
 mod admin{
